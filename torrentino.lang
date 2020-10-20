@@ -1,0 +1,7 @@
+[ru]
+You are not authorized to use this bot. Please contact bot owner to get access.=У вас недостаточно прав для выполнения этой команды. Пожалуйста обратитесь к администратору.
+Torrents list=Список торрентов
+Please choose destination folder=Пожалуйста выберите папку для загрузки файла
+What would you like to do? Please choose actions from keyboard. You could also send torrent file or magnet link.=Чтобы вы хотели сделать? Пожалуйста выберите действия используя клавиатуру внизу. Вы также можете отправить торрент файл или magnet ссылку
+File {0} will be downloaded into {1}=Файл {0} будет загружен в папку {1}
+Torrent {0} was removed from Transmission server=Торрент {0} был удалён с Transmission сервера
