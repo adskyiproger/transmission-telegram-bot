@@ -14,6 +14,9 @@ import configparser
 from pathlib import Path
 from functools import wraps
 
+from requests import get
+from bs4 import BeautifulSoup
+
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler, InlineQueryHandler
 from telegram import KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ParseMode
 from transmission_rpc.client import Client
@@ -51,6 +54,12 @@ TORRENT_ACTIONS=[
         "▶️ Start All"
         ]
 torrent_reply_markup = ReplyKeyboardMarkup( [[InlineKeyboardButton(key) for key in TORRENT_ACTIONS]], resize_keyboard=True )
+def sizeof_fmt(num, suffix='B'):
+   for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+      if abs(num) < 1024.0:
+         return "%3.1f%s%s" % (num, unit, suffix)
+      num /= 1024.0
+   return "%.1f%s%s" % (num, 'Yi', suffix)
 
 def trans(STRING,L_CODE):
     if L_CODE in lang.sections():
@@ -101,6 +110,27 @@ def askDownloadDirMagnet(update, context):
     context.user_data['torrent']={'type':'magnet','url':update.message.text}
 
 @restricted
+def askDownloadLink(update,context):
+    _id=update.message.text.split("_")[1]
+    update.message.reply_text("Please choose download folderi for {}".format(context.user_data['download_links'][_id]), reply_markup=reply_markup)
+    context.user_data['torrent']={'type':'url','url':context.user_data['download_links'][_id]}
+    logger.info("Added torrent URL to download list: {}".format(context.user_data['download_links'][_id]))
+
+@restricted
+def getMenuPage(update,context):
+    logger.debug(update)
+    query = update.callback_query
+    query.answer()
+    context.bot.edit_message_text(chat_id=update.callback_query.message.chat_id,
+                                  message_id=update.callback_query.message.message_id,
+                                  text=context.user_data['pages'][str(query.data)],parse_mode=ParseMode.HTML,reply_markup=context.user_data['pages_markup'],disable_web_page_preview=True)
+    #context.user_data['pages_markup']['prev_page_ind']=int(query.data)-1
+    #context.user_data['pages_markup']['inline_keyboard'][0].pop(int(query.data)-1)
+    #context.user_data['pages_markup']['inline_keyboard'][0].pop(int(query.data)-1)
+    #context.user_data['pages_markup']['inline_keyboard'][0].insert(int(query.data),InlineKeyboardButton(">"+str(query.data),callback_data=str(query.data)))
+ 
+
+@restricted
 def processUserKey(update, context):
     logger.debug(update)
     query = update.callback_query
@@ -108,27 +138,74 @@ def processUserKey(update, context):
     # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
     query.answer()
     if context.user_data['torrent']['type'] == 'torrent':
-        #query.edit_message_text(text="File: "+context.user_data['torrent']['file_name']+" will be downloaded into "+str(query.data))
-        query.edit_message_text(text=trans("File {0} will be downloaded into {1}",query.from_user.language_code).format(context.user_data['torrent']['file_name'],str(query.data)))
-        _file = context.bot.getFile(context.user_data['torrent']['file_id'])
-        _file.download(tempfile.gettempdir()+os.path.sep+context.user_data['torrent']['file_name'])
-        logger.debug("Torrent file {0} was downloaded into temporal directpry {1}".format(context.user_data['torrent']['file_id'],tempfile.gettempdir()+os.path.sep+context.user_data['torrent']['file_name']))
-        with open(tempfile.gettempdir()+os.path.sep+context.user_data['torrent']['file_name'], 'rb') as f:
-            TORRENT_CLIENT.add_torrent(f,download_dir=query.data)
+       #query.edit_message_text(text="File: "+context.user_data['torrent']['file_name']+" will be downloaded into "+str(query.data))
+       query.edit_message_text(text=trans("File {0} will be downloaded into {1}",query.from_user.language_code).format(context.user_data['torrent']['file_name'],str(query.data)))
+       _file = context.bot.getFile(context.user_data['torrent']['file_id'])
+       _file.download(tempfile.gettempdir()+os.path.sep+context.user_data['torrent']['file_name'])
+       logger.debug("Torrent file {0} was downloaded into temporal directpry {1}".format(context.user_data['torrent']['file_id'],tempfile.gettempdir()+os.path.sep+context.user_data['torrent']['file_name']))
+       with open(tempfile.gettempdir()+os.path.sep+context.user_data['torrent']['file_name'], 'rb') as f:
+           TORRENT_CLIENT.add_torrent(f,download_dir=query.data)
 
-        logger.info("File {0} will be placed into {1}".format(context.user_data['torrent']['file_name'],query.data))
+       logger.info("File {0} will be placed into {1}".format(context.user_data['torrent']['file_name'],query.data))
 
     elif context.user_data['torrent']['type'] == 'magnet':
-        query.edit_message_text(text="Magnet URL "+context.user_data['torrent']['url']+" will be downloaded into "+str(query.data))
-        TORRENT_CLIENT.add_torrent(context.user_data['torrent']['url'],download_dir=query.data)
-        logger.info("Magnet URL {0} will be placed into {1}".format(context.user_data['torrent']['url'],query.data))
-    else:
-        logger.error("Something went wrong, please check debug output.")
-        logger.debug(context)
-        logger.debug(update)
+       query.edit_message_text(text="Magnet URL "+context.user_data['torrent']['url']+" will be downloaded into "+str(query.data))
+       TORRENT_CLIENT.add_torrent(context.user_data['torrent']['url'],download_dir=query.data)
+       logger.info("Magnet URL {0} will be placed into {1}".format(context.user_data['torrent']['url'],query.data))
+    elif context.user_data['torrent']['type'] == 'url':
+       query.edit_message_text(text=trans("Torrent URL {0} will be downloaded into {1}",query.from_user.language_code).format(context.user_data['torrent']['url'],str(query.data)))
+       TORRENT_CLIENT.add_torrent(context.user_data['torrent']['url'],download_dir=query.data)
+       logger.info("Torrent URL {0} will be placed into {1}".format(context.user_data['torrent']['url'],query.data))
+
+#    else:
+#        logger.error("Something went wrong, please check debug output.")
+#        logger.debug(context)
+#        logger.debug(update)
 
 def hell(update, context):
-    update.message.reply_text(trans('What would you like to do? Please choose actions from keyboard. You could also send torrent file or magnet link.',update.message.from_user.language_code))
+    #update.message.reply_text(trans('What would you like to do? Please choose actions from keyboard. You could also send torrent file or magnet link.',update.message.from_userlanguage_code))
+    tracker_home_url="http://nnmclub.to"
+    tracker_search_url="/forum/tracker.php?nm="
+    x=tracker_home_url+tracker_search_url+update.message.text
+    _data=BeautifulSoup(get(x).content, 'lxml').select('table.forumline > tbody > tr')
+    #context.bot.send_message(chat_id=update.message.chat.id,text="Found {} entries, I will send you a message within a moment, please wait".format(_data.len()))
+    #print(_data)
+    context.user_data['pages']={}
+    context.user_data['download_links']={}
+    _kb=[]
+    _message=""
+    jj=0
+    ii=0
+    for row in _data:
+        _cols=row.select('td')
+        TITLE=_cols[2].text
+        INFO=_cols[2].select('a')[0].get('href')
+        DL=_cols[4].select('a')[0].get('href')
+        SIZE="".join(_cols[5].text.split(' ')[1:])
+        DATE="".join(_cols[9].text.split(' ')[1:])[0:10]
+        
+        logger.info("COL Title:"+TITLE+" L:"+str(INFO)+" DL:"+str(DL)+" S:"+str(SIZE)+" D:"+str(DATE))
+        _message=_message+"\n<b>{2}</b>: {5}  {6}\n<a href='{0}/forum/{1}'>Info</a>     [ ▼ /download_{4} ]\n".format(tracker_home_url,
+                                                                                 INFO,TITLE.replace(r'<',''),DL,ii,SIZE,DATE)
+        context.user_data['download_links'][str(ii)]="{0}/forum/{1}".format(tracker_home_url,DL)
+        if ii == 5:
+            jj=jj+1
+            context.user_data['pages'][str(jj)]=_message
+            print("Page: "+str(jj)+" \n"+_message)
+            _message=""
+            _kb.append(InlineKeyboardButton(str(jj),callback_data=str(jj)))
+            ii=0
+        ii=ii+1
+    if ii>0:
+        context.user_data['pages'][str(jj+1)]=_message
+    # if at least one page exist, add pager        
+    if jj>0:
+        context.bot.send_message(chat_id=update.message.chat.id,parse_mode=ParseMode.HTML,text=context.user_data['pages']['1'],reply_markup=InlineKeyboardMarkup( [ _kb ] ),disable_web_page_preview=True)
+        context.user_data['pages_markup']=InlineKeyboardMarkup( [ _kb ] )
+    else:
+        context.bot.send_message(chat_id=update.message.chat.id,
+                                 text=trans('What would you like to do? Please choose actions from keyboard. You could also send torrent file or magnet link.',update.message.from_user.language_code),
+                                 reply_markup=torrent_reply_markup)
     logger.debug(update)
 
 @restricted
@@ -167,6 +244,8 @@ def torrentStartStop(update,context):
     else:
         TORRENT_CLIENT.start_torrent(int(torrent_id))
 
+
+
 @restricted
 def torrentList(update,context):
     """List all torrents on Transmission server"""
@@ -189,9 +268,15 @@ def torrentInfo(update,context):
     _message=_message+"Files:\n"
     for file_id, file in enumerate(torrent.files()):
         _message=_message+f"{file_id}: {file.name}: completed/size: {file.completed}/{file.size} Bytes \n"
+    # truncate long messages 
+    _message = _message[:4000]+'..\n' if len(_message)>4000 else _message
     _message=_message+"--------------------------\n" \
             "[ ▶ /start_{0} ] [ ⏹ /stop_{0} ] [ ⏏ /delete_{0} ]\n".format(torrent.id)
-    context.bot.send_message(chat_id=update.message.chat.id,text=_message,parse_mode=ParseMode.HTML,reply_markup=torrent_reply_markup)
+    try:        
+        context.bot.send_message(chat_id=update.message.chat.id,text=_message,parse_mode=ParseMode.HTML,reply_markup=torrent_reply_markup)
+    except:
+        context.bot.send_message(chat_id=update.message.chat.id,text="Something went wrong, probably too many files in this torrent",parse_mode=ParseMode.HTML,reply_markup=torrent_reply_markup)
+
 
 @restricted
 def torrentDelete(update,context):
@@ -220,11 +305,13 @@ def main():
     dp.add_handler(MessageHandler(Filters.regex(r'/stop_'), torrentStop))
     dp.add_handler(MessageHandler(Filters.regex(r'/start_'), torrentStart))
     dp.add_handler(MessageHandler(Filters.regex(r'/delete'), torrentDelete))
+    dp.add_handler(MessageHandler(Filters.regex(r'/download'), askDownloadLink))
     # Process magnet link
     dp.add_handler(MessageHandler(Filters.regex(r'(magnet:\?xt=urn:btih:[a-zA-Z0-9]*)'), askDownloadDirMagnet))
     # Process file
     dp.add_handler(MessageHandler(Filters.document, askDownloadDirFile))
     # Process Button
+    dp.add_handler(CallbackQueryHandler(getMenuPage,pattern=r'[0-9]+'))
     dp.add_handler(CallbackQueryHandler(processUserKey))
     # Default action
     dp.add_handler(MessageHandler(Filters.all, hell))
