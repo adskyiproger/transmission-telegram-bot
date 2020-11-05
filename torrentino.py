@@ -107,7 +107,7 @@ def help_command(update, context):
     update.message.reply_text('Help!')
 
 
-def echo(update, context):
+def start(update, context):
     """Echo the user message."""
     update.message.reply_text(update.message.text)
     logging.debug("echo: "+str(update))
@@ -186,7 +186,7 @@ def searchOnWebTracker(update, context):
         context.user_data['pages_markup']=InlineKeyboardMarkup( [ SR.KEYBOARD ] )
     else:
         context.bot.send_message(chat_id=query.message.chat.id,
-                                 text=trans('What would you like to do? Please choose actions from keyboard. You could also send torrent file or magnet link.',update.message.from_user.language_code),
+                                 text=trans('What would you like to do? Please choose actions from keyboard. You could also send torrent file or magnet link.',query.message.from_user.language_code),
                                  reply_markup=torrent_reply_markup)
     logging.debug(update)
 
