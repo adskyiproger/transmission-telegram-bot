@@ -7,16 +7,18 @@ Usage:
 Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
-import os, re
+import os, re, sys
 import tempfile
 import logging
+import logging.handlers
 import configparser
 from pathlib import Path
-from functools import wraps
 from models.TransmissionClient import TransmissionClient
-
-from requests import get
-from bs4 import BeautifulSoup
+from models.SearchTorrents import SearchTorrents
+from functools import wraps
+#from models.utils import *
+#from requests import get
+#from bs4 import BeautifulSoup
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler, InlineQueryHandler
 from telegram import KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ParseMode
@@ -44,9 +46,19 @@ TORRENT_CLIENT = TransmissionClient(
 reply_markup = InlineKeyboardMarkup( [[ InlineKeyboardButton(key.capitalize(),callback_data=config['DIRECTORIES'][key]) for key in config['DIRECTORIES'] ]] )
 
 # Configure telegram bot logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
-logger = logging.getLogger(__name__)
+logging.basicConfig(
+                format = '[%(asctime)s] [%(levelname)s]: %(message)s',
+                level = logging.DEBUG,
+                handlers = [
+                    logging.handlers.RotatingFileHandler(
+                                        filename = config['BOT']['LOG_FILE'],
+                                        maxBytes = (1048576*5),
+                                        backupCount = 1,
+                                        ),
+                    logging.StreamHandler(sys.stdout)
+                    ]
+                )
+
 
 # Configure actions to work with torrent
 TORRENT_ACTIONS=[
@@ -55,6 +67,12 @@ TORRENT_ACTIONS=[
         "▶️ Start All"
         ]
 torrent_reply_markup = ReplyKeyboardMarkup( [[InlineKeyboardButton(key) for key in TORRENT_ACTIONS]], resize_keyboard=True )
+
+
+tracker_reply_markup = InlineKeyboardMarkup( [[InlineKeyboardButton(key, callback_data=key) for key in SearchTorrents.CLASSES.keys()]], resize_keyboard=True )
+
+tracker_list="|".join(SearchTorrents.CLASSES.keys())
+print(tracker_list)
 def sizeof_fmt(num, suffix='B'):
    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
       if abs(num) < 1024.0:
@@ -74,11 +92,13 @@ def restricted(func):
         user_id = update.effective_user.id
         if str(user_id) not in config['BOT']['ALLOWED_USERS'].split(','):
             context.bot.send_message(chat_id=user_id,text=trans("You are not authorized to use this bot. Please contact bot owner to get access.",L_CODE=update.message.from_user.language_code),parse_mode=ParseMode.HTML,reply_markup=torrent_reply_markup)
-            logger.debug(update)
-            logger.error("Unauthorized access denied for {}.".format(user_id))
+            logging.debug(update)
+            logging.error("Unauthorized access denied for {}.".format(user_id))
             return
         return func(update, context, *args, **kwargs)
     return wrapped
+
+
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
 
@@ -90,12 +110,12 @@ def help_command(update, context):
 def echo(update, context):
     """Echo the user message."""
     update.message.reply_text(update.message.text)
-    logger.debug("echo: "+str(update))
+    logging.debug("echo: "+str(update))
 
 @restricted
 def askDownloadDirFile(update, context):
     """Download file"""
-    logger.debug(update)
+    logging.debug(update)
     if update.message.document.mime_type == 'application/x-bittorrent':
         update.message.reply_text(trans('Please choose destination folder',update.message.from_user.language_code)+":", reply_markup=reply_markup)
         context.user_data['torrent']={'type':'torrent','file_name':update.message.document.file_name,'file_id':update.message.document.file_id}
@@ -115,25 +135,21 @@ def askDownloadMenuLink(update,context):
     _id=update.message.text.split("_")[1]
     update.message.reply_text("Please choose download folderi for {}".format(context.user_data['download_links'][_id]), reply_markup=reply_markup)
     context.user_data['torrent']={'type':'url','url':context.user_data['download_links'][_id]}
-    logger.info("Added torrent URL to download list: {}".format(context.user_data['download_links'][_id]))
+    logging.info("Added torrent URL to download list: {}".format(context.user_data['download_links'][_id]))
 
 @restricted
 def getMenuPage(update,context):
-    logger.debug(update)
+    logging.debug(update)
     query = update.callback_query
     query.answer()
     context.bot.edit_message_text(chat_id=update.callback_query.message.chat_id,
                                   message_id=update.callback_query.message.message_id,
                                   text=context.user_data['pages'][str(query.data)],parse_mode=ParseMode.HTML,reply_markup=context.user_data['pages_markup'],disable_web_page_preview=True)
-    #context.user_data['pages_markup']['prev_page_ind']=int(query.data)-1
-    #context.user_data['pages_markup']['inline_keyboard'][0].pop(int(query.data)-1)
-    #context.user_data['pages_markup']['inline_keyboard'][0].pop(int(query.data)-1)
-    #context.user_data['pages_markup']['inline_keyboard'][0].insert(int(query.data),InlineKeyboardButton(">"+str(query.data),callback_data=str(query.data)))
  
 
 @restricted
 def processUserKey(update, context):
-    logger.debug(update)
+    logging.debug(update)
     query = update.callback_query
     # CallbackQueries need to be answered, even if no notification to the user is needed
     # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
@@ -142,95 +158,59 @@ def processUserKey(update, context):
        query.edit_message_text(text=trans("File {0} will be downloaded into {1}",query.from_user.language_code).format(context.user_data['torrent']['file_name'],str(query.data)))
        _file = context.bot.getFile(context.user_data['torrent']['file_id'])
        _file.download(tempfile.gettempdir()+os.path.sep+context.user_data['torrent']['file_name'])
-       logger.debug("Torrent file {0} was downloaded into temporal directpry {1}".format(context.user_data['torrent']['file_id'],tempfile.gettempdir()+os.path.sep+context.user_data['torrent']['file_name']))
+       logging.debug("Torrent file {0} was downloaded into temporal directpry {1}".format(context.user_data['torrent']['file_id'],tempfile.gettempdir()+os.path.sep+context.user_data['torrent']['file_name']))
        with open(tempfile.gettempdir()+os.path.sep+context.user_data['torrent']['file_name'], 'rb') as f:
            TORRENT_CLIENT.add_torrent(f,download_dir=query.data)
 
-       logger.info("File {0} will be placed into {1}".format(context.user_data['torrent']['file_name'],query.data))
+       logging.info("File {0} will be placed into {1}".format(context.user_data['torrent']['file_name'],query.data))
 
     elif context.user_data['torrent']['type'] in [ 'magnet', 'url' ]:
        query.edit_message_text(text="URL "+context.user_data['torrent']['url']+" will be downloaded into "+str(query.data))
        TORRENT_CLIENT.add_torrent(context.user_data['torrent']['url'],download_dir=query.data)
-       logger.info("URL {0} will be placed into {1}".format(context.user_data['torrent']['url'],query.data))
+       logging.info("URL {0} will be placed into {1}".format(context.user_data['torrent']['url'],query.data))
 
-#    else:
-#        logger.error("Something went wrong, please check debug output.")
-#        logger.debug(context)
-#        logger.debug(update)
+def askTrackerSelection(update,context):
+    context.user_data['search_string']=update.message.text
+    update.message.reply_text(trans('Please choose torrent tracker:',update.message.from_user.language_code)+":", reply_markup=tracker_reply_markup)
+
 
 def searchOnWebTracker(update, context):
-    #update.message.reply_text(trans('What would you like to do? Please choose actions from keyboard. You could also send torrent file or magnet link.',update.message.from_userlanguage_code))
-    tracker_home_url="http://nnmclub.to"
-    tracker_search_url="/forum/tracker.php?nm="
-    x=tracker_home_url+tracker_search_url+update.message.text
-    _data=BeautifulSoup(get(x).content, 'lxml').select('table.forumline > tbody > tr')
-    #context.bot.send_message(chat_id=update.message.chat.id,text="Found {} entries, I will send you a message within a moment, please wait".format(_data.len()))
-    #print(_data)
-    context.user_data['pages']={}
-    context.user_data['download_links']={}
-    _kb=[]
-    _message=""
-    jj=0
-    ii=0
-    kk=0
-    for row in _data:
-        _cols=row.select('td')
-        TITLE=_cols[2].text
-        INFO=_cols[2].select('a')[0].get('href')
-        DL=_cols[4].select('a')[0].get('href')
-        SIZE="".join(_cols[5].text.split(' ')[1:])
-        DATE="".join(_cols[9].text.split(' ')[1:])[0:10]
-        
-        logger.info("COL Title:"+TITLE+" L:"+str(INFO)+" DL:"+str(DL)+" S:"+str(SIZE)+" D:"+str(DATE))
-        _message=_message+"\n<b>{2}</b>: {5}  {6}\n<a href='{0}/forum/{1}'>Info</a>     [ ▼ /download_{4} ]\n".format(tracker_home_url,
-                                                                                 INFO,TITLE.replace(r'<',''),DL,ii,SIZE,DATE)
-        context.user_data['download_links'][str(ii)]="{0}/forum/{1}".format(tracker_home_url,DL)
-        if kk == 5:
-            jj=jj+1
-            context.user_data['pages'][str(jj)]=_message
-            print("Page: "+str(jj)+" \n"+_message)
-            _message=""
-            _kb.append(InlineKeyboardButton(str(jj),callback_data=str(jj)))
-            kk=0
-        kk=kk+1
-        ii=ii+1
-    if kk>0:
-        context.user_data['pages'][str(jj+1)]=_message
+    query = update.callback_query
+    print(update)
     # if at least one page exist, add pager        
-    if jj>0:
-        context.bot.send_message(chat_id=update.message.chat.id,parse_mode=ParseMode.HTML,text=context.user_data['pages']['1'],reply_markup=InlineKeyboardMarkup( [ _kb ] ),disable_web_page_preview=True)
-        context.user_data['pages_markup']=InlineKeyboardMarkup( [ _kb ] )
+    SR=SearchTorrents(query.data,context.user_data['search_string'])
+    context.user_data['pages']=SR.PAGES
+    context.user_data['download_links']=SR.LINKS
+    if len(context.user_data['pages'])>0:
+        context.bot.send_message(chat_id=query.message.chat.id,parse_mode=ParseMode.HTML,text=context.user_data['pages']['1'],reply_markup=InlineKeyboardMarkup( [ SR.KEYBOARD ] ),disable_web_page_preview=True)
+        context.user_data['pages_markup']=InlineKeyboardMarkup( [ SR.KEYBOARD ] )
     else:
-        context.bot.send_message(chat_id=update.message.chat.id,
+        context.bot.send_message(chat_id=query.message.chat.id,
                                  text=trans('What would you like to do? Please choose actions from keyboard. You could also send torrent file or magnet link.',update.message.from_user.language_code),
                                  reply_markup=torrent_reply_markup)
-    logger.debug(update)
+    logging.debug(update)
 
 @restricted
 def torrentStop(update,context):
     """Stop torrent by torrent_id"""
-    logger.debug(update)
-    torrent_id=update.message.text.split('_')[1]
-    logger.info("Stopping torrent id {0}".format(torrent_id))
-    TORRENT_CLIENT.stop_torrent(int(torrent_id))
+    logging.debug(update)
+    TORRENT_CLIENT.stop_torrent(int(update.message.text.split('_')[1]))
 
 @restricted
 def torrentStopAll(update,context):
     """Stop All Torrents"""
-    TORRENT_CLIENT.stop_alltorrents()
+    TORRENT_CLIENT.stop_all()
 
 @restricted
 def torrentStart(update,context):
     """Start torrent by torrent_id"""
-    logger.debug(update)
-    torrent_id=update.message.text.split('_')[1]
-    logger.info("Starting torrent id {0}".format(torrent_id))
-    TORRENT_CLIENT.start_torrent(int(torrent_id))
+    logging.debug(update)
+    TORRENT_CLIENT.start_torrent(int(update.message.text.split('_')[1]))
 
 @restricted
 def torrentStartAll(update,context):
     """Stop All Torrents"""
-    TORRENT_CLIENT.start_alltorrents()
+    TORRENT_CLIENT.start_all()
 
 @restricted
 def torrentList(update,context):
@@ -243,9 +223,9 @@ def torrentList(update,context):
 @restricted
 def torrentInfo(update,context):
     """Show detailed information about torrent"""
-    logger.debug(update)
-    torrent_id=update.message.text.replace('/info_', '')
-    logger.info("Loading torrent id {0}".format(torrent_id))
+    logging.debug(update)
+    torrent_id=update.message.text.split('_')[1]
+    logging.info("Loading torrent id {0}".format(torrent_id))
     _message=TORRENT_CLIENT.info(int(torrent_id))
     # truncate long messages 
     _message = _message[:4000]+'..\n' if len(_message)>4000 else _message
@@ -259,9 +239,9 @@ def torrentInfo(update,context):
 @restricted
 def torrentDelete(update,context):
     """Remove torrent by torrent_id"""
-    logger.debug(update)
+    logging.debug(update)
     torrent_id=update.message.text.replace('/delete_', '')
-    logger.info("Removing torrent id {0}".format(torrent_id))
+    logging.info("Removing torrent id {0}".format(torrent_id))
     context.bot.send_message(chat_id=update.message.chat.id,text=trans("Torrent {0} was removed from Transmission server".format(TORRENT_CLIENT.get_torrents(int(torrent_id))[0].name),update.message.from_user.language_code),parse_mode=ParseMode.HTML,reply_markup=torrent_reply_markup)
     TORRENT_CLIENT.remove_torrent(int(torrent_id),delete_data=config['TRANSMISSION']['DELETE_DATA'])
 
@@ -283,6 +263,7 @@ def main():
     dp.add_handler(MessageHandler(Filters.regex(r'^/start_[0-9]+$'), torrentStart))
     dp.add_handler(MessageHandler(Filters.regex(r'^/delete_[0-9]+$'), torrentDelete))
     # Add Search/Download/Navigation handlers to dispatcher
+    dp.add_handler(CallbackQueryHandler(searchOnWebTracker,pattern=tracker_list))
     # Ask download directory for Menu URL 
     dp.add_handler(MessageHandler(Filters.regex(r'^/download_[0-9]+$'), askDownloadMenuLink))
     # Ask download directory for magnet/http(s) link
@@ -294,7 +275,7 @@ def main():
     # Select download folder switcher (inline keyboard)
     dp.add_handler(CallbackQueryHandler(processUserKey))
     # Default search input text
-    dp.add_handler(MessageHandler(Filters.all, searchOnWebTracker))
+    dp.add_handler(MessageHandler(Filters.all, askTrackerSelection))
 
     # Start the Bot
     updater.start_polling()

@@ -9,12 +9,12 @@ logger = logging.getLogger(__name__)
 
 
 class TransmissionClient(Client):
-    def stop_alltorrents(self):
+    def stop_all(self):
         for torrent in self.get_torrents():
             self.stop_torrent(torrent.id)
             logger.info("Stopped torrent {1} (id: {0})".format(torrent.id,torrent.name))
 
-    def start_alltorrents(self):
+    def start_all(self):
         for torrent in self.get_torrents():
             self.start_torrent(torrent.id)
             logger.info("Started torrent {1} (id: {0})".format(torrent.id,torrent.name))
