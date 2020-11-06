@@ -6,6 +6,7 @@ Supported trackers:
 * http://nnmclub.to/
 * http://rutor.info 
 * https://eztv.re/
+* https://kat.sx/
 (new will arrive soon)
 
 ## Features

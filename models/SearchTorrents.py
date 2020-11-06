@@ -2,11 +2,13 @@ from models.SearchNonameClub import SearchNonameClub
 from telegram import InlineKeyboardButton 
 from models.SearchRUTOR import SearchRUTOR
 from models.SearchEZTV import SearchEZTV
+from models.SearchKAT import SearchKAT
 
 class SearchTorrents:
      CLASSES={ "nnmclub" : SearchNonameClub,
                "rutor" : SearchRUTOR,
-               "EZTV" : SearchEZTV
+               "EZTV" : SearchEZTV,
+               "KAT" : SearchKAT
              }
      def __init__(self, name="rutor", search_string="test"):
          TRACKER=self.CLASSES[name]()
