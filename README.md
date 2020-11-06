@@ -2,8 +2,14 @@
 
 Telegram bot for Searching torrents and passing to Transmission torrent server.
 
+Supported trackers:
+* http://nnmclub.to/
+* http://rutor.info 
+* https://eztv.re/
+(new will arrive soon)
+
 ## Features
-1. Search torrents on web portals and passing to Transmission. (Today http://nnmclub.to/, http://rutor.info are the only supported torrent tracker, but new will arrive soon)
+1. Search torrents on web portals and passing to Transmission.
 2. Direct send torrent files and magnet urls to transmission server for download.
 3. Essentials Transmission server actions such as Stop, Start, Delete, View info.
 
