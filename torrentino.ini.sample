@@ -2,7 +2,7 @@
 # TOKEN, Use BotFather to create new token
 TOKEN=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 LOG_FILE=torrentino.log
-
+LOG_LEVEL=INFO
 # Admin telegram account ID or comma separated IDs
 ALLOWED_USERS=<Your telegram account ID(s)>
 

@@ -1,7 +1,6 @@
 from requests import get
 from bs4 import BeautifulSoup
 import logging
-#logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.DEBUG)
 
 
 

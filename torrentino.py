@@ -16,9 +16,6 @@ from pathlib import Path
 from models.TransmissionClient import TransmissionClient
 from models.SearchTorrents import SearchTorrents
 from functools import wraps
-#from models.utils import *
-#from requests import get
-#from bs4 import BeautifulSoup
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler, InlineQueryHandler
 from telegram import KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ParseMode
@@ -46,18 +43,17 @@ TORRENT_CLIENT = TransmissionClient(
 reply_markup = InlineKeyboardMarkup( [[ InlineKeyboardButton(key.capitalize(),callback_data=config['DIRECTORIES'][key]) for key in config['DIRECTORIES'] ]] )
 
 # Configure telegram bot logging
-logging.basicConfig(
-                format = '[%(asctime)s] [%(levelname)s]: %(message)s',
-                level = logging.DEBUG,
-                handlers = [
-                    logging.handlers.RotatingFileHandler(
+log_handlers=[ logging.StreamHandler(sys.stdout) ]
+if config['BOT']['LOG_FILE']:
+    log_handlers.append(logging.handlers.RotatingFileHandler(
                                         filename = config['BOT']['LOG_FILE'],
                                         maxBytes = (1048576*5),
                                         backupCount = 1,
-                                        ),
-                    logging.StreamHandler(sys.stdout)
-                    ]
-                )
+                                        )
+                       )
+logging.basicConfig( format = '[%(asctime)s] [%(levelname)s]: %(name)s %(message)s',
+                     level = logging.getLevelName(config['BOT']['LOG_LEVEL']),
+                     handlers = log_handlers )
 
 
 # Configure actions to work with torrent
@@ -72,7 +68,7 @@ torrent_reply_markup = ReplyKeyboardMarkup( [[InlineKeyboardButton(key) for key 
 tracker_reply_markup = InlineKeyboardMarkup( [[InlineKeyboardButton(key, callback_data=key) for key in SearchTorrents.CLASSES.keys()]], resize_keyboard=True )
 
 tracker_list="|".join(SearchTorrents.CLASSES.keys())
-print(tracker_list)
+
 def sizeof_fmt(num, suffix='B'):
    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
       if abs(num) < 1024.0:
@@ -133,7 +129,7 @@ def askDownloadDirURL(update, context):
 @restricted
 def askDownloadMenuLink(update,context):
     _id=update.message.text.split("_")[1]
-    update.message.reply_text("Please choose download folderi for {}".format(context.user_data['download_links'][_id]), reply_markup=reply_markup)
+    update.message.reply_text("Please choose download folder for {}".format(context.user_data['download_links'][_id]), reply_markup=reply_markup)
     context.user_data['torrent']={'type':'url','url':context.user_data['download_links'][_id]}
     logging.info("Added torrent URL to download list: {}".format(context.user_data['download_links'][_id]))
 
@@ -144,9 +140,11 @@ def getMenuPage(update,context):
     query.answer()
     context.bot.edit_message_text(chat_id=update.callback_query.message.chat_id,
                                   message_id=update.callback_query.message.message_id,
-                                  text=context.user_data['pages'][str(query.data)],parse_mode=ParseMode.HTML,reply_markup=context.user_data['pages_markup'],disable_web_page_preview=True)
+                                  text=context.user_data['pages'][str(query.data)],
+                                  parse_mode=ParseMode.HTML,
+                                  reply_markup=context.user_data['pages_markup'],
+                                  disable_web_page_preview=True)
  
-
 @restricted
 def processUserKey(update, context):
     logging.debug(update)
@@ -165,15 +163,17 @@ def processUserKey(update, context):
        logging.info("File {0} will be placed into {1}".format(context.user_data['torrent']['file_name'],query.data))
 
     elif context.user_data['torrent']['type'] in [ 'magnet', 'url' ]:
-       query.edit_message_text(text="URL "+context.user_data['torrent']['url']+" will be downloaded into "+str(query.data))
+       query.edit_message_text(text=trans("URL {0} will be downloaded into {1}.",query.from_user.language_code).format(context.user_data['torrent']['url'],query.data))
        TORRENT_CLIENT.add_torrent(context.user_data['torrent']['url'],download_dir=query.data)
        logging.info("URL {0} will be placed into {1}".format(context.user_data['torrent']['url'],query.data))
 
+@restricted
 def askTrackerSelection(update,context):
     context.user_data['search_string']=update.message.text
     update.message.reply_text(trans('Please choose torrent tracker:',update.message.from_user.language_code)+":", reply_markup=tracker_reply_markup)
 
 
+@restricted
 def searchOnWebTracker(update, context):
     query = update.callback_query
     print(update)
@@ -217,7 +217,7 @@ def torrentList(update,context):
     """List all torrents on Transmission server"""
     _message=trans("Torrents list",update.message.from_user.language_code)+": \n"
     for torrent in TORRENT_CLIENT.get_torrents():
-        _message=_message+"\n<b>{1}</b>  ℹ /info_{0} \n Progress: {2}% Status: {3} \n[ ▶ /start_{0} ] [ ⏹ /stop_{0} ] [ ⏏  /delete_{0} ]\n".format(torrent.id,torrent.name,round(torrent.progress),torrent.status,torrent.format_eta())
+        _message=_message+"\n<b>{1}</b>  ℹ /info_{0} \n Progress: {2}% Status: {3} \n[▶ /start_{0}] [⏹ /stop_{0}] [⏏ /delete_{0}]\n".format(torrent.id,torrent.name,round(torrent.progress),torrent.status,torrent.format_eta())
     context.bot.send_message(chat_id=update.message.chat.id,text=_message,parse_mode=ParseMode.HTML,reply_markup=torrent_reply_markup)
 
 @restricted
@@ -230,7 +230,7 @@ def torrentInfo(update,context):
     # truncate long messages 
     _message = _message[:4000]+'..\n' if len(_message)>4000 else _message
     _message=_message+"--------------------------\n" \
-            "[ ▶ /start_{0} ] [ ⏹ /stop_{0} ] [ ⏏ /delete_{0} ]\n".format(torrent_id)
+            "[▶ /start_{0}] [⏹ /stop_{0}] [⏏ /delete_{0}]\n".format(torrent_id)
     try:        
         context.bot.send_message(chat_id=update.message.chat.id,text=_message,parse_mode=ParseMode.HTML,reply_markup=torrent_reply_markup)
     except:
