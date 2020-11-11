@@ -7,7 +7,7 @@ Usage:
 Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
-import os, re, sys
+import os, re, sys, threading, time
 import tempfile
 import logging
 import logging.handlers
@@ -65,7 +65,7 @@ TORRENT_ACTIONS=[
 torrent_reply_markup = ReplyKeyboardMarkup( [[InlineKeyboardButton(key) for key in TORRENT_ACTIONS]], resize_keyboard=True )
 
 
-tracker_reply_markup = InlineKeyboardMarkup( [[InlineKeyboardButton(key, callback_data=key) for key in SearchTorrents.CLASSES.keys()]], resize_keyboard=True )
+tracker_reply_markup = InlineKeyboardMarkup( [[InlineKeyboardButton(key, callback_data=key)] for key in SearchTorrents.CLASSES.keys()], resize_keyboard=True )
 
 tracker_list="|".join(SearchTorrents.CLASSES.keys())
 
@@ -108,12 +108,32 @@ def start(update, context):
     update.message.reply_text(update.message.text)
     logging.debug("echo: "+str(update))
 
+def notifyOnDone(context,user_id,torrent_id,user_lang="en_US"):
+    
+    context.bot.send_message(chat_id=user_id,text=trans("I will notify you once download complete.",L_CODE=user_lang),parse_mode=ParseMode.HTML)
+    while "seeding" != TORRENT_CLIENT.status(torrent_id):
+        time.sleep(60)
+        logging.debug("Torrent {0} is in status {1}".format(torrent_id,TORRENT_CLIENT.status(torrent_id)))
+
+    _message=trans("Download completed",L_CODE=user_lang)+":\n"+TORRENT_CLIENT.info(int(torrent_id))
+
+    # truncate long messages 
+    _message = _message[:4000]+'..\n' if len(_message)>4000 else _message
+    _message=_message+"--------------------------\n" \
+            "[▶ /start_{0}] [⏹ /stop_{0}] [⏏ /delete_{0}]\n".format(torrent_id)
+    try:        
+        context.bot.send_message(chat_id=user_id,text=_message,parse_mode=ParseMode.HTML)
+    except:
+        context.bot.send_message(chat_id=user_id,text="Something went wrong, probably too many files in this torrent",parse_mode=ParseMode.HTML,reply_markup=torrent_reply_markup)
+
+
+
 @restricted
 def askDownloadDirFile(update, context):
     """Download file"""
     logging.debug(update)
     if update.message.document.mime_type == 'application/x-bittorrent':
-        update.message.reply_text(trans('Please choose destination folder',update.message.from_user.language_code)+":", reply_markup=reply_markup)
+        update.message.reply_text(trans('Please choose download folder for {}',update.message.from_user.language_code).format(update.message.document.file_name)+":", reply_markup=reply_markup)
         context.user_data['torrent']={'type':'torrent','file_name':update.message.document.file_name,'file_id':update.message.document.file_id}
     else:
         update.message.reply_text("Error: Unsupported mime type: \n"+
@@ -123,13 +143,13 @@ def askDownloadDirFile(update, context):
 
 @restricted
 def askDownloadDirURL(update, context):
-    update.message.reply_text(trans('Please choose destination folder',update.message.from_user.language_code)+":", reply_markup=reply_markup)
+    update.message.reply_text(trans('Please choose download folder for {}',update.message.from_user.language_code).format(update.message.text)+":", reply_markup=reply_markup)
     context.user_data['torrent']={'type':'url','url':update.message.text}
 
 @restricted
 def askDownloadMenuLink(update,context):
     _id=update.message.text.split("_")[1]
-    update.message.reply_text("Please choose download folder for {}".format(context.user_data['download_links'][_id]), reply_markup=reply_markup)
+    update.message.reply_text(trans("Please choose download folder for {}",update.message.from_user.language_code).format(context.user_data['download_links'][_id])+":", reply_markup=reply_markup)
     context.user_data['torrent']={'type':'url','url':context.user_data['download_links'][_id]}
     logging.info("Added torrent URL to download list: {}".format(context.user_data['download_links'][_id]))
 
@@ -166,6 +186,8 @@ def processUserKey(update, context):
        query.edit_message_text(text=trans("URL {0} will be downloaded into {1}.",query.from_user.language_code).format(context.user_data['torrent']['url'],query.data))
        TORRENT_CLIENT.add_torrent(context.user_data['torrent']['url'],download_dir=query.data)
        logging.info("URL {0} will be placed into {1}".format(context.user_data['torrent']['url'],query.data))
+    _t=threading.Thread(target=notifyOnDone, args=(context,query.message.chat.id,TORRENT_CLIENT.get_torrents()[-1].id,query.from_user.language_code))
+    _t.start()
 
 @restricted
 def askTrackerSelection(update,context):
