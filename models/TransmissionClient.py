@@ -16,6 +16,8 @@ class TransmissionClient(Client):
         for torrent in self.get_torrents():
             self.start_torrent(torrent.id)
             logger.info("Started torrent {1} (id: {0})".format(torrent.id,torrent.name))
+    def status(self,torrent_id):
+        return self.get_torrents(int(torrent_id))[0].status
 
     def info(self,torrent_id):
         torrent=self.get_torrents(int(torrent_id))[0]
