@@ -1,0 +1,43 @@
+---
+version: "2.1"
+services:
+  jellyfin:
+  jellyfin:
+    image: ghcr.io/linuxserver/jellyfin
+    container_name: jellyfin
+    environment:
+      - PUID=<dnla uid>
+      - PGID=<dnla guid>
+      - TZ=Europe/London
+    volumes:
+      - /data/Media/Video:/Video
+      - /data/Media/TVShows:/TVShows
+      - /home/dnla/docker/jellyfin/config:/config
+    ports:
+      - 8096:8096
+      - 8920:8920 
+      - 7359:7359/udp 
+      - 1900:1900/udp 
+    restart: "unless-stopped"
+  torrentino:
+    image: transmission-telegram-bot
+    container_name: transmission-telegram-bot
+    volumes:
+      - /home/dnla/docker/torrentino/config/torrentino.ini:/usr/src/app/torrentino.ini
+      - /home/dnla/docker/torrentino/torrentino.log:/usr/src/app/torrentino.log
+  transmission:
+    image: ghcr.io/linuxserver/transmission
+    container_name: transmission
+    environment:
+      - PUID=<dnla uid>
+      - PGID=<dnla guid>
+      - TZ=Europe/London
+      - USER=test
+      - PASS=test
+    volumes:
+      - /data/Media:/downloads
+    ports:
+      - 9091:9091
+      - 51413:51413
+      - 51413:51413/udp
+    restart: unless-stopped

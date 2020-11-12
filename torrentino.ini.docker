@@ -1,0 +1,30 @@
+[BOT]
+# TOKEN, Use BotFather to create new token
+TOKEN=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+# Admin telegram account ID or comma separated IDs
+ALLOWED_USERS=<Your telegram account ID(s)>
+
+# Log file and log level configuration
+LOG_FILE=torrentino.log
+LOG_LEVEL=INFO
+
+[TRANSMISSION]
+# HOST, Transmission server host
+HOST=localhost
+# PORT, Transmission server port
+PORT=9091
+# USER, Transmission server user name
+USER=test
+# PASSWORD, Transmission server user password
+PASSWORD=test
+# DELETE_DATA, delete torrent from transmission and remove data from file system
+DELETE_DATA=True
+
+[DIRECTORIES]
+# List names and file system path to directories on Transmission server
+# Example: multiple folders:
+Movies=/downloads/Movies
+TVShows=/downloads/TVShows
+Music=/downloads/Music
+Soft=/downloads/Soft
+
