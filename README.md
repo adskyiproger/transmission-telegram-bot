@@ -128,6 +128,6 @@ docker-compose up -d
 
 ## Environemnt description
 
-Jellyfin web interface is available at http://<Pi4 hostname or ip>:8096
-Transmission web interface is available at http://<Pi4 hostname or ip>:9091
+Jellyfin web interface is available at `http://<Pi4 hostname or ip>:8096`
+Transmission web interface is available at `http://<Pi4 hostname or ip>:9091`
 
