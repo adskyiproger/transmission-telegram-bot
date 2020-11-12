@@ -10,7 +10,7 @@ Supported trackers:
 (new will arrive soon)
 
 ## Features
-1. Search torrents on web portals and passing to Transmission.
+1. Search torrents on trackers and passing to Transmission.
 2. Direct send torrent files and magnet urls to transmission server for download.
 3. Essentials Transmission server actions such as Stop, Start, Delete, View info.
 
@@ -68,6 +68,7 @@ Soft=/data/Media/Soft
 # Raspberry Pi4 setup guide
 
 [ THIS SECTION IS UNDER DEVELOPMENT ]
+
 This section describes how to build home DNLA solution on Raspberry Pi4 with external HDD. 
 
 ## Hardware list:
@@ -128,6 +129,7 @@ docker-compose up -d
 
 ## Environemnt description
 
-Jellyfin web interface is available at `http://<Pi4 hostname or ip>:8096`
-Transmission web interface is available at `http://<Pi4 hostname or ip>:9091`
+* Jellyfin web interface is available at `http://<Pi4 hostname or ip>:8096`
+
+* Transmission web interface is available at `http://<Pi4 hostname or ip>:9091`
 
