@@ -67,8 +67,6 @@ Soft=/data/Media/Soft
 
 # Raspberry Pi4 setup guide
 
-[ THIS SECTION IS UNDER DEVELOPMENT ]
-
 This section describes how to build home DNLA solution on Raspberry Pi4 with external HDD. 
 
 ## Hardware list:
@@ -79,9 +77,13 @@ This section describes how to build home DNLA solution on Raspberry Pi4 with ext
 ## Software list:
 
 1. Docker with docker-compose. Guides how to setup docker and docker-compose could be found online.
-2. Jellyfin docker image (https://jellyfin.org/)
-3. Transmission docker image (https://transmissionbt.com/)
-4. Transmission telegram bot docker image built from this repo
+2. Jellyfin docker imagei https://hub.docker.com/r/linuxserver/jellyfin (https://jellyfin.org/).
+3. Transmission docker image https://hub.docker.com/r/linuxserver/transmission (https://transmissionbt.com/).
+4. Transmission telegram bot docker image built from this repo.
+
+## Docker images
+
+1. Jellyfin: 
 
 ## Installation steps
 
@@ -108,7 +110,7 @@ docker build -t transmission-telegram-bot .
 5. Navigate back into home directory and create directory structure to persist docker containers data:
 ```
 cd ~
-mkdir -p docker/{jellyfin,torrentino}/config
+mkdir -p docker/{jellyfin,torrentino,transmission}/config
 ```
 6. Copy Bot configuration file `torrentino.ini.docker` into `~/docker/torrentino/config` and create empty log file:
 ```
@@ -126,10 +128,11 @@ cp ~/transmission-telegram-bot/docker-compose.yaml docker/
 cd ~/docker
 docker-compose up -d
 ```
+11. Login into Jellyfin web UI and configure DNLA folders.
+
 
 ## Environemnt description
 
 * Jellyfin web interface is available at `http://<Pi4 hostname or ip>:8096`
-
 * Transmission web interface is available at `http://<Pi4 hostname or ip>:9091`
 

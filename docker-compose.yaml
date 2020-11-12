@@ -22,6 +22,8 @@ services:
   torrentino:
     image: transmission-telegram-bot
     container_name: transmission-telegram-bot
+    depends_on:
+      - "transmission"
     volumes:
       - /home/dnla/docker/torrentino/config/torrentino.ini:/usr/src/app/torrentino.ini
       - /home/dnla/docker/torrentino/torrentino.log:/usr/src/app/torrentino.log
@@ -36,6 +38,7 @@ services:
       - PASS=test
     volumes:
       - /data/Media:/downloads
+      - /home/dnla/docker/transmission/config:/config
     ports:
       - 9091:9091
       - 51413:51413
