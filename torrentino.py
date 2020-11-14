@@ -204,7 +204,8 @@ def searchOnWebTracker(update, context):
     context.user_data['pages']=SR.PAGES
     context.user_data['download_links']=SR.LINKS
     if len(context.user_data['pages'])>0:
-        context.bot.send_message(chat_id=query.message.chat.id,parse_mode=ParseMode.HTML,text=context.user_data['pages']['1'],reply_markup=InlineKeyboardMarkup( [ SR.KEYBOARD ] ),disable_web_page_preview=True)
+        #context.bot.send_message(chat_id=query.message.chat.id,parse_mode=ParseMode.HTML,text=context.user_data['pages']['1'],reply_markup=InlineKeyboardMarkup( [ SR.KEYBOARD ] ),disable_web_page_preview=True)
+        query.edit_message_text(parse_mode=ParseMode.HTML,text=context.user_data['pages']['1'],reply_markup=InlineKeyboardMarkup( [ SR.KEYBOARD ] ),disable_web_page_preview=True)
         context.user_data['pages_markup']=InlineKeyboardMarkup( [ SR.KEYBOARD ] )
     else:
         context.bot.send_message(chat_id=query.message.chat.id,
