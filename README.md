@@ -67,7 +67,7 @@ Soft=/data/Media/Soft
 
 # Raspberry Pi4 setup guide
 
-This section describes how to build home DNLA solution on Raspberry Pi4 with external HDD. 
+This section describes how to build home DLNA solution on Raspberry Pi4 with external HDD. 
 
 ## Hardware list:
 
@@ -128,7 +128,7 @@ cp ~/transmission-telegram-bot/docker-compose.yaml docker/
 cd ~/docker
 docker-compose up -d
 ```
-11. Login into Jellyfin web UI and configure DNLA folders.
+11. Login into Jellyfin web UI and configure DLNA folders.
 
 
 ## Environemnt description
