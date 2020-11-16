@@ -3,7 +3,7 @@ from telegram import InlineKeyboardButton
 from models.SearchRUTOR import SearchRUTOR
 from models.SearchEZTV import SearchEZTV
 from models.SearchKAT import SearchKAT
-import hashlib
+import hashlib, threading, time, logging
 
 class SearchTorrents:
      CLASSES={ "nnmclub" : SearchNonameClub,
@@ -12,16 +12,17 @@ class SearchTorrents:
                "KAT" : SearchKAT
              }
      CACHE={}
+     CACHE_TIMER={}
      def __init__(self, name="rutor", search_string="test"):
          self.KEYBOARD=[]
          self.PAGES={}
          self.LINKS={}
          self.POSTS={}
          x=search_string
-         print("Name {0} with {1}".format(name,search_string))
+         logging.info("Searching on tracker {0} for: {1}".format(name,search_string))
          srch_hash=hashlib.md5(str(name+search_string).encode('utf-8')).hexdigest()
          if srch_hash in self.CACHE.keys():
-             print("Using value from cache")
+             logging.info("Found cached search results for: {0}".format(search_string))
              self.POSTS=self.CACHE[srch_hash]
          else:
              TRACKER=self.CLASSES[name]()
