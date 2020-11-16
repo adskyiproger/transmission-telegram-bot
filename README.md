@@ -92,14 +92,14 @@ For example: Video, TVShows, Soft, Music.:
 ```
 mkdir -p /data/Media/{Video,TVShows,Soft,Music}
 ```
-2. Create dedicated user `dnla` for running docker containers and make this user owner of `/data/Media`:
+2. Create dedicated user `dlna` for running docker containers and make this user owner of `/data/Media`:
 ```
-sudo useradd -m -G docker dnla
-sudo chown -R dnla:dnla /data/Media
+sudo useradd -m -G docker dlna
+sudo chown -R dlna:dnla /data/Media
 ```
-3. Login as `dnla` user: 
+3. Login as `dlna` user: 
 ```
-sudo su - dnla
+sudo su - dlna
 ```
 4. Clone this git repo into home folder and build transmission-telegram-bot docker image:
 ```
