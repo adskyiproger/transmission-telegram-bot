@@ -7,6 +7,7 @@ Supported trackers:
 * http://rutor.info 
 * https://eztv.re/
 * https://kat.sx/
+
 (new will arrive soon)
 
 ## Features
@@ -14,16 +15,36 @@ Supported trackers:
 2. Direct send torrent files and magnet urls to transmission server for download.
 3. Essentials Transmission server actions such as Stop, Start, Delete, View info.
 
-#Usage
-Please register new telegram bot using `BotFather`.
+# Usage
+
+This Bot could be used as satelite for Transmission server for search torrent files on predifined web sites. 
+Additionally you could setup home DLNA server like Jellyfin or MiniDLNA.
+
+Before building docker image or running python script please register new telegram bot using `BotFather`.
 Place bot security token into torrents.ini.
 
-## Preparation steps
-1. Install and configure transmission server web interface with username and password. You could use docker image https://hub.docker.com/r/linuxserver/transmission instead of manual (rpm/deb) setup.
+## Preparation
+1. Install and configure transmission server web interface with username and password.
+   You could use docker image https://hub.docker.com/r/linuxserver/transmission instead of manual (rpm/deb) setup.
+   Please check `docker-compose.yaml`
 2. Update torrentino.ini configuration file.
 
+## Run python script
+
+1. Clone this repository
+2. Update configuration file:
+   ```
+   # check comments inside the file
+   torrentino.ini
+   ```
+3. Run:
+   ```
+   pip install -r requirements.txt
+   python torrentino.py
+   ```
 
 ## Run in docker
+
 
 1. Build docker image:
    ```
@@ -36,56 +57,25 @@ Place bot security token into torrents.ini.
 3. Check container logs.
 
 
-# `torrentino.ini` Configuration options
 
-```
-[BOT]
-# TOKEN, Use BotFather to create new token
-TOKEN=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-# Your telegram ID
-ALLOWED_USERS=XXXXXXXXXX
-
-[TRANSMISSION]
-# HOST, Transmission server host
-HOST=192.168.88.225
-# PORT, Transmission server port
-PORT=9091
-# USER, Transmission server user name
-USER=test
-# PASSWORD, Transmission server user password
-PASSWORD=test
-# DELETE_DATA, delete torrent from transmission and remove data from file system
-DELETE_DATA=True
-
-[DIRECTORIES]
-# List names and file system path to directories on Transmission server
-Video=/data/Media/Video
-TVShows=/data/Media/TVShows
-Music=/data/Media/Music
-Soft=/data/Media/Soft
-```
-
-# Raspberry Pi4 setup guide
+## Home DLNA on Raspberry Pi4 setup guide
 
 This section describes how to build home DLNA solution on Raspberry Pi4 with external HDD. 
 
-## Hardware list:
+### Hardware list:
 
 1. Raspberry Pi4 device (4G RAM).
 2. External HDD formatted as `ext4` (this guide use `/data/Media` as mountpoint). 
 
-## Software list:
+### Software list:
 
 1. Docker with docker-compose. Guides how to setup docker and docker-compose could be found online.
 2. Jellyfin docker imagei https://hub.docker.com/r/linuxserver/jellyfin (https://jellyfin.org/).
 3. Transmission docker image https://hub.docker.com/r/linuxserver/transmission (https://transmissionbt.com/).
 4. Transmission telegram bot docker image built from this repo.
 
-## Docker images
 
-1. Jellyfin: 
-
-## Installation steps
+### Installation steps
 
 1. Create folders inside `/data/Media` to organize your data.
 For example: Video, TVShows, Soft, Music.:
@@ -131,7 +121,7 @@ docker-compose up -d
 11. Login into Jellyfin web UI and configure DLNA folders.
 
 
-## Environemnt description
+### Environemnt description
 
 * Jellyfin web interface is available at `http://<Pi4 hostname or ip>:8096`
 * Transmission web interface is available at `http://<Pi4 hostname or ip>:9091`
