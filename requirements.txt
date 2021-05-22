@@ -1,5 +1,7 @@
-python-telegram-bot==12.8
-transmission-rpc==3.2.1
+python-telegram-bot==13.5
+transmission-rpc==3.2.5
 bs4
 requests
 lxml
+mechanize
+cookiejar

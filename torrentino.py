@@ -58,11 +58,11 @@ logging.basicConfig( format = '[%(asctime)s] [%(levelname)s]: %(name)s %(message
 
 # Configure actions to work with torrent
 TORRENT_ACTIONS=[
-        "🔁️ List",
+        "🔍 List",
         "⏹ Stop All",
         "▶️ Start All"
         ]
-torrent_reply_markup = ReplyKeyboardMarkup( [[InlineKeyboardButton(key) for key in TORRENT_ACTIONS]], resize_keyboard=True )
+torrent_reply_markup = ReplyKeyboardMarkup( [[KeyboardButton(text=str(key)) for key in TORRENT_ACTIONS]], resize_keyboard=True )
 
 
 tracker_reply_markup = InlineKeyboardMarkup( [[InlineKeyboardButton(key, callback_data=key)] for key in SearchTorrents.CLASSES.keys()], resize_keyboard=True )
@@ -198,7 +198,6 @@ def askTrackerSelection(update,context):
 @restricted
 def searchOnWebTracker(update, context):
     query = update.callback_query
-    print(update)
     # if at least one page exist, add pager        
     SR=SearchTorrents(query.data,context.user_data['search_string'])
     context.user_data['pages']=SR.PAGES
