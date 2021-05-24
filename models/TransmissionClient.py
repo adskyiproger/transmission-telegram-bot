@@ -3,8 +3,8 @@ from transmission_rpc.lib_types import File
 import logging
 import os
 
-logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
 
 class TransmissionClient(Client):
     def stop_all(self):
