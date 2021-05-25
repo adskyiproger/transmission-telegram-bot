@@ -5,7 +5,7 @@ import logging
 
 
 class SearchNonameClub:
-    TRACKER_URL="http://nnmclub.to"
+    TRACKER_URL="https://nnmclub.to"
     TRACKER_SEARCH_URL_TPL="/forum/tracker.php?nm="
 
     def search(self,search_string):    
