@@ -162,7 +162,7 @@ def getMenuPage(update,context):
                                   message_id=update.callback_query.message.message_id,
                                   text=context.user_data['pages'][str(query.data)],
                                   parse_mode=ParseMode.HTML,
-                                  reply_markup=context.user_data['pages_markup'],
+                                  reply_markup=InlineKeyboardMarkup(context.user_data['pages_markup']),
                                   disable_web_page_preview=True)
  
 @restricted
@@ -202,10 +202,12 @@ def searchOnWebTracker(update, context):
     SR=SearchTorrents(query.data,context.user_data['search_string'])
     context.user_data['pages']=SR.PAGES
     context.user_data['download_links']=SR.LINKS
+    context.user_data['pages_markup']=[[ InlineKeyboardButton(str(k), callback_data=str(k)) for k in range(1, len(SR.PAGES)+1) ]]
     if len(context.user_data['pages'])>0:
-        #context.bot.send_message(chat_id=query.message.chat.id,parse_mode=ParseMode.HTML,text=context.user_data['pages']['1'],reply_markup=InlineKeyboardMarkup( [ SR.KEYBOARD ] ),disable_web_page_preview=True)
-        query.edit_message_text(parse_mode=ParseMode.HTML,text=context.user_data['pages']['1'],reply_markup=InlineKeyboardMarkup( [ SR.KEYBOARD ] ),disable_web_page_preview=True)
-        context.user_data['pages_markup']=InlineKeyboardMarkup( [ SR.KEYBOARD ] )
+        query.edit_message_text(parse_mode=ParseMode.HTML,
+                                text=context.user_data['pages']['1'],
+                                reply_markup=InlineKeyboardMarkup( context.user_data['pages_markup'] ),
+                                disable_web_page_preview=True)
     else:
         context.bot.send_message(chat_id=query.message.chat.id,
                                  text=trans('What would you like to do? Please choose actions from keyboard. You could also send torrent file or magnet link.',query.message.from_user.language_code),

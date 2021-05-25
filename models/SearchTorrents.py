@@ -1,5 +1,4 @@
 from models.SearchNonameClub import SearchNonameClub
-from telegram import InlineKeyboardButton 
 from models.SearchRUTOR import SearchRUTOR
 from models.SearchEZTV import SearchEZTV
 from models.SearchKAT import SearchKAT
@@ -15,7 +14,6 @@ class SearchTorrents:
      CACHE={}
      CACHE_TIMER={}
      def __init__(self, name="rutor", search_string="test"):
-         self.KEYBOARD=[]
          self.PAGES={}
          self.LINKS={}
          self.POSTS={}
@@ -38,9 +36,6 @@ class SearchTorrents:
               if n_posts % 5 > 0:
                   n_pages+=1
          logger.info(f"Found {n_posts} posts grouped into {n_pages} pages for {search_string} on tracker {name}")
-        
-         for jj in range(1,n_pages+1):
-             self.KEYBOARD.append(InlineKeyboardButton(str(jj),callback_data=str(jj)))
 
          _message=""
          kk=1
