@@ -29,14 +29,6 @@ class SearchTorrents:
              self.POSTS=TRACKER.POSTS
              self.CACHE[srch_hash]=TRACKER.POSTS
 
-         n_posts=len(self.POSTS)
-         n_pages=0
-         if n_posts > 0 and n_posts > 5:
-              n_pages=n_posts//5
-              if n_posts % 5 > 0:
-                  n_pages+=1
-         logger.info(f"Found {n_posts} posts grouped into {n_pages} pages for {search_string} on tracker {name}")
-
          _message=""
          kk=1
          ii=1
@@ -54,5 +46,5 @@ class SearchTorrents:
          if kk>1:
             self.PAGES[str(jj)]=_message
              
-         
-     
+         logger.info(f"Found {len(self.LINKS)} posts grouped into {len(self.PAGES)} pages for {search_string} on tracker {name}")
+
