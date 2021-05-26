@@ -201,8 +201,12 @@ def searchOnWebTracker(update, context):
     # if at least one page exist, add pager        
     SR=SearchTorrents(query.data,context.user_data['search_string'])
     context.user_data['pages']=SR.PAGES
+    
     context.user_data['download_links']=SR.LINKS
-    context.user_data['pages_markup']=[[ InlineKeyboardButton(str(k), callback_data=str(k)) for k in range(1, len(SR.PAGES)+1) ]]
+    if len(SR.PAGES) > 1:
+    	context.user_data['pages_markup']=[[ InlineKeyboardButton(str(k), callback_data=str(k)) for k in range(1, len(SR.PAGES)+1) ]]
+    else:
+        context.user_data['pages_markup']=[]
     if len(context.user_data['pages'])>0:
         query.edit_message_text(parse_mode=ParseMode.HTML,
                                 text=context.user_data['pages']['1'],
