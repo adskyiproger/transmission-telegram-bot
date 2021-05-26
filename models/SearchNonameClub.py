@@ -23,7 +23,7 @@ class SearchNonameClub:
             SIZE="".join(_cols[5].text.split(' ')[1:])
             DATE="".join(_cols[9].text.split(' ')[1:])[0:10]
                     
-            logger.info("COL Title:"+TITLE+" L:"+str(INFO)+" DL:"+str(DL)+" S:"+str(SIZE)+" D:"+str(DATE))
+            logger.debug("COL Title:"+TITLE+" L:"+str(INFO)+" DL:"+str(DL)+" S:"+str(SIZE)+" D:"+str(DATE))
             self.POSTS.append(
                         {'title': TITLE.replace(r'<',''), 'info':"{0}/forum/{1}".format(self.TRACKER_URL,INFO), 'dl': "{0}/forum/{1}".format(self.TRACKER_URL,DL), 'size':SIZE,'date': DATE }
                             )

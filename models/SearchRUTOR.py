@@ -25,7 +25,7 @@ class SearchRUTOR:
             SIZE=_cols[3].text
             DATE=_cols[0].text
                     
-            logger.info("COL Title:"+TITLE+" L:"+str(INFO)+" DL:"+str(DL)+" S:"+str(SIZE)+" D:"+str(DATE))
+            logger.debug("COL Title:"+TITLE+" L:"+str(INFO)+" DL:"+str(DL)+" S:"+str(SIZE)+" D:"+str(DATE))
             self.POSTS.append(
                         {'title': TITLE.replace(r'<',''), 'info':"{0}/{1}".format(self.TRACKER_URL,INFO), 'dl': "{1}".format(self.TRACKER_URL,DL), 'size':SIZE,'date': DATE }
                             )
