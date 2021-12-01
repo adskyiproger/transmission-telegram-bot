@@ -87,7 +87,10 @@ def restricted(func):
     def wrapped(update, context, *args, **kwargs):
         user_id = update.effective_user.id
         if str(user_id) not in config['BOT']['ALLOWED_USERS'].split(','):
-            context.bot.send_message(chat_id=user_id,text=trans("You are not authorized to use this bot. Please contact bot owner to get access.",L_CODE=update.message.from_user.language_code),parse_mode=ParseMode.HTML,reply_markup=torrent_reply_markup)
+            context.bot.send_message(chat_id=user_id,
+                                     text=trans("You are not authorized to use this bot. Please contact bot owner to get access.",update.message.from_user.language_code),
+                                     parse_mode=ParseMode.HTML,
+                                     reply_markup=torrent_reply_markup)
             logging.debug(update)
             logging.error("Unauthorized access denied for {}.".format(user_id))
             return
@@ -110,7 +113,7 @@ def start(update, context):
 
 def notifyOnDone(context,user_id,torrent_id,user_lang="en_US"):
     
-    context.bot.send_message(chat_id=user_id,text=trans("I will notify you once download complete.",L_CODE=user_lang),parse_mode=ParseMode.HTML)
+    context.bot.send_message(chat_id=user_id,text=trans("I will notify you once download complete.",user_lang),parse_mode=ParseMode.HTML)
     while "seeding" != TORRENT_CLIENT.status(torrent_id):
         time.sleep(60)
         logging.debug("Torrent {0} is in status {1}".format(torrent_id,TORRENT_CLIENT.status(torrent_id)))

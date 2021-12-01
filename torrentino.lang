@@ -7,3 +7,13 @@ File {0} will be downloaded into {1}=Файл {0} будет загружен в
 URL {0} will be downloaded into {1}.=URL {0} будет загружен в папку {1}.
 Torrent {0} was removed from Transmission server=Торрент {0} был удалён с Transmission сервера
 I will notify you once download complete.=Я уведомлю вас о завершении загрузки.
+[uk]
+You are not authorized to use this bot. Please contact bot owner to get access.=У вас недостатньо дозволів для виконання цієї команди. Будь-ласка зверніться до адміністратора.
+Torrents list=Список торрентів
+Please choose download folder for {}=Будь-ласка оберіть папку для завантажання {}
+Nothing found. Please try to use different search query.=Нічого не знайдено. Спробуйте пошукати з іншою фразою.
+File {0} will be downloaded into {1}=Файл {0} буде завантажено в папку {1}
+URL {0} will be downloaded into {1}.=URL {0} буде завантажено в папку {1}.
+Torrent {0} was removed from Transmission server=Торрент {0} було видалено з Transmission серверу
+I will notify you once download complete.=Я повідомлю вас щойно файл буде завантажено.
+
