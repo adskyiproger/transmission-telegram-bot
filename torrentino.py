@@ -162,7 +162,7 @@ def getMenuPage(update,context):
                                   message_id=update.callback_query.message.message_id,
                                   text=context.user_data['pages'][str(query.data)],
                                   parse_mode=ParseMode.HTML,
-                                  reply_markup=InlineKeyboardMarkup(context.user_data['pages_markup']),
+                                  reply_markup=context.user_data['pages_markup'],
                                   disable_web_page_preview=True)
  
 @restricted
@@ -201,17 +201,11 @@ def searchOnWebTracker(update, context):
     # if at least one page exist, add pager        
     SR=SearchTorrents(query.data,context.user_data['search_string'])
     context.user_data['pages']=SR.PAGES
-    
     context.user_data['download_links']=SR.LINKS
-    if len(SR.PAGES) > 1:
-    	context.user_data['pages_markup']=[[ InlineKeyboardButton(str(k), callback_data=str(k)) for k in range(1, len(SR.PAGES)+1) ]]
-    else:
-        context.user_data['pages_markup']=[]
     if len(context.user_data['pages'])>0:
-        query.edit_message_text(parse_mode=ParseMode.HTML,
-                                text=context.user_data['pages']['1'],
-                                reply_markup=InlineKeyboardMarkup( context.user_data['pages_markup'] ),
-                                disable_web_page_preview=True)
+        #context.bot.send_message(chat_id=query.message.chat.id,parse_mode=ParseMode.HTML,text=context.user_data['pages']['1'],reply_markup=InlineKeyboardMarkup( [ SR.KEYBOARD ] ),disable_web_page_preview=True)
+        query.edit_message_text(parse_mode=ParseMode.HTML,text=context.user_data['pages']['1'],reply_markup=InlineKeyboardMarkup( [ SR.KEYBOARD ] ),disable_web_page_preview=True)
+        context.user_data['pages_markup']=InlineKeyboardMarkup( [ SR.KEYBOARD ] )
     else:
         context.bot.send_message(chat_id=query.message.chat.id,
                                  text=trans('What would you like to do? Please choose actions from keyboard. You could also send torrent file or magnet link.',query.message.from_user.language_code),
@@ -245,7 +239,10 @@ def torrentList(update,context):
     """List all torrents on Transmission server"""
     _message=trans("Torrents list",update.message.from_user.language_code)+": \n"
     for torrent in TORRENT_CLIENT.get_torrents():
-        _message=_message+"\n<b>{1}</b>  ℹ /info_{0} \n Progress: {2}% Status: {3} \n[▶ /start_{0}] [⏹ /stop_{0}] [⏏ /delete_{0}]\n".format(torrent.id,torrent.name,round(torrent.progress),torrent.status,torrent.format_eta())
+        if torrent.status in ['seeding', 'downloading']:
+            _message=_message+"\n<b>{1}</b>\n Progress: {2}% Status: {3} \n[ℹ /info_{0}] [⏹  /stop_{0}] [⏏ /delete_{0}]\n".format(torrent.id,torrent.name,round(torrent.progress),torrent.status,torrent.format_eta())
+        else:
+            _message=_message+"\n<b>{1}</b>\n Progress: {2}% Status: {3} \n[ℹ /info_{0}] [▶ /start_{0}] [⏏ /delete_{0}]\n".format(torrent.id,torrent.name,round(torrent.progress),torrent.status,torrent.format_eta())
     context.bot.send_message(chat_id=update.message.chat.id,text=_message,parse_mode=ParseMode.HTML,reply_markup=torrent_reply_markup)
 
 @restricted
