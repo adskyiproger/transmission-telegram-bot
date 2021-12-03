@@ -14,15 +14,12 @@ class SearchRUTOR:
         self.POSTS=[]
         x=self.TRACKER_URL+self.TRACKER_SEARCH_URL_TPL+search_string
         _data=BeautifulSoup(get(x).content, 'lxml').select('div#index > table > tr')
-        #logger.debug(_data)
         for row in _data[1:]:
-            logger.debug(row)
             _cols=row.select('td')
-            logger.debug(_cols)
             TITLE=_cols[1].select('a')[2].text
             INFO=_cols[1].select('a')[2].get('href')
             DL=_cols[1].select('a')[1].get('href')
-            SIZE=_cols[3].text
+            SIZE = _cols[3].text if len(_cols) == 5 else _cols[2].text
             DATE=_cols[0].text
                     
             logger.debug("COL Title:"+TITLE+" L:"+str(INFO)+" DL:"+str(DL)+" S:"+str(SIZE)+" D:"+str(DATE))

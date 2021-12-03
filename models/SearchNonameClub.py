@@ -17,14 +17,16 @@ class SearchNonameClub:
         logger.debug(_data)
         for row in _data:
             _cols=row.select('td')
-            TITLE=_cols[2].text
+            TITLE=_cols[2].text.replace(r'<', '')
             INFO=_cols[2].select('a')[0].get('href')
             DL=_cols[4].select('a')[0].get('href')
             SIZE="".join(_cols[5].text.split(' ')[1:])
             DATE="".join(_cols[9].text.split(' ')[1:])[0:10]
                     
-            logger.debug("COL Title:"+TITLE+" L:"+str(INFO)+" DL:"+str(DL)+" S:"+str(SIZE)+" D:"+str(DATE))
-            self.POSTS.append(
-                        {'title': TITLE.replace(r'<',''), 'info':"{0}/forum/{1}".format(self.TRACKER_URL,INFO), 'dl': "{0}/forum/{1}".format(self.TRACKER_URL,DL), 'size':SIZE,'date': DATE }
-                            )
+            logger.debug(f"COL T: {TITLE} L:{str(INFO)} DL:{str(DL)} S:{str(SIZE)} D:{str(DATE)}")
+            self.POSTS.append({'title': TITLE,
+                               'info': f"{self.TRACKER_URL}/forum/{INFO}",
+                               'dl': f"{self.TRACKER_URL}/forum/{DL}",
+                               'size':SIZE,
+                               'date': DATE })
 
