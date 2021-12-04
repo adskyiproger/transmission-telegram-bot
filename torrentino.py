@@ -7,7 +7,7 @@ Usage:
 Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
-import os, re, sys, threading, time
+import os, re, sys, threading, time, copy
 import tempfile
 import logging
 import logging.handlers
@@ -161,13 +161,24 @@ def getMenuPage(update,context):
     logging.debug(update)
     query = update.callback_query
     query.answer()
-    context.bot.edit_message_text(chat_id=update.callback_query.message.chat_id,
-                                  message_id=update.callback_query.message.message_id,
-                                  text=context.user_data['pages'][str(query.data)],
-                                  parse_mode=ParseMode.HTML,
-                                  reply_markup=context.user_data['pages_markup'],
-                                  disable_web_page_preview=True)
- 
+    try:
+        if str(query.data) != 'x':
+            page = int(query.data) - 1
+            reply_markup = copy.deepcopy(context.user_data['pages_markup'])
+            reply_markup['inline_keyboard'][0][page].text = "<3>"
+            reply_markup['inline_keyboard'][0][page].callback_data='x'
+            context.bot.edit_message_text(chat_id=update.callback_query.message.chat_id,
+                                          message_id=update.callback_query.message.message_id,
+                                          text=context.user_data['pages'][str(page + 1)],
+                                          parse_mode=ParseMode.HTML,
+                                          reply_markup=reply_markup,
+                                          disable_web_page_preview=True)
+        else:
+            logging.debug("You are trying to click the same page")
+    except ValueError as err:
+        logging.debug(f"Wrong menu page {query.data}: {err}")
+
+
 @restricted
 def processUserKey(update, context):
     logging.debug(update)
@@ -208,7 +219,6 @@ def searchOnWebTracker(update, context):
     context.user_data['download_links']=SR.LINKS
     KEYBOARD=[InlineKeyboardButton(str(jj), callback_data=str(jj)) for jj in range(1, len(SR.PAGES)+1)]
     if len(context.user_data['pages'])>0:
-        #context.bot.send_message(chat_id=query.message.chat.id,parse_mode=ParseMode.HTML,text=context.user_data['pages']['1'],reply_markup=InlineKeyboardMarkup( [ SR.KEYBOARD ] ),disable_web_page_preview=True)
         query.edit_message_text(parse_mode=ParseMode.HTML,text=context.user_data['pages']['1'],reply_markup=InlineKeyboardMarkup( [ KEYBOARD ] ),disable_web_page_preview=True)
         context.user_data['pages_markup']=InlineKeyboardMarkup( [ KEYBOARD ] )
     else:
@@ -301,7 +311,7 @@ def main():
     # Ask download directory for torrent file
     dp.add_handler(MessageHandler(Filters.document, askDownloadDirFile))
     # Navigation buttons switcher (inline keyboard)
-    dp.add_handler(CallbackQueryHandler(getMenuPage,pattern=r'^[0-9]+$'))
+    dp.add_handler(CallbackQueryHandler(getMenuPage,pattern=r'^[x0-9]+$'))
     # Select download folder switcher (inline keyboard)
     dp.add_handler(CallbackQueryHandler(processUserKey))
     # Default search input text

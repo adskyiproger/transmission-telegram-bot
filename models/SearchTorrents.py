@@ -30,9 +30,7 @@ class SearchTorrents:
              self.CACHE[srch_hash]=TRACKER.POSTS
 
          _message=""
-         kk=1
-         ii=1
-         jj=1
+         kk = ii = jj = 1
          for post in self.POSTS:
              _message += f"\n<b>{post['title']}</b>: {post['size']}  {post['date']}\n<a href='{post['info']}'>Info</a>     [ ▼ /download_{ii} ]\n"
              self.LINKS[str(ii)]=post['dl']
