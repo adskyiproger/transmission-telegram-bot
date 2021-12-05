@@ -9,25 +9,24 @@ bot.
 """
 import os, re, sys, threading, time, copy
 import tempfile
-import logging
-import logging.handlers
-import configparser
+
 from pathlib import Path
 from models.TransmissionClient import TransmissionClient
 from models.SearchTorrents import SearchTorrents
-from functools import wraps
+
+from lib.func import restricted, trans, sizeof_fmt, get_config, get_logger
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler, InlineQueryHandler
 from telegram import KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ParseMode
 from transmission_rpc.client import Client
 from transmission_rpc.lib_types import File
 
-lang = configparser.ConfigParser()
-lang.read(str(Path(__file__).parent) +str(os.path.sep)+ 'torrentino.lang')
 # Read configuration file, torrentino.ini
 # File is in the same directory as script
-config = configparser.ConfigParser()
-config.read(str(Path(__file__).parent) +str(os.path.sep)+ 'torrentino.ini')
+
+config = get_config()
+
+print(f"config: {config}")
 # Telegram bot token
 BOT_TOKEN=config['BOT']['TOKEN']
 # Client connection to Transmission torrent server
@@ -42,21 +41,8 @@ TORRENT_CLIENT = TransmissionClient(
 # Transmission server needs write access to these directories
 reply_markup = InlineKeyboardMarkup( [[ InlineKeyboardButton(key.capitalize(),callback_data=config['DIRECTORIES'][key]) for key in config['DIRECTORIES'] ]] )
 
-# Configure telegram bot logging
-log_handlers=[ logging.StreamHandler(sys.stdout) ]
-if config['BOT']['LOG_FILE']:
-    # First run: create directory
-    if not os.path.isdir(os.path.dirname(config['BOT']['LOG_FILE'])):
-        os.makedirs(os.path.dirname(config['BOT']['LOG_FILE']))
-    log_handlers.append(logging.handlers.RotatingFileHandler(
-                                        filename = config['BOT']['LOG_FILE'],
-                                        maxBytes = (1048576*5),
-                                        backupCount = 1,
-                                        )
-                       )
-logging.basicConfig( format = '[%(asctime)s] [%(levelname)s]: %(name)s %(message)s',
-                     level = logging.getLevelName(config['BOT']['LOG_LEVEL']),
-                     handlers = log_handlers )
+
+logging = get_logger(__file__)
 
 
 # Configure actions to work with torrent
@@ -71,35 +57,6 @@ torrent_reply_markup = ReplyKeyboardMarkup( [[KeyboardButton(text=str(key)) for 
 tracker_reply_markup = InlineKeyboardMarkup( [[InlineKeyboardButton(key, callback_data=key)] for key in SearchTorrents.CLASSES.keys()], resize_keyboard=True )
 
 tracker_list="|".join(SearchTorrents.CLASSES.keys())
-
-def sizeof_fmt(num, suffix='B'):
-   for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
-      if abs(num) < 1024.0:
-         return "%3.1f%s%s" % (num, unit, suffix)
-      num /= 1024.0
-   return "%.1f%s%s" % (num, 'Yi', suffix)
-
-def trans(STRING,L_CODE):
-    if L_CODE in lang.sections():
-        if STRING in lang[L_CODE]:
-            STRING=lang[L_CODE][STRING]
-    return STRING
-
-def restricted(func):
-    @wraps(func)
-    def wrapped(update, context, *args, **kwargs):
-        user_id = update.effective_user.id
-        if str(user_id) not in config['BOT']['ALLOWED_USERS'].split(','):
-            context.bot.send_message(chat_id=user_id,
-                                     text=trans("You are not authorized to use this bot. Please contact bot owner to get access.",update.message.from_user.language_code),
-                                     parse_mode=ParseMode.HTML,
-                                     reply_markup=torrent_reply_markup)
-            logging.debug(update)
-            logging.error("Unauthorized access denied for {}.".format(user_id))
-            return
-        return func(update, context, *args, **kwargs)
-    return wrapped
-
 
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
