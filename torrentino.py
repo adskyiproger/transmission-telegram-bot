@@ -45,6 +45,9 @@ reply_markup = InlineKeyboardMarkup( [[ InlineKeyboardButton(key.capitalize(),ca
 # Configure telegram bot logging
 log_handlers=[ logging.StreamHandler(sys.stdout) ]
 if config['BOT']['LOG_FILE']:
+    # First run: create directory
+    if not os.path.isdir(os.path.dirname(config['BOT']['LOG_FILE'])):
+        os.makedirs(os.path.dirname(config['BOT']['LOG_FILE']))
     log_handlers.append(logging.handlers.RotatingFileHandler(
                                         filename = config['BOT']['LOG_FILE'],
                                         maxBytes = (1048576*5),
