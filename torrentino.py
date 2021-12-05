@@ -7,28 +7,29 @@ Usage:
 Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
-import os, re, sys, threading, time, copy
+import os
+import threading
+import time
+import copy
 import tempfile
-
-from pathlib import Path
+import random
+import string
 from models.TransmissionClient import TransmissionClient
 from models.SearchTorrents import SearchTorrents
 
-from lib.func import restricted, trans, sizeof_fmt, get_config, get_logger
+from lib.func import restricted, \
+                     trans, get_config, get_logger, \
+                     get_qr_code, adduser
 
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler, InlineQueryHandler
+from telegram.ext import Updater, MessageHandler, Filters, CallbackQueryHandler
 from telegram import KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ParseMode
-from transmission_rpc.client import Client
-from transmission_rpc.lib_types import File
 
 # Read configuration file, torrentino.ini
 # File is in the same directory as script
-
 config = get_config()
 
-print(f"config: {config}")
 # Telegram bot token
-BOT_TOKEN=config['BOT']['TOKEN']
+BOT_TOKEN = config['BOT']['TOKEN']
 # Client connection to Transmission torrent server
 # User environment variables or defaults from configuration file
 TORRENT_CLIENT = TransmissionClient(
@@ -41,6 +42,8 @@ TORRENT_CLIENT = TransmissionClient(
 # Transmission server needs write access to these directories
 reply_markup = InlineKeyboardMarkup( [[ InlineKeyboardButton(key.capitalize(),callback_data=config['DIRECTORIES'][key]) for key in config['DIRECTORIES'] ]] )
 
+# This variable is used to auth new users
+WELCOME_HASHES = []
 
 logging = get_logger(__file__)
 
@@ -63,7 +66,10 @@ tracker_list="|".join(SearchTorrents.CLASSES.keys())
 
 def help_command(update, context):
     """Send a message when the command /help is issued."""
-    update.message.reply_text('Help!')
+    HELP = ""
+    if update.message.chat.id == config['BOT']['SUPER_USER']:
+        HELP += "/adduser, issue token for new user"
+    context.bot.send_message(chat_id=update.message.chat.id, text=HELP, parse_mode=ParseMode.HTML)
 
 
 def start(update, context):
@@ -71,24 +77,28 @@ def start(update, context):
     update.message.reply_text(update.message.text)
     logging.debug("echo: "+str(update))
 
-def notifyOnDone(context,user_id,torrent_id,user_lang="en_US"):
+def notifyOnDone(context,user_id, torrent_id, user_lang="en_US"):
     
-    context.bot.send_message(chat_id=user_id,text=trans("I will notify you once download complete.",user_lang),parse_mode=ParseMode.HTML)
+    context.bot.send_message(chat_id=user_id,
+                             text=trans("I will notify you once download complete.",user_lang),
+                             parse_mode=ParseMode.HTML)
     while "seeding" != TORRENT_CLIENT.status(torrent_id):
         time.sleep(60)
-        logging.debug("Torrent {0} is in status {1}".format(torrent_id,TORRENT_CLIENT.status(torrent_id)))
+        logging.debug(f"Torrent {torrent_id} is in status {TORRENT_CLIENT.status(torrent_id)}")
 
-    _message=trans("Download completed",L_CODE=user_lang)+":\n"+TORRENT_CLIENT.info(int(torrent_id))
+    _message = trans("Download completed",L_CODE=user_lang)+":\n"+TORRENT_CLIENT.info(int(torrent_id))
 
     # truncate long messages 
     _message = _message[:4000]+'..\n' if len(_message)>4000 else _message
-    _message=_message+"--------------------------\n" \
+    _message = _message+"--------------------------\n" \
             "[▶ /start_{0}] [⏹ /stop_{0}] [⏏ /delete_{0}]\n".format(torrent_id)
     try:        
-        context.bot.send_message(chat_id=user_id,text=_message,parse_mode=ParseMode.HTML)
+        context.bot.send_message(chat_id=user_id, text=_message, parse_mode=ParseMode.HTML)
     except:
-        context.bot.send_message(chat_id=user_id,text="Something went wrong, probably too many files in this torrent",parse_mode=ParseMode.HTML,reply_markup=torrent_reply_markup)
-
+        context.bot.send_message(chat_id=user_id,
+                                 text="Something went wrong, probably too many files in this torrent",
+                                 parse_mode=ParseMode.HTML,
+                                 reply_markup=torrent_reply_markup)
 
 
 @restricted
@@ -104,10 +114,12 @@ def askDownloadDirFile(update, context):
                    "\nMime type: "+update.message.document.mime_type
                 )
 
+
 @restricted
 def askDownloadDirURL(update, context):
-    update.message.reply_text(trans('Please choose download folder for {}',update.message.from_user.language_code).format(update.message.text)+":", reply_markup=reply_markup)
+    update.message.reply_text(trans('Please choose download folder for {}', update.message.from_user.language_code).format(update.message.text)+":", reply_markup=reply_markup)
     context.user_data['torrent']={'type':'url','url':update.message.text}
+
 
 @restricted
 def askDownloadMenuLink(update,context):
@@ -115,6 +127,7 @@ def askDownloadMenuLink(update,context):
     update.message.reply_text(trans("Please choose download folder for {}",update.message.from_user.language_code).format(context.user_data['download_links'][_id])+":", reply_markup=reply_markup)
     context.user_data['torrent']={'type':'url','url':context.user_data['download_links'][_id]}
     logging.info("Added torrent URL to download list: {}".format(context.user_data['download_links'][_id]))
+
 
 @restricted
 def getMenuPage(update,context):
@@ -163,6 +176,7 @@ def processUserKey(update, context):
     _t=threading.Thread(target=notifyOnDone, args=(context,query.message.chat.id,TORRENT_CLIENT.get_torrents()[-1].id,query.from_user.language_code))
     _t.start()
 
+
 @restricted
 def askTrackerSelection(update,context):
     context.user_data['search_string']=update.message.text
@@ -187,16 +201,19 @@ def searchOnWebTracker(update, context):
                                  reply_markup=torrent_reply_markup)
     logging.debug(update)
 
+
 @restricted
 def torrentStop(update,context):
     """Stop torrent by torrent_id"""
     logging.debug(update)
     TORRENT_CLIENT.stop_torrent(int(update.message.text.split('_')[1]))
 
+
 @restricted
 def torrentStopAll(update,context):
     """Stop All Torrents"""
     TORRENT_CLIENT.stop_all()
+
 
 @restricted
 def torrentStart(update,context):
@@ -204,10 +221,12 @@ def torrentStart(update,context):
     logging.debug(update)
     TORRENT_CLIENT.start_torrent(int(update.message.text.split('_')[1]))
 
+
 @restricted
 def torrentStartAll(update,context):
     """Stop All Torrents"""
     TORRENT_CLIENT.start_all()
+
 
 @restricted
 def torrentList(update,context):
@@ -218,32 +237,72 @@ def torrentList(update,context):
             _message=_message+"\n<b>{1}</b>\n Progress: {2}% Status: {3} \n[ℹ /info_{0}] [⏹  /stop_{0}] [⏏ /delete_{0}]\n".format(torrent.id,torrent.name,round(torrent.progress),torrent.status,torrent.format_eta())
         else:
             _message=_message+"\n<b>{1}</b>\n Progress: {2}% Status: {3} \n[ℹ /info_{0}] [▶ /start_{0}] [⏏ /delete_{0}]\n".format(torrent.id,torrent.name,round(torrent.progress),torrent.status,torrent.format_eta())
-    context.bot.send_message(chat_id=update.message.chat.id,text=_message,parse_mode=ParseMode.HTML,reply_markup=torrent_reply_markup)
+    context.bot.send_message(chat_id=update.message.chat.id,
+                             text=_message,parse_mode=ParseMode.HTML,
+                             reply_markup=torrent_reply_markup)
+
 
 @restricted
 def torrentInfo(update,context):
     """Show detailed information about torrent"""
     logging.debug(update)
-    torrent_id=update.message.text.split('_')[1]
+    torrent_id = update.message.text.split('_')[1]
     logging.info("Loading torrent id {0}".format(torrent_id))
-    _message=TORRENT_CLIENT.info(int(torrent_id))
+    _message = TORRENT_CLIENT.info(int(torrent_id))
     # truncate long messages 
     _message = _message[:4000]+'..\n' if len(_message)>4000 else _message
-    _message=_message+"--------------------------\n" \
+    _message = _message+"--------------------------\n" \
             "[▶ /start_{0}] [⏹ /stop_{0}] [⏏ /delete_{0}]\n".format(torrent_id)
     try:        
-        context.bot.send_message(chat_id=update.message.chat.id,text=_message,parse_mode=ParseMode.HTML,reply_markup=torrent_reply_markup)
-    except:
-        context.bot.send_message(chat_id=update.message.chat.id,text="Something went wrong, probably too many files in this torrent",parse_mode=ParseMode.HTML,reply_markup=torrent_reply_markup)
+        context.bot.send_message(chat_id=update.message.chat.id,
+                                 text=_message,parse_mode=ParseMode.HTML,
+                                 reply_markup=torrent_reply_markup)
+    except Exception as err:
+        context.bot.send_message(chat_id=update.message.chat.id,
+                                 text="Something went wrong: {err}",
+                                 parse_mode=ParseMode.HTML,
+                                 reply_markup=torrent_reply_markup)
+
 
 @restricted
 def torrentDelete(update,context):
     """Remove torrent by torrent_id"""
     logging.debug(update)
-    torrent_id=update.message.text.replace('/delete_', '')
+    torrent_id = update.message.text.replace('/delete_', '')
     logging.info("Removing torrent id {0}".format(torrent_id))
-    context.bot.send_message(chat_id=update.message.chat.id,text=trans("Torrent {0} was removed from Transmission server".format(TORRENT_CLIENT.get_torrents(int(torrent_id))[0].name),update.message.from_user.language_code),parse_mode=ParseMode.HTML,reply_markup=torrent_reply_markup)
-    TORRENT_CLIENT.remove_torrent(int(torrent_id),delete_data=config['TRANSMISSION']['DELETE_DATA'])
+    context.bot.send_message(chat_id=update.message.chat.id,
+                             text=trans("Torrent {0} was removed from Transmission server".format(TORRENT_CLIENT.get_torrents(int(torrent_id))[0].name),
+                             update.message.from_user.language_code),
+                             parse_mode=ParseMode.HTML,
+                             reply_markup=torrent_reply_markup)
+    TORRENT_CLIENT.remove_torrent(int(torrent_id), delete_data=config['TRANSMISSION']['DELETE_DATA'])
+
+
+@restricted
+def addNewUser(update, context):
+    if update.message.chat.id == config['BOT']['SUPER_USER']:
+        hash = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
+        WELCOME_HASHES.append(hash)
+        logging.info(context.bot)
+        message = f"https://t.me/{context.bot.username}?start=welcome_{hash}"
+        img = get_qr_code(message)
+        context.bot.send_photo(update.message.chat.id,
+                               open(img, 'rb'),
+                               caption=message)
+    else:
+        context.bot.send_message(update.message.chat.id, "Nice try!")
+
+
+def welcomeNewUser(update, context):
+    hash_code = update.message.text.replace('/start welcome_', '')
+    if hash_code in WELCOME_HASHES and update.message.chat.id:
+        config['BOT']['ALLOWED_USERS'].append(update.message.chat.id)
+        adduser(update.message.chat.id)
+        WELCOME_HASHES.remove(hash_code)
+        context.bot.send_message(update.message.chat.id,
+                                 f"Welcome {update.message.chat.first_name}!",
+                                 reply_markup=torrent_reply_markup)
+        logging.info(f"New user: {update.message.chat.id}")
 
 
 def main():
@@ -254,6 +313,12 @@ def main():
     updater = Updater(BOT_TOKEN, use_context=True)
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
+    # Admin commands
+    dp.add_handler(MessageHandler(Filters.regex(r'^/help$'), help_command))
+    # Issue user token:
+    dp.add_handler(MessageHandler(Filters.regex(r'^/adduser$'), addNewUser))
+    # Process new user request:
+    dp.add_handler(MessageHandler(Filters.regex(r'^/start\ welcome_[A-Za-z0-9]+$'), welcomeNewUser))
     # Add Transmission handlers to dispatcher:
     dp.add_handler(MessageHandler(Filters.regex(r'List$'), torrentList))
     dp.add_handler(MessageHandler(Filters.regex(r'^/info_[0-9]+$'), torrentInfo))
@@ -263,15 +328,15 @@ def main():
     dp.add_handler(MessageHandler(Filters.regex(r'^/start_[0-9]+$'), torrentStart))
     dp.add_handler(MessageHandler(Filters.regex(r'^/delete_[0-9]+$'), torrentDelete))
     # Add Search/Download/Navigation handlers to dispatcher
-    dp.add_handler(CallbackQueryHandler(searchOnWebTracker,pattern=tracker_list))
-    # Ask download directory for Menu URL 
+    dp.add_handler(CallbackQueryHandler(searchOnWebTracker, pattern=tracker_list))
+    # Ask download directory for Menu URL
     dp.add_handler(MessageHandler(Filters.regex(r'^/download_[0-9]+$'), askDownloadMenuLink))
     # Ask download directory for magnet/http(s) link
     dp.add_handler(MessageHandler(Filters.regex(r'(magnet:\?xt=urn:btih:[a-zA-Z0-9]*|[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*))'), askDownloadDirURL))
     # Ask download directory for torrent file
     dp.add_handler(MessageHandler(Filters.document, askDownloadDirFile))
     # Navigation buttons switcher (inline keyboard)
-    dp.add_handler(CallbackQueryHandler(getMenuPage,pattern=r'^[x0-9]+$'))
+    dp.add_handler(CallbackQueryHandler(getMenuPage, pattern=r'^[x0-9]+$'))
     # Select download folder switcher (inline keyboard)
     dp.add_handler(CallbackQueryHandler(processUserKey))
     # Default search input text

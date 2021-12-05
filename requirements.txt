@@ -5,3 +5,5 @@ requests
 lxml
 mechanize
 cookiejar
+pillow
+qrcode

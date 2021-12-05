@@ -7,6 +7,7 @@ from functools import wraps
 import logging
 import logging.handlers
 from telegram import KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ParseMode
+import qrcode # Link for website
 
 
 # Configure actions to work with torrent
@@ -49,11 +50,27 @@ def trans(STRING,L_CODE):
             STRING=lang[L_CODE][STRING]
     return STRING
 
+
+def save_config():
+    with open(CONFIG_FILE, 'w') as f:
+        yaml.dump(CONFIG, f)
+
+
+def adduser(id):
+    if id not in CONFIG['BOT']['ALLOWED_USERS']:
+        CONFIG['BOT']['ALLOWED_USERS'].append(id)
+        save_config()
+
+
 def restricted(func):
     @wraps(func)
     def wrapped(update, context, *args, **kwargs):
         user_id = update.effective_user.id
-        if str(user_id) not in CONFIG['BOT']['ALLOWED_USERS'].split(','):
+        if 'SUPER_USER' not in CONFIG['BOT'] or CONFIG['BOT']['SUPER_USER'] == '':
+            logging.warn(f"Adding new super user {user_id}")
+            CONFIG['BOT']['SUPER_USER'] = user_id
+            save_config()
+        elif user_id not in CONFIG['BOT']['ALLOWED_USERS']:
             context.bot.send_message(chat_id=user_id,
                                      text=trans("You are not authorized to use this bot. Please contact bot owner to get access.",update.message.from_user.language_code),
                                      parse_mode=ParseMode.HTML,
@@ -85,4 +102,16 @@ def get_logger(class_name: str):
     return log
 
 
-CONFIG = load_config(str(Path(__file__).parent.parent) +str(os.path.sep)+ 'torrentino.yaml')
+def get_qr_code(input_data):
+    qr = qrcode.QRCode(
+            version=1,
+            box_size=10,
+            border=5)
+    qr.add_data(input_data)
+    qr.make(fit=True)
+    img = qr.make_image(fill='black', back_color='white')
+    img.save('qrcode001.png')
+    return 'qrcode001.png'
+
+CONFIG_FILE = str(Path(__file__).parent.parent) +str(os.path.sep)+ 'torrentino.yaml'
+CONFIG = load_config(CONFIG_FILE)
