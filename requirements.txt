@@ -3,6 +3,7 @@ transmission-rpc==3.2.5
 bs4
 requests
 lxml
+PyYAML
 mechanize
 cookiejar
 pillow
