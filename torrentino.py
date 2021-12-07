@@ -66,9 +66,9 @@ tracker_list="|".join(SearchTorrents.CLASSES.keys())
 
 def help_command(update, context):
     """Send a message when the command /help is issued."""
-    HELP = ""
+    HELP = trans("HELP",update.message.from_user.language_code)
     if update.message.chat.id == config['BOT']['SUPER_USER']:
-        HELP += "/adduser, issue token for new user"
+        HELP += "\n"+trans("HELP_ADMIN",update.message.from_user.language_code)
     context.bot.send_message(chat_id=update.message.chat.id, text=HELP, parse_mode=ParseMode.HTML)
 
 
@@ -188,9 +188,11 @@ def searchOnWebTracker(update, context):
     query = update.callback_query
     # if at least one page exist, add pager
     logging.info(f"Searching for {query.data,context.user_data['search_string']}")
+    query.edit_message_text(text=trans('DOING_SEARCH', query.message.from_user.language_code))
     SR=SearchTorrents(query.data,context.user_data['search_string'])
     context.user_data['pages']=SR.PAGES
     context.user_data['download_links']=SR.LINKS
+
     KEYBOARD=[InlineKeyboardButton(str(jj), callback_data=str(jj)) for jj in range(1, len(SR.PAGES)+1)]
     if len(context.user_data['pages'])>0:
         query.edit_message_text(parse_mode=ParseMode.HTML,text=context.user_data['pages']['1'],reply_markup=InlineKeyboardMarkup( [ KEYBOARD ] ),disable_web_page_preview=True)
@@ -303,6 +305,7 @@ def welcomeNewUser(update, context):
                                  f"Welcome {update.message.chat.first_name}!",
                                  reply_markup=torrent_reply_markup)
         logging.info(f"New user: {update.message.chat.id}")
+        help_command(update, context)
 
 
 def main():

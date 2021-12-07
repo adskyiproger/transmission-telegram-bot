@@ -1,3 +1,9 @@
+[en]
+HELP=Use keyboard to control torrents
+     - List, list all torrents
+HELP_ADMIN=Following admin commands are available:
+           /adduser, issue auth token for new user
+DOING_SEARCH=Please wait, searching...
 [ru]
 You are not authorized to use this bot. Please contact bot owner to get access.=У вас недостаточно прав для выполнения этой команды. Пожалуйста обратитесь к администратору.
 Torrents list=Список торрентов
@@ -7,6 +13,11 @@ File {0} will be downloaded into {1}=Файл {0} будет загружен в
 URL {0} will be downloaded into {1}.=URL {0} будет загружен в папку {1}.
 Torrent {0} was removed from Transmission server=Торрент {0} был удалён с Transmission сервера
 I will notify you once download complete.=Я уведомлю вас о завершении загрузки.
+HELP=Use keyboard to control torrents
+     - List, list all torrents
+HELP_ADMIN=Following admin commands are available:
+           /adduser, issue auth token for new user
+DOING_SEARCH=Подождите, ищу...
 [uk]
 You are not authorized to use this bot. Please contact bot owner to get access.=У вас недостатньо дозволів для виконання цієї команди. Будь-ласка зверніться до адміністратора.
 Torrents list=Список торрентів
@@ -16,4 +27,9 @@ File {0} will be downloaded into {1}=Файл {0} буде завантажен�
 URL {0} will be downloaded into {1}.=URL {0} буде завантажено в папку {1}.
 Torrent {0} was removed from Transmission server=Торрент {0} було видалено з Transmission серверу
 I will notify you once download complete.=Я повідомлю вас щойно файл буде завантажено.
-
+HELP=Використовуйте клавіатуру для управління торентами.
+     Доступні команди:
+     - List, переглянути статус торрентів
+HELP_ADMIN=Команди для адміністрування:
+           /adduser, issue auth token for new user
+DOING_SEARCH=Зачекайте, шукаю...
