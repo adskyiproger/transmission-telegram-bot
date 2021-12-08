@@ -4,6 +4,7 @@ import yaml
 import sys
 from pathlib import Path
 from functools import wraps
+from tempfile import mkstemp
 import logging
 import logging.handlers
 from telegram import KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ParseMode
@@ -13,8 +14,8 @@ import qrcode # Link for website
 # Configure actions to work with torrent
 TORRENT_ACTIONS=[
         "🔍 List",
-        "⏹ Stop All",
-        "▶️ Start All"
+       # "⏹ Stop All",
+       # "▶️ Start All"
         ]
 torrent_reply_markup = ReplyKeyboardMarkup( [[KeyboardButton(text=str(key)) for key in TORRENT_ACTIONS]], resize_keyboard=True )
 
@@ -45,6 +46,7 @@ def sizeof_fmt(num, suffix='B'):
    return "%.1f%s%s" % (num, 'Yi', suffix)
 
 def trans(STRING,L_CODE):
+    logging.debug(f"Translate: {STRING}, {L_CODE}")
     if L_CODE in lang.sections():
         if STRING in lang[L_CODE]:
             STRING=lang[L_CODE][STRING]
@@ -103,15 +105,14 @@ def get_logger(class_name: str):
 
 
 def get_qr_code(input_data):
-    qr = qrcode.QRCode(
-            version=1,
-            box_size=10,
-            border=5)
+    qr = qrcode.QRCode(version=1, box_size=10, border=5)
     qr.add_data(input_data)
     qr.make(fit=True)
+    img_file = mkstemp()[1]
+    logging.debug(f"Temporal file created: {img_file}")
     img = qr.make_image(fill='black', back_color='white')
-    img.save('qrcode001.png')
-    return 'qrcode001.png'
+    img.save(img_file)
+    return img_file
 
 CONFIG_FILE = str(Path(__file__).parent.parent) +str(os.path.sep)+ 'torrentino.yaml'
 CONFIG = load_config(CONFIG_FILE)

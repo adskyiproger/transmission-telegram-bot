@@ -20,6 +20,13 @@ class SearchRUTOR:
             INFO=_cols[1].select('a')[2].get('href')
             DL=_cols[1].select('a')[1].get('href')
             SIZE = _cols[3].text if len(_cols) == 5 else _cols[2].text
+            UNITS = {'KB': 1024, 'MB': 1048576, 'GB': 1073741824 }
+            try:
+                #logger.info(f"Size {SIZE.split('\\xa0')}")
+                if SIZE.split('\xa0')[1] in UNITS.keys():
+                    SIZE = int(float(SIZE.split('\xa0')[0])) * UNITS[SIZE.split('\xa0')[1]]
+            except Exception as e:
+                pass
             DATE=_cols[0].text
                     
             logger.debug("COL Title:"+TITLE+" L:"+str(INFO)+" DL:"+str(DL)+" S:"+str(SIZE)+" D:"+str(DATE))

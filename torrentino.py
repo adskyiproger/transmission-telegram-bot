@@ -38,6 +38,8 @@ TORRENT_CLIENT = TransmissionClient(
                     username=os.getenv("TR_USER", config['TRANSMISSION']['USER']),
                     password=os.getenv("TR_PASSWORD", config['TRANSMISSION']['PASSWORD'])
                     )
+# Mockup:
+# TORRENT_CLIENT = None
 # Download directories
 # Transmission server needs write access to these directories
 reply_markup = InlineKeyboardMarkup( [[ InlineKeyboardButton(key.capitalize(),callback_data=config['DIRECTORIES'][key]) for key in config['DIRECTORIES'] ]] )
@@ -51,13 +53,13 @@ logging = get_logger(__file__)
 # Configure actions to work with torrent
 TORRENT_ACTIONS=[
         "🔍 List",
-        "⏹ Stop All",
-        "▶️ Start All"
+        # "⏹ Stop All",
+        # "▶️ Start All"
         ]
 torrent_reply_markup = ReplyKeyboardMarkup( [[KeyboardButton(text=str(key)) for key in TORRENT_ACTIONS]], resize_keyboard=True )
 
 
-tracker_reply_markup = InlineKeyboardMarkup( [[InlineKeyboardButton(key, callback_data=key)] for key in SearchTorrents.CLASSES.keys()], resize_keyboard=True )
+# tracker_reply_markup = InlineKeyboardMarkup( [[InlineKeyboardButton(key, callback_data=key)] for key in SearchTorrents.CLASSES.keys()], resize_keyboard=True )
 
 tracker_list="|".join(SearchTorrents.CLASSES.keys())
 
@@ -138,7 +140,7 @@ def getMenuPage(update,context):
         if str(query.data) != 'x':
             page = int(query.data) - 1
             reply_markup = copy.deepcopy(context.user_data['pages_markup'])
-            reply_markup['inline_keyboard'][0][page].text = "<3>"
+            reply_markup['inline_keyboard'][0][page].text = "..."
             reply_markup['inline_keyboard'][0][page].callback_data='x'
             context.bot.edit_message_text(chat_id=update.callback_query.message.chat_id,
                                           message_id=update.callback_query.message.message_id,
@@ -177,29 +179,40 @@ def processUserKey(update, context):
     _t.start()
 
 
-@restricted
-def askTrackerSelection(update,context):
-    context.user_data['search_string']=update.message.text
-    update.message.reply_text(trans('Please choose torrent tracker:',update.message.from_user.language_code)+":", reply_markup=tracker_reply_markup)
+# @restricted
+# def askTrackerSelection(update,context):
+#    context.user_data['search_string']=update.message.text
+#    update.message.reply_text(trans('Please choose torrent tracker:',update.message.from_user.language_code)+":", reply_markup=tracker_reply_markup)
 
 
 @restricted
 def searchOnWebTracker(update, context):
-    query = update.callback_query
+    logging.debug(update)
     # if at least one page exist, add pager
-    logging.info(f"Searching for {query.data,context.user_data['search_string']}")
-    query.edit_message_text(text=trans('DOING_SEARCH', query.message.from_user.language_code))
-    SR=SearchTorrents(query.data,context.user_data['search_string'])
+    logging.info(f"Searching for {update.message.text}")
+    msg = update.message.reply_text(text=trans('DOING_SEARCH', update.message.from_user.language_code),
+                                    reply_markup=torrent_reply_markup)
+
+
+    #context.bot.send_message(chat_id=update.message.chat.id,
+    #                         text=trans('DOING_SEARCH', update.message.from_user.language_code),
+    #                         reply_markup=torrent_reply_markup)
+    SR=SearchTorrents(update.message.text)
     context.user_data['pages']=SR.PAGES
     context.user_data['download_links']=SR.LINKS
 
     KEYBOARD=[InlineKeyboardButton(str(jj), callback_data=str(jj)) for jj in range(1, len(SR.PAGES)+1)]
     if len(context.user_data['pages'])>0:
-        query.edit_message_text(parse_mode=ParseMode.HTML,text=context.user_data['pages']['1'],reply_markup=InlineKeyboardMarkup( [ KEYBOARD ] ),disable_web_page_preview=True)
+        # query.edit_message_text(parse_mode=ParseMode.HTML,text=context.user_data['pages']['1'],reply_markup=InlineKeyboardMarkup( [ KEYBOARD ] ),disable_web_page_preview=True)
+        update.message.reply_text(text=context.user_data['pages']['1'],
+                    reply_markup=InlineKeyboardMarkup( [ KEYBOARD ] ),
+                    parse_mode=ParseMode.HTML,
+                    disable_web_page_preview=True)
+
         context.user_data['pages_markup']=InlineKeyboardMarkup( [ KEYBOARD ] )
     else:
-        context.bot.send_message(chat_id=query.message.chat.id,
-                                 text=trans('What would you like to do? Please choose actions from keyboard. You could also send torrent file or magnet link.',query.message.from_user.language_code),
+        context.bot.send_message(chat_id=update.message.chat.id,
+                                 text=trans('What would you like to do? Please choose actions from keyboard. You could also send torrent file or magnet link.', update.message.from_user.language_code),
                                  reply_markup=torrent_reply_markup)
     logging.debug(update)
 
@@ -331,7 +344,7 @@ def main():
     dp.add_handler(MessageHandler(Filters.regex(r'^/start_[0-9]+$'), torrentStart))
     dp.add_handler(MessageHandler(Filters.regex(r'^/delete_[0-9]+$'), torrentDelete))
     # Add Search/Download/Navigation handlers to dispatcher
-    dp.add_handler(CallbackQueryHandler(searchOnWebTracker, pattern=tracker_list))
+    # dp.add_handler(CallbackQueryHandler(searchOnWebTracker, pattern=tracker_list))
     # Ask download directory for Menu URL
     dp.add_handler(MessageHandler(Filters.regex(r'^/download_[0-9]+$'), askDownloadMenuLink))
     # Ask download directory for magnet/http(s) link
@@ -343,7 +356,7 @@ def main():
     # Select download folder switcher (inline keyboard)
     dp.add_handler(CallbackQueryHandler(processUserKey))
     # Default search input text
-    dp.add_handler(MessageHandler(Filters.all, askTrackerSelection))
+    dp.add_handler(MessageHandler(Filters.all, searchOnWebTracker))
 
     # Start the Bot
     updater.start_polling()

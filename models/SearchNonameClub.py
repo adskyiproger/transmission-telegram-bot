@@ -22,7 +22,13 @@ class SearchNonameClub:
             DL=_cols[4].select('a')[0].get('href')
             SIZE="".join(_cols[5].text.split(' ')[1:])
             DATE="".join(_cols[9].text.split(' ')[1:])[0:10]
-                    
+            UNITS = {'KB': 1024, 'MB': 1048576, 'GB': 1073741824 }
+            try:
+                #logger.info(f"Size {SIZE.split('\\xa0')}")
+                if SIZE[-2:] in UNITS.keys():
+                    SIZE = int(float(SIZE[:-2])) * UNITS[SIZE[-2:]]
+            except Exception as e:
+                pass     
             logger.debug(f"COL T: {TITLE} L:{str(INFO)} DL:{str(DL)} S:{str(SIZE)} D:{str(DATE)}")
             self.POSTS.append({'title': TITLE,
                                'info': f"{self.TRACKER_URL}/forum/{INFO}",
