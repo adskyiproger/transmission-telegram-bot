@@ -46,8 +46,8 @@ class SearchTorrents:
                 self.POSTS = sorted_list
                 self.CACHE[srch_hash]=self.POSTS
             except Exception as err:
-                for post in posts:
-                    logger.error(f"{post['title']}: {post['size']}")
+                logger.fatal(err)
+                self.POSTS = posts
 
          logger.info(f"Found {len(self.POSTS)} posts on trackers {','.join(self.CLASSES)}")
 
