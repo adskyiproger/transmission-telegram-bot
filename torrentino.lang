@@ -4,6 +4,8 @@ HELP=Use keyboard to control torrents
 HELP_ADMIN=Following admin commands are available:
            /adduser, issue auth token for new user
 DOING_SEARCH=Please wait, searching...
+NAV_HEADER=Viewing page {} of {}:
+           -------------------------
 [ru]
 You are not authorized to use this bot. Please contact bot owner to get access.=У вас недостаточно прав для выполнения этой команды. Пожалуйста обратитесь к администратору.
 Torrents list=Список торрентов
@@ -18,6 +20,8 @@ HELP=Use keyboard to control torrents
 HELP_ADMIN=Following admin commands are available:
            /adduser, issue auth token for new user
 DOING_SEARCH=Подождите, ищу...
+NAV_HEADER=Страница {} из {}:
+           -------------------------
 [uk]
 You are not authorized to use this bot. Please contact bot owner to get access.=У вас недостатньо дозволів для виконання цієї команди. Будь-ласка зверніться до адміністратора.
 Torrents list=Список торрентів
@@ -33,3 +37,5 @@ HELP=Використовуйте клавіатуру для управлінн
 HELP_ADMIN=Команди для адміністрування:
            /adduser, issue auth token for new user
 DOING_SEARCH=Зачекайте, шукаю...
+NAV_HEADER=Сторінка {} з {}:
+           -------------------------

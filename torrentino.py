@@ -7,6 +7,7 @@ Usage:
 Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
+from math import ceil
 import os
 import threading
 import time
@@ -125,26 +126,24 @@ def askDownloadDirURL(update, context):
 
 @restricted
 def askDownloadMenuLink(update,context):
-    _id=update.message.text.split("_")[1]
-    update.message.reply_text(trans("Please choose download folder for {}",update.message.from_user.language_code).format(context.user_data['download_links'][_id])+":", reply_markup=reply_markup)
-    context.user_data['torrent']={'type':'url','url':context.user_data['download_links'][_id]}
-    logging.info("Added torrent URL to download list: {}".format(context.user_data['download_links'][_id]))
+    _id=int(update.message.text.split("_")[1])
+    update.message.reply_text(trans("Please choose download folder for {}",update.message.from_user.language_code).format(context.user_data['posts'][_id]['dl'])+":", reply_markup=reply_markup)
+    context.user_data['torrent']={'type':'url','url':context.user_data['posts'][_id]['dl']}
+    logging.info("Added torrent URL to download list: {}".format(context.user_data['posts'][_id]['dl']))
 
 
 @restricted
 def getMenuPage(update,context):
-    logging.debug(update)
+    # logging.debug(update)
     query = update.callback_query
     query.answer()
     try:
         if str(query.data) != 'x':
-            page = int(query.data) - 1
-            reply_markup = copy.deepcopy(context.user_data['pages_markup'])
-            reply_markup['inline_keyboard'][0][page].text = "..."
-            reply_markup['inline_keyboard'][0][page].callback_data='x'
+            reply_markup = getKeyboard(context, query.data)
+
             context.bot.edit_message_text(chat_id=update.callback_query.message.chat_id,
                                           message_id=update.callback_query.message.message_id,
-                                          text=context.user_data['pages'][str(page + 1)],
+                                          text=getPage(context, int(query.data), query.from_user.language_code),
                                           parse_mode=ParseMode.HTML,
                                           reply_markup=reply_markup,
                                           disable_web_page_preview=True)
@@ -152,6 +151,52 @@ def getMenuPage(update,context):
             logging.debug("You are trying to click the same page")
     except ValueError as err:
         logging.debug(f"Wrong menu page {query.data}: {err}")
+
+
+def getNumPages(context):
+    num_pages = int(len(context.user_data['posts']) /5 )
+    if len(context.user_data['posts']) % 5 > 0:
+        num_pages += 1
+    return num_pages
+
+def getPage(context, _page=1, user_lang="en"):
+    page = int(_page)
+    _message=trans("NAV_HEADER", user_lang).format(page, getNumPages(context))
+    # Add first and last posts index
+    first, last = ( page * 5 ) - 5, page * 5
+    ii = first
+    for post in context.user_data['posts'][first:last]:
+        _message += f"\n<b>{post['title']}</b>: {post['size']}  {post['date']}\n<a href='{post['info']}'>Info</a>     [ ▼ /download_{ii} ]\n"
+        ii += 1
+    return _message
+
+
+def getKeyboard(context, _page=1):
+    pages = getNumPages(context)
+    page = int(_page)
+    # Edge case for first page
+    if page == 1 or page < 4:
+        KEYBOARD=[InlineKeyboardButton(str(jj), callback_data=str(jj)) for jj in range(1, 8) if jj < pages]
+    # Edge case for last page
+    elif pages - page < 4:
+        KEYBOARD=[InlineKeyboardButton(str(jj), callback_data=str(jj)) for jj in range(pages - 6, pages + 1) if jj <= pages]
+    # Regular navigation
+    else:
+        KEYBOARD=[InlineKeyboardButton(str(jj), callback_data=str(jj)) for jj in range(page - 3, page + 4) if jj <= pages]
+    
+    FOOTER_KEYS = []
+    if page > 10:
+        FOOTER_KEYS.append(InlineKeyboardButton("«« -10", callback_data=str(page-10)))
+    if pages > page + 10:
+        FOOTER_KEYS.append(InlineKeyboardButton("+10 »»", callback_data=str(page+10)))
+
+    for key in KEYBOARD:
+        print(key)
+        if str(key.text) == str(page):
+            key.text = "..."
+            key.callback_data="x"
+    
+    return InlineKeyboardMarkup( [ KEYBOARD, FOOTER_KEYS ] )
 
 
 @restricted
@@ -198,18 +243,13 @@ def searchOnWebTracker(update, context):
     #                         text=trans('DOING_SEARCH', update.message.from_user.language_code),
     #                         reply_markup=torrent_reply_markup)
     SR=SearchTorrents(update.message.text)
-    context.user_data['pages']=SR.PAGES
-    context.user_data['download_links']=SR.LINKS
+    context.user_data['posts']=SR.POSTS
 
-    KEYBOARD=[InlineKeyboardButton(str(jj), callback_data=str(jj)) for jj in range(1, len(SR.PAGES)+1)]
-    if len(context.user_data['pages'])>0:
-        # query.edit_message_text(parse_mode=ParseMode.HTML,text=context.user_data['pages']['1'],reply_markup=InlineKeyboardMarkup( [ KEYBOARD ] ),disable_web_page_preview=True)
-        update.message.reply_text(text=context.user_data['pages']['1'],
-                    reply_markup=InlineKeyboardMarkup( [ KEYBOARD ] ),
+    if len(context.user_data['posts'])>0:
+        update.message.reply_text(text=getPage(context),
+                    reply_markup=getKeyboard(context),
                     parse_mode=ParseMode.HTML,
                     disable_web_page_preview=True)
-
-        context.user_data['pages_markup']=InlineKeyboardMarkup( [ KEYBOARD ] )
     else:
         context.bot.send_message(chat_id=update.message.chat.id,
                                  text=trans('What would you like to do? Please choose actions from keyboard. You could also send torrent file or magnet link.', update.message.from_user.language_code),

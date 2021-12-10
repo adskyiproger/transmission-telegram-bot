@@ -49,20 +49,5 @@ class SearchTorrents:
                 for post in posts:
                     logger.error(f"{post['title']}: {post['size']}")
 
-         _message=""
-         kk = ii = jj = 1
-         for post in self.POSTS:
-             _message += f"\n<b>{post['title']}</b>: {post['size']}  {post['date']}\n<a href='{post['info']}'>Info</a>     [ ▼ /download_{ii} ]\n"
-             self.LINKS[str(ii)]=post['dl']
-             ii+=1
-             if kk == 5:
-                self.PAGES[str(jj)]=_message
-                kk=0
-                jj+=1
-                _message=""
-             kk+=1
-         if kk>1:
-            self.PAGES[str(jj)]=_message
-             
-         logger.info(f"Found {len(self.LINKS)} posts grouped into {len(self.PAGES)} pages for {search_string} on trackers {','.join(self.CLASSES)}")
+         logger.info(f"Found {len(self.POSTS)} posts on trackers {','.join(self.CLASSES)}")
 
