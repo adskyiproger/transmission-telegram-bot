@@ -74,7 +74,7 @@ def restricted(func):
             save_config()
         elif user_id not in CONFIG['BOT']['ALLOWED_USERS']:
             context.bot.send_message(chat_id=user_id,
-                                     text=trans("You are not authorized to use this bot. Please contact bot owner to get access.",update.message.from_user.language_code),
+                                     text=trans('ACCESS_RESTRICTED', update.message.from_user.language_code),
                                      parse_mode=ParseMode.HTML,
                                      reply_markup=torrent_reply_markup)
             logging.debug(update)

@@ -1,4 +1,6 @@
 [en]
+ACCESS_RESTRICTED=You are not authorized to use this bot. Please contact bot owner to get access.
+TORRENT_REMOVED=Torrent {} was removed from Transmission server
 HELP=Use keyboard to control torrents
      - List, list all torrents
 HELP_ADMIN=Following admin commands are available:
@@ -6,14 +8,18 @@ HELP_ADMIN=Following admin commands are available:
 DOING_SEARCH=Please wait, searching...
 NAV_HEADER=Viewing page {} of {}:
            -------------------------
+NO_SEARCH_RESULTS=Seems like you have not searched today. Please try to search for something, For instance: Lorf of the rings
+NOTHING_FOUND=Unfortunately, nothing found for your query.
+CHOOSE_DOWNLOAD_DIR=Please choose download folder for {}
+FILE_WILL_BE_DOWNLOADED=File {0} will be downloaded into {1}
+SOMETHING_WENT_WRONG=Something went wrong, probably too many files in this torrent
 [ru]
-You are not authorized to use this bot. Please contact bot owner to get access.=У вас недостаточно прав для выполнения этой команды. Пожалуйста обратитесь к администратору.
+ACCESS_RESTRICTED=У вас недостаточно прав для выполнения этой команды. Пожалуйста обратитесь к администратору.
 Torrents list=Список торрентов
-Please choose download folder for {}=Пожалуйста выберите папку для загрузки {}
 Nothing found. Please try to use different search query.=Ничего не найдено. Пожалуйста попробуйте использовать другой поисковый запрос.
-File {0} will be downloaded into {1}=Файл {0} будет загружен в папку {1}
+FILE_WILL_BE_DOWNLOADED=Файл {0} будет загружен в папку {1}
 URL {0} will be downloaded into {1}.=URL {0} будет загружен в папку {1}.
-Torrent {0} was removed from Transmission server=Торрент {0} был удалён с Transmission сервера
+TORRENT_REMOVED=Торрент {0} был удалён с Transmission сервера
 I will notify you once download complete.=Я уведомлю вас о завершении загрузки.
 HELP=Use keyboard to control torrents
      - List, list all torrents
@@ -22,14 +28,18 @@ HELP_ADMIN=Following admin commands are available:
 DOING_SEARCH=Подождите, ищу...
 NAV_HEADER=Страница {} из {}:
            -------------------------
+
+NO_SEARCH_RESULTS=Похоже вы ещё не пользовались поиском сегодня. Попробуйте что нибудь найти, например: С лёгким паром
+NOTHING_FOUND=К сожалению по вашему запросу ничего не найдено.
+CHOOSE_DOWNLOAD_DIR=Выберите папку для загрузки файла {}
+SOMETHING_WENT_WRONG=Something went wrong, probably too many files in this torrent
 [uk]
-You are not authorized to use this bot. Please contact bot owner to get access.=У вас недостатньо дозволів для виконання цієї команди. Будь-ласка зверніться до адміністратора.
+ACCESS_RESTRICTED=У вас недостатньо дозволів для виконання цієї команди. Будь-ласка зверніться до адміністратора.
 Torrents list=Список торрентів
-Please choose download folder for {}=Будь-ласка оберіть папку для завантажання {}
 Nothing found. Please try to use different search query.=Нічого не знайдено. Спробуйте пошукати з іншою фразою.
-File {0} will be downloaded into {1}=Файл {0} буде завантажено в папку {1}
+FILE_WILL_BE_DOWNLOADED=Файл {0} буде завантажено в папку {1}
 URL {0} will be downloaded into {1}.=URL {0} буде завантажено в папку {1}.
-Torrent {0} was removed from Transmission server=Торрент {0} було видалено з Transmission серверу
+TORRENT_REMOVED=Торрент {} видалено з Transmission серверу
 I will notify you once download complete.=Я повідомлю вас щойно файл буде завантажено.
 HELP=Використовуйте клавіатуру для управління торентами.
      Доступні команди:
@@ -39,3 +49,7 @@ HELP_ADMIN=Команди для адміністрування:
 DOING_SEARCH=Зачекайте, шукаю...
 NAV_HEADER=Сторінка {} з {}:
            -------------------------
+
+NO_SEARCH_RESULTS=Схоже ви ще не користувалися пошуком сьогодні. Спробуйте щось знайти, наприклад: Дизель шоу.
+NOTHING_FOUND=Нажаль за вашим запитом нічого не знайдено.
+CHOOSE_DOWNLOAD_DIR=Оберіть папку для завантажання файлу {}
