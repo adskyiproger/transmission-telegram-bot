@@ -102,6 +102,7 @@ def notifyOnDone(context,user_id, torrent_id, user_lang="en_US"):
 def askDownloadDirFile(update, context):
     """Download file"""
     logging.debug(update)
+    logging.info(f"Searching for download file dir")
     if update.message.document.mime_type == 'application/x-bittorrent':
         update.message.reply_text(trans('Please choose download folder for {}',update.message.from_user.language_code).format(update.message.document.file_name)+":", reply_markup=reply_markup)
         context.user_data['torrent']={'type':'torrent','file_name':update.message.document.file_name,'file_id':update.message.document.file_id}
@@ -117,6 +118,7 @@ def askDownloadDirURL(update, context):
     Ask download directory for Magnet URL.
     Next step: 
     """
+    logging.info(f"Downloading URL {update.message.text}")
     update.message.reply_text(trans('CHOOSE_DOWNLOAD_DIR',
                                     update.message.from_user.language_code).format(update.message.text)+":",
                               reply_markup=reply_markup)
@@ -125,6 +127,7 @@ def askDownloadDirURL(update, context):
 
 @restricted
 def askDownloadDirPageLink(update,context):
+    logging.info(f"Downloading page link {update.message.text}")
     _id=int(update.message.text.split("_")[1])
     update.message.reply_text(trans('CHOOSE_DOWNLOAD_DIR',update.message.from_user.language_code).format(context.user_data['posts'][_id]['dl'])+":", reply_markup=reply_markup)
     context.user_data['torrent']={'type':'url','url':context.user_data['posts'][_id]['dl']}
@@ -245,13 +248,12 @@ def processUserKey(update, context):
 @restricted
 def searchOnWebTracker(update, context):
     logging.debug(update)
-    # if at least one page exist, add pager
-    logging.info(f"Searching for {update.message.text}")
-    msg = update.message.reply_text(text=trans('DOING_SEARCH', update.message.from_user.language_code))
+
+    msg = update.message.reply_text(text=trans('DOING_SEARCH', update.message.from_user.language_code)+f" {update.message.text}")
 
     SR=SearchTorrents(update.message.text)
     context.user_data['posts']=SR.POSTS
-
+    # Display search results if something was found
     if len(context.user_data['posts'])>0:
         context.bot.edit_message_text(chat_id=msg.chat.id,
                                       message_id=msg.message_id,
@@ -259,10 +261,11 @@ def searchOnWebTracker(update, context):
                                       reply_markup=getKeyboard(context),
                                       parse_mode=ParseMode.HTML,
                                       disable_web_page_preview=True)
+    # Tell user about empty search results
     else:
-        context.bot.send_message(chat_id=update.message.chat.id,
-                                 text=trans('NOTHING_FOUND', update.message.from_user.language_code),
-                                 reply_markup=torrent_reply_markup)
+        context.bot.edit_message_text(chat_id=update.message.chat.id,
+                                      message_id=msg.message_id,
+                                      text=trans('NOTHING_FOUND', update.message.from_user.language_code))
 
 
 @restricted

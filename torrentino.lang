@@ -5,7 +5,7 @@ HELP=Use keyboard to control torrents
      - List, list all torrents
 HELP_ADMIN=Following admin commands are available:
            /adduser, issue auth token for new user
-DOING_SEARCH=Please wait, searching...
+DOING_SEARCH=Please wait, searching:
 NAV_HEADER=Viewing page {} of {}:
            -------------------------
 NO_SEARCH_RESULTS=Seems like you have not searched today. Please try to search for something, For instance: Lorf of the rings
@@ -25,7 +25,7 @@ HELP=Use keyboard to control torrents
      - List, list all torrents
 HELP_ADMIN=Following admin commands are available:
            /adduser, issue auth token for new user
-DOING_SEARCH=Подождите, ищу...
+DOING_SEARCH=Подождите, ищу:
 NAV_HEADER=Страница {} из {}:
            -------------------------
 
@@ -46,7 +46,7 @@ HELP=Використовуйте клавіатуру для управлінн
      - List, переглянути статус торрентів
 HELP_ADMIN=Команди для адміністрування:
            /adduser, issue auth token for new user
-DOING_SEARCH=Зачекайте, шукаю...
+DOING_SEARCH=Зачекайте, шукаю:
 NAV_HEADER=Сторінка {} з {}:
            -------------------------
 
