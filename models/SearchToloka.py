@@ -50,7 +50,6 @@ class SearchToloka(SearchBase):
             INFO=_cols[2].select('a')[0].get('href')
             DL=_cols[5].select('a')[0].get('href')
             SIZE=_cols[6].text
-            print(_cols[12])
             DATE=_cols[12].text
             UNITS = {'KB': 1024, 'MB': 1048576, 'GB': 1073741824 }
             logger.debug(f"COL T: {TITLE} L:{str(INFO)} DL:{str(DL)} S:{str(SIZE)} D:{str(DATE)}")
