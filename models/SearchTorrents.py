@@ -22,7 +22,7 @@ class SearchTorrents:
      CLASSES={ "nnmclub" : SearchNonameClub,
                "rutor" : SearchRUTOR,
                "toloka" : SearchToloka,
-               # "KAT" : SearchKAT
+               # "kat" : SearchKAT
              }
      CACHE={}
      CACHE_TIMER={}

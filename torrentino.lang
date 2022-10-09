@@ -2,7 +2,8 @@
 ACCESS_RESTRICTED=You are not authorized to use this bot. Please contact bot owner to get access.
 TORRENT_REMOVED=Torrent {} was removed from Transmission server
 HELP=Use keyboard to control torrents
-     - List, list all torrents
+     - "📁 Torrents", get torrents list from your server
+     - "🔍 Search", last search results
 HELP_ADMIN=Following admin commands are available:
            /adduser, issue auth token for new user
 DOING_SEARCH=Please wait, searching:
@@ -22,7 +23,8 @@ URL {0} will be downloaded into {1}.=URL {0} будет загружен в па
 TORRENT_REMOVED=Торрент {0} был удалён с Transmission сервера
 I will notify you once download complete.=Я уведомлю вас о завершении загрузки.
 HELP=Use keyboard to control torrents
-     - List, list all torrents
+     - "📁 Torrents", список торрентов на вашем сервере
+     - "🔍 Search", результаты последнего поиска
 HELP_ADMIN=Following admin commands are available:
            /adduser, issue auth token for new user
 DOING_SEARCH=Подождите, ищу:
@@ -43,7 +45,8 @@ TORRENT_REMOVED=Торрент {} видалено з Transmission сервер�
 I will notify you once download complete.=Я повідомлю вас щойно файл буде завантажено.
 HELP=Використовуйте клавіатуру для управління торентами.
      Доступні команди:
-     - List, переглянути статус торрентів
+     - "📁 Torrents", переглянути статус торрентів
+     - "🔍 Search", результати останнього пошуку
 HELP_ADMIN=Команди для адміністрування:
            /adduser, issue auth token for new user
 DOING_SEARCH=Зачекайте, шукаю:

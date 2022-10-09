@@ -5,6 +5,7 @@ import logging
 from models.SearchBase import SearchBase
 
 class SearchNonameClub(SearchBase):
+    TRACKER_NAME = "nnmclub"
     TRACKER_URL="https://nnmclub.to"
     TRACKER_SEARCH_URL_TPL="/forum/tracker.php?nm="
 
@@ -34,9 +35,9 @@ class SearchNonameClub(SearchBase):
             #    logger.error(f"Can not convert {SIZE}")
             #    SIZE = 0'    
             logger.debug(f"COL T: {TITLE} L:{str(INFO)} DL:{str(DL)} S:{str(SIZE)} D:{str(DATE)}")
-            self.POSTS.append({'title': TITLE,
+            self.POSTS.append({'tracker': self.TRACKER_NAME,
+                               'title': TITLE,
                                'info': f"{self.TRACKER_URL}/forum/{INFO}",
                                'dl': f"{self.TRACKER_URL}/forum/{DL}",
                                'size':SIZE,
                                'date': DATE })
-

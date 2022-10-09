@@ -5,6 +5,7 @@ import logging
 from models.SearchBase import SearchBase
 
 class SearchKAT(SearchBase):
+    TRACKER_NAME = "kat"
     TRACKER_URL="https://kat.sx"
     TRACKER_SEARCH_URL_TPL="/search.php?q="
 
@@ -26,6 +27,7 @@ class SearchKAT(SearchBase):
                     
             logger.debug("COL Title:"+TITLE+" L:"+str(INFO)+" DL:"+str(DL)+" S:"+str(SIZE)+" D:"+str(DATE))
             self.POSTS.append(
-                        {'title': TITLE.replace(r'<',''), 'info':"{0}/forum/{1}".format(self.TRACKER_URL,INFO), 'dl': "{0}/forum/{1}".format(self.TRACKER_URL,DL), 'size':SIZE,'date': DATE }
+                        {'tracker': self.TRACKER_NAME,
+                        'title': TITLE.replace(r'<',''), 'info':"{0}/forum/{1}".format(self.TRACKER_URL,INFO), 'dl': "{0}/forum/{1}".format(self.TRACKER_URL,DL), 'size':SIZE,'date': DATE }
                             )
 

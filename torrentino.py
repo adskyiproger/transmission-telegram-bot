@@ -134,11 +134,9 @@ def askDownloadDirPageLink(update,context):
     _id=int(update.message.text.split("_")[1])
     update.message.reply_text(trans('CHOOSE_DOWNLOAD_DIR',
                                     update.message.from_user.language_code).format(context.user_data['posts'][_id]['dl'])+":", reply_markup=reply_markup)
-    tracker = None
-    if _.has(context.user_data['posts'][_id], 'tracker'):
-        tracker = context.user_data['posts'][_id]['tracker']
-        logging.info("Tracker %s requires credentials", _.get(context.user_data['posts'][_id], 'tracker'))
-    context.user_data['torrent']={'type':'url','url':context.user_data['posts'][_id]['dl'], 'tracker': tracker}
+    context.user_data['torrent']={'type': 'url',
+                                  'url': context.user_data['posts'][_id]['dl'], 
+                                  'tracker': context.user_data['posts'][_id]['tracker']}
     logging.info("Added torrent URL to download list: {}".format(context.user_data['posts'][_id]['dl']))
 
 
@@ -240,7 +238,7 @@ def processUserKey(update, context):
             TORRENT_CLIENT.add_torrent(f,download_dir=query.data)
 
         logging.info("File {0} will be placed into {1}".format(context.user_data['torrent']['file_name'],query.data))
-    elif context.user_data['torrent']['type'] == 'url' and _.has(context.user_data['torrent'], 'tracker'):
+    elif context.user_data['torrent']['type'] == 'url' and _.has(config['CREDENTIALS'], context.user_data['torrent']['tracker']):
         tmp_file_path = download_with_auth(context.user_data['torrent'],
                                            config['CREDENTIALS'][context.user_data['torrent']['tracker']])
         query.edit_message_text(text=trans('FILE_WILL_BE_DOWNLOADED', 
@@ -419,7 +417,7 @@ def main():
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
     # Admin commands
-    dp.add_handler(MessageHandler(Filters.regex(r'^/help$'), help_command))
+    dp.add_handler(MessageHandler(Filters.regex(r'^/(help|start)$'), help_command))
     # Issue user token:
     dp.add_handler(MessageHandler(Filters.regex(r'^/adduser$'), addNewUser))
     # Process new user request:
