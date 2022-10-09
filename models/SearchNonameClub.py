@@ -2,11 +2,14 @@ from requests import get
 from bs4 import BeautifulSoup
 import logging
 #logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+from models.SearchBase import SearchBase
 
-
-class SearchNonameClub:
+class SearchNonameClub(SearchBase):
     TRACKER_URL="https://nnmclub.to"
     TRACKER_SEARCH_URL_TPL="/forum/tracker.php?nm="
+
+    def __init__(self, username=None, password=None) -> None:
+        pass
 
     def search(self,search_string):    
         logger = logging.getLogger(self.__class__.__name__)

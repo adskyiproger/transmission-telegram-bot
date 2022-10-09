@@ -2,11 +2,13 @@ from requests import get
 from bs4 import BeautifulSoup
 import logging
 
+from models.SearchBase import SearchBase
 
-
-class SearchRUTOR:
+class SearchRUTOR(SearchBase):
     TRACKER_URL="http://rutor.info"
     TRACKER_SEARCH_URL_TPL="/search/0/0/000/0/"
+    def __init__(self, username=None, password=None) -> None:
+        pass
 
     def search(self,search_string):    
         logger = logging.getLogger(self.__class__.__name__)

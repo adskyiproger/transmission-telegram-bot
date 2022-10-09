@@ -8,3 +8,4 @@ mechanize
 cookiejar
 pillow
 qrcode
+pydash

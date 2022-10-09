@@ -2,7 +2,9 @@ from requests import get
 from bs4 import BeautifulSoup
 import logging
 
-class SearchEZTV:
+from models.SearchBase import SearchBase
+
+class SearchEZTV(SearchBase):
     TRACKER_URL="https://eztv.re"
     TRACKER_SEARCH_URL_TPL="/search/"
 

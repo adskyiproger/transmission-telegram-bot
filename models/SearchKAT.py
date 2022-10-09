@@ -2,9 +2,9 @@ from requests import get
 from bs4 import BeautifulSoup
 import logging
 #logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+from models.SearchBase import SearchBase
 
-
-class SearchKAT:
+class SearchKAT(SearchBase):
     TRACKER_URL="https://kat.sx"
     TRACKER_SEARCH_URL_TPL="/search.php?q="
 

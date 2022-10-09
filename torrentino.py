@@ -7,6 +7,9 @@ Usage:
 Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
+from asyncio.log import logger
+from distutils import file_util
+import requests
 from math import ceil
 import os
 import threading
@@ -17,7 +20,7 @@ import random
 import string
 from models.TransmissionClient import TransmissionClient
 from models.SearchTorrents import SearchTorrents
-
+import pydash as _
 from lib.func import restricted, \
                      trans, get_config, get_logger, \
                      get_qr_code, adduser
@@ -65,7 +68,7 @@ torrent_reply_markup = ReplyKeyboardMarkup( [[KeyboardButton(text=str(key)) for 
 # tracker_reply_markup = InlineKeyboardMarkup( [[InlineKeyboardButton(key, callback_data=key)] for key in SearchTorrents.CLASSES.keys()], resize_keyboard=True )
 
 tracker_list="|".join(SearchTorrents.CLASSES.keys())
-
+SearchTorrents.CREDENTIALS = config['CREDENTIALS']
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
 
@@ -74,12 +77,12 @@ def help_command(update, context):
     HELP = trans("HELP",update.message.from_user.language_code)
     if update.message.chat.id == config['BOT']['SUPER_USER']:
         HELP += "\n"+trans("HELP_ADMIN",update.message.from_user.language_code)
-    context.bot.send_message(chat_id=update.message.chat.id, text=HELP, parse_mode=ParseMode.HTML)
+    context.bot.send_message(chat_id=update.message.chat.id, text=HELP, parse_mode=ParseMode.HTML, reply_markup=torrent_reply_markup)
 
 
 def start(update, context):
     """Echo the user message."""
-    update.message.reply_text(update.message.text)
+    update.message.reply_text(update.message.text, reply_markup=torrent_reply_markup)
     logging.debug("echo: "+str(update))
 
 
@@ -129,8 +132,13 @@ def askDownloadDirURL(update, context):
 def askDownloadDirPageLink(update,context):
     logging.info(f"Downloading page link {update.message.text}")
     _id=int(update.message.text.split("_")[1])
-    update.message.reply_text(trans('CHOOSE_DOWNLOAD_DIR',update.message.from_user.language_code).format(context.user_data['posts'][_id]['dl'])+":", reply_markup=reply_markup)
-    context.user_data['torrent']={'type':'url','url':context.user_data['posts'][_id]['dl']}
+    update.message.reply_text(trans('CHOOSE_DOWNLOAD_DIR',
+                                    update.message.from_user.language_code).format(context.user_data['posts'][_id]['dl'])+":", reply_markup=reply_markup)
+    tracker = None
+    if _.has(context.user_data['posts'][_id], 'tracker'):
+        tracker = context.user_data['posts'][_id]['tracker']
+        logging.info("Tracker %s requires credentials", _.get(context.user_data['posts'][_id], 'tracker'))
+    context.user_data['torrent']={'type':'url','url':context.user_data['posts'][_id]['dl'], 'tracker': tracker}
     logging.info("Added torrent URL to download list: {}".format(context.user_data['posts'][_id]['dl']))
 
 
@@ -220,30 +228,60 @@ def processUserKey(update, context):
     # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
     query.answer()
     if context.user_data['torrent']['type'] == 'torrent':
-       query.edit_message_text(text=trans('FILE_WILL_BE_DOWNLOADED', 
-                                          query.from_user.language_code).format(context.user_data['torrent']['file_name'],
-                                                                                str(query.data)))
-       _file = context.bot.getFile(context.user_data['torrent']['file_id'])
-       _file.download(tempfile.gettempdir()+os.path.sep+context.user_data['torrent']['file_name'])
-       logging.debug("Torrent file {0} was downloaded into temporal directpry {1}".format(context.user_data['torrent']['file_id'],tempfile.gettempdir()+os.path.sep+context.user_data['torrent']['file_name']))
-       with open(tempfile.gettempdir()+os.path.sep+context.user_data['torrent']['file_name'], 'rb') as f:
-           TORRENT_CLIENT.add_torrent(f,download_dir=query.data)
+        query.edit_message_text(text=trans('FILE_WILL_BE_DOWNLOADED', 
+                                            query.from_user.language_code).format(context.user_data['torrent']['file_name'],
+                                                                                    str(query.data)))
+        _file = context.bot.getFile(context.user_data['torrent']['file_id'])
+        # Temporal file location
+        tmp_file_path = tempfile.gettempdir()+os.path.sep+context.user_data['torrent']['file_name']
+        _file.download(tmp_file_path)
+        logging.debug("Torrent file {0} was downloaded into temporal directpry {1}".format(context.user_data['torrent']['file_id'], tmp_file_path))
+        with open(tmp_file_path, 'rb') as f:
+            TORRENT_CLIENT.add_torrent(f,download_dir=query.data)
 
-       logging.info("File {0} will be placed into {1}".format(context.user_data['torrent']['file_name'],query.data))
-
+        logging.info("File {0} will be placed into {1}".format(context.user_data['torrent']['file_name'],query.data))
+    elif context.user_data['torrent']['type'] == 'url' and _.has(context.user_data['torrent'], 'tracker'):
+        tmp_file_path = download_with_auth(context.user_data['torrent'],
+                                           config['CREDENTIALS'][context.user_data['torrent']['tracker']])
+        query.edit_message_text(text=trans('FILE_WILL_BE_DOWNLOADED', 
+                                           query.from_user.language_code).format(context.user_data['torrent']['url'],
+                                                                                    str(query.data)))
+        with open(tmp_file_path, 'rb') as f:
+            TORRENT_CLIENT.add_torrent(f, download_dir=query.data)
     elif context.user_data['torrent']['type'] in [ 'magnet', 'url' ]:
-       query.edit_message_text(text=trans("URL {0} will be downloaded into {1}.",query.from_user.language_code).format(context.user_data['torrent']['url'],query.data))
-       TORRENT_CLIENT.add_torrent(context.user_data['torrent']['url'],download_dir=query.data)
-       logging.info("URL {0} will be placed into {1}".format(context.user_data['torrent']['url'],query.data))
-    _t=threading.Thread(target=notifyOnDone, args=(context,query.message.chat.id,TORRENT_CLIENT.get_torrents()[-1].id,query.from_user.language_code))
+        file_url = context.user_data['torrent']['url']
+        logging.debug(context.user_data['torrent'])
+        download_dir = query.data
+        query.edit_message_text(text=trans("URL {0} will be downloaded into {1}.", query.from_user.language_code).format(file_url, download_dir))
+        TORRENT_CLIENT.add_torrent(file_url, download_dir=download_dir)
+        logging.info("URL {0} will be placed into {1}".format(file_url, download_dir))
+
+    # Start background thread and notify user on done
+    _t=threading.Thread(target=notifyOnDone,
+                        args=(context,
+                              query.message.chat.id,
+                              TORRENT_CLIENT.get_torrents()[-1].id,
+                              query.from_user.language_code))
     _t.start()
 
-
-# @restricted
-# def askTrackerSelection(update,context):
-#    context.user_data['search_string']=update.message.text
-#    update.message.reply_text(trans('Please choose torrent tracker:',update.message.from_user.language_code)+":", reply_markup=tracker_reply_markup)
-
+def download_with_auth(torrent, auth_info) -> str:
+    logging.info("Downloading file %s with authorization")
+    file_url = torrent['url']
+    x = requests.Session()
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    payload = {
+        "username": auth_info['USERNAME'],
+        "password": auth_info['PASSWORD'],
+        'redirect':'index.php?',
+        'sid':'',
+        'login':'Login'
+    }
+    x.post(auth_info['login_url'], data=payload)
+    r = x.get(file_url, allow_redirects=True)
+    tmp_file_path = tempfile.gettempdir()+os.path.sep+"blabla.file.torrent"
+    with open(tmp_file_path, 'wb') as f:
+        f.write(r.content)
+    return tmp_file_path
 
 @restricted
 def searchOnWebTracker(update, context):

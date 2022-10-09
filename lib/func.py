@@ -9,7 +9,7 @@ import logging
 import logging.handlers
 from telegram import KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ParseMode
 import qrcode # Link for website
-
+import pydash as _
 
 # Configure actions to work with torrent
 TORRENT_ACTIONS=[

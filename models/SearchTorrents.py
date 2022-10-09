@@ -1,7 +1,9 @@
+from models.SearchBase import SearchBase
 from models.SearchNonameClub import SearchNonameClub
 from models.SearchRUTOR import SearchRUTOR
-from models.SearchEZTV import SearchEZTV
-from models.SearchKAT import SearchKAT
+# from models.SearchEZTV import SearchEZTV
+# from models.SearchKAT import SearchKAT
+from models.SearchToloka import SearchToloka
 import hashlib, threading, time, logging
 import math
 
@@ -16,9 +18,10 @@ def convert_size(size_bytes):
 
 logger = logging.getLogger(__name__)
 class SearchTorrents:
+     CREDENTIALS = {}
      CLASSES={ "nnmclub" : SearchNonameClub,
                "rutor" : SearchRUTOR,
-               # "EZTV" : SearchEZTV,
+               "toloka" : SearchToloka,
                # "KAT" : SearchKAT
              }
      CACHE={}
@@ -35,8 +38,13 @@ class SearchTorrents:
          else:
 
             posts = []
+            TRACKER = SearchBase()
             for _class in self.CLASSES:
-                TRACKER=self.CLASSES[_class]()
+                if _class in self.CREDENTIALS:
+                    creds = self.CREDENTIALS[_class]
+                    TRACKER = self.CLASSES[_class](username=creds["USERNAME"], password=creds["PASSWORD"])
+                else:
+                    TRACKER=self.CLASSES[_class]()
                 TRACKER.search(search_string)
                 posts.extend(TRACKER.POSTS)
             try:
