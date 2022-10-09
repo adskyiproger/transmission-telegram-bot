@@ -210,7 +210,6 @@ def getKeyboard(context, _page=1):
         FOOTER_KEYS.append(InlineKeyboardButton("+10 »»", callback_data=str(page+10)))
 
     for key in KEYBOARD:
-        print(key)
         if str(key.text) == str(page):
             key.text = "..."
             key.callback_data="x"
