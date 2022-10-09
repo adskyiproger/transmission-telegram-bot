@@ -7,6 +7,7 @@ Supported trackers:
 * http://rutor.info 
 * https://eztv.re/
 * https://kat.sx/
+* https://toloka.to
 
 (new will arrive soon)
 
@@ -21,13 +22,15 @@ This Bot could be used as satelite for Transmission server for search torrent fi
 Additionally you could setup home DLNA server like Jellyfin or MiniDLNA.
 
 Before building docker image or running python script please register new telegram bot using `BotFather`.
-Place bot security token into torrents.ini.
+Place bot security token into torrents.yaml.
+
+Get your telegram user id with https://t.me/userinfobot. See https://github.com/nadam/userinfobot for more details.
 
 ## Preparation
 1. Install and configure transmission server web interface with username and password.
    You could use docker image https://hub.docker.com/r/linuxserver/transmission instead of manual (rpm/deb) setup.
    Please check `docker-compose.yaml`
-2. Update torrentino.ini configuration file.
+2. Update torrentino.yaml configuration file.
 
 ## Run python script
 
