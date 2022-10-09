@@ -8,7 +8,6 @@ Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
 from asyncio.log import logger
-from distutils import file_util
 import requests
 from math import ceil
 import os
