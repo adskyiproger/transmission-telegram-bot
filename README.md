@@ -38,7 +38,7 @@ Get your telegram user id with https://t.me/userinfobot. See https://github.com/
 2. Update configuration file:
    ```
    # check comments inside the file
-   torrentino.ini
+   torrentino.yaml
    ```
 3. Run:
    ```
@@ -55,7 +55,7 @@ Get your telegram user id with https://t.me/userinfobot. See https://github.com/
    ```
 2. Start docker container as daemon process:
    ```
-   docker run -d -v `pwd`/torrentino.ini:/usr/src/app/torrentino.ini my-bot
+   docker run -d -v `pwd`/torrentino.yaml:/usr/src/app/torrentino.yaml my-bot
    ```
 3. Check container logs.
 
@@ -105,12 +105,12 @@ docker build -t transmission-telegram-bot .
 cd ~
 mkdir -p docker/{jellyfin,torrentino,transmission}/config
 ```
-6. Copy Bot configuration file `torrentino.ini.docker` into `~/docker/torrentino/config` and create empty log file:
+6. Copy Bot configuration file `torrentino.docker.yaml` into `~/docker/torrentino/config` and create empty log file:
 ```
-cp ~/transmission-telegram-bot/torrentino.ini.docker ~/docker/torrentino/config/torrentino.ini
+cp ~/transmission-telegram-bot/torrentino.docker.yaml ~/docker/torrentino/config/torrentino.yaml
 touch docker/torrentino/torrentino.log
 ```
-7. Open `~/docker/torrentino/config/torrentino.ini` in text editor and update `TOKEN` and `ALLOWED_USERS` variables.
+7. Open `~/docker/torrentino/config/torrentino.yaml` in text editor and update `TOKEN`, `SUPER_USER` and `ALLOWED_USERS` variables.
 8. Copy docker-compose.yaml into `~/docker` directory
 ```
 cp ~/transmission-telegram-bot/docker-compose.yaml docker/
