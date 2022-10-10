@@ -10,7 +10,10 @@ BOT:
 
   # Log file and log level configuration
   LOG_FILE: logs/torrentino.log
-  LOG_LEVEL: DEBUG
+  LOG_LEVEL: INFO
+
+  # Sorting field
+  SORT_BY: date
 
 TRANSMISSION:
   # HOST, Transmission server host
