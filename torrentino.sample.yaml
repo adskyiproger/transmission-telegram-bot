@@ -13,7 +13,8 @@ BOT:
   LOG_LEVEL: INFO
 
   # Sorting field
-  SORT_BY: date
+  # TODO: Add sorting by date, seeders, leachers
+  SORT_BY: size
 
 TRANSMISSION:
   # HOST, Transmission server host

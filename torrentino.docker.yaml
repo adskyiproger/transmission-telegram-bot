@@ -13,6 +13,7 @@ BOT:
   LOG_LEVEL: INFO
 
   # Sorting field
+  # TODO: Add sorting by date, seeders, leachers
   SORT_BY: size
 
 TRANSMISSION:

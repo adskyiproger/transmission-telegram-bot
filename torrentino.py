@@ -68,6 +68,7 @@ torrent_reply_markup = ReplyKeyboardMarkup( [[KeyboardButton(text=str(key)) for 
 
 tracker_list="|".join(SearchTorrents.CLASSES.keys())
 SearchTorrents.CREDENTIALS = config['CREDENTIALS']
+SearchTorrents.SORT_BY = config['BOT']['SORT_BY']
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
 

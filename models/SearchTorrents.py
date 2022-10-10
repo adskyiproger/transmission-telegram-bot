@@ -18,6 +18,7 @@ def convert_size(size_bytes):
 
 logger = logging.getLogger(__name__)
 class SearchTorrents:
+     SORT_BY = 'size'
      CREDENTIALS = {}
      CLASSES={ "nnmclub" : SearchNonameClub,
                "rutor" : SearchRUTOR,
@@ -48,7 +49,7 @@ class SearchTorrents:
                 TRACKER.search(search_string)
                 posts.extend(TRACKER.POSTS)
             try:
-                sorted_list = sorted(posts, key=lambda d: d['size'], reverse=True)
+                sorted_list = sorted(posts, key=lambda d: d[self.SORT_BY], reverse=True)
                 for el in sorted_list:
                     el['size'] = convert_size(el['size'])
                 self.POSTS = sorted_list
