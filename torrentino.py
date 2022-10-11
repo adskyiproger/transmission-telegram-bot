@@ -68,6 +68,7 @@ torrent_reply_markup = ReplyKeyboardMarkup( [[KeyboardButton(text=str(key)) for 
 
 tracker_list="|".join(SearchTorrents.CLASSES.keys())
 SearchTorrents.CREDENTIALS = config['CREDENTIALS']
+SearchTorrents.SORT_BY = config['BOT']['SORT_BY']
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
 
@@ -184,7 +185,7 @@ def getPage(context, _page=1, user_lang="en"):
     first, last = ( page * 5 ) - 5, page * 5
     ii = first
     for post in context.user_data['posts'][first:last]:
-        _message += f"\n<b>{post['title']}</b>: {post['size']}  {post['date']}\n<a href='{post['info']}'>Info</a>     [ ▼ /download_{ii} ]\n"
+        _message += f"""\n<b>{post['title']}</b>: {post['size']}  {post['date']} ⬆{post['seed']} ⬇{post['leach']}\n<a href='{post['info']}'>Info</a>     [ ▼ /download_{ii} ]\n"""
         ii += 1
     return _message
 

@@ -2,13 +2,23 @@ BOT:
   # TOKEN, Use BotFather to create new token
   TOKEN: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
   # Admin telegram account ID or comma separated IDs
+  # Use https://github.com/nadam/userinfobot to get your ID
   SUPER_USER: "<Your telegram account ID>"
-  # Your family and friends telegram account ID(s)
-  ALLOWED_USERS: "<Your family and friends telegram account ID(s)"
+  # List of your family and friends telegram account ID(s)
+  # This list can be managed by user registration feature
+  ALLOWED_USERS: []
 
   # Log file and log level configuration
   LOG_FILE: logs/torrentino.log
-  LOG_LEVEL: DEBUG
+  LOG_LEVEL: INFO
+
+  # Sorting field, specify any of values
+  # - size, torrent size
+  # - date, torrent adding date
+  # - seed, number of seeders
+  # - leach, number of leachers
+  # Results will be shown in reverse order, from latest to oldest, from biggest to smallest
+  SORT_BY: size
 
 TRANSMISSION:
   # HOST, Transmission server host
@@ -29,3 +39,11 @@ DIRECTORIES:
   TVShows: /downloads/TVShows
   Music: /downloads/Music
   Soft: /downloads/Soft
+
+# Credentioals section will be responsible for authorization
+# Currently only toloka requires authorizaion
+CREDENTIALS:
+  toloka:
+     USERNAME: <email or login>
+     PASSWORD: <password>
+     login_url: https://toloka.to/login.php

@@ -10,7 +10,15 @@ BOT:
 
   # Log file and log level configuration
   LOG_FILE: logs/torrentino.log
-  LOG_LEVEL: DEBUG
+  LOG_LEVEL: INFO
+
+  # Sorting field, specify any of values
+  # - size, torrent size
+  # - date, torrent adding date
+  # - seed, number of seeders
+  # - leach, number of leachers
+  # Results will be shown in reverse order, from latest to oldest, from biggest to smallest
+  SORT_BY: size
 
 TRANSMISSION:
   # HOST, Transmission server host
