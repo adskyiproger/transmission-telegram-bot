@@ -12,6 +12,10 @@ class SearchNonameClub(SearchBase):
     def __init__(self, username=None, password=None) -> None:
         pass
 
+    def convert_date(self, date: str):
+        _date = date.split("-")
+        return f"{_date[2]}-{_date[1]}-{_date[0]}"
+
     def search(self,search_string):    
         logger = logging.getLogger(self.__class__.__name__)
         """Search data on the web"""
@@ -29,11 +33,14 @@ class SearchNonameClub(SearchBase):
             UNITS = {'KB': 1024, 'MB': 1048576, 'GB': 1073741824 }
             if SIZE[-2:].upper() in UNITS.keys():
                 SIZE = int(float(SIZE[:-2])) * UNITS[SIZE[-2:].upper()]
-
+            SEEDS = _cols[6].text
+            LEACH = _cols[7].text
             logger.debug(f"COL T: {TITLE} L:{str(INFO)} DL:{str(DL)} S:{str(SIZE)} D:{str(DATE)}")
             self.POSTS.append({'tracker': self.TRACKER_NAME,
                                'title': TITLE,
                                'info': f"{self.TRACKER_URL}/forum/{INFO}",
                                'dl': f"{self.TRACKER_URL}/forum/{DL}",
                                'size':SIZE,
-                               'date': DATE })
+                               'date': self.convert_date(DATE),
+                               'seed': SEEDS,
+                               'leach': LEACH})

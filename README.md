@@ -14,6 +14,7 @@ Supported trackers:
 1. Search torrents on trackers and passing to Transmission.
 2. Direct send torrent files and magnet urls to transmission server for download.
 3. Essentials Transmission server actions such as Stop, Start, Delete, View info.
+4. Torrents sort by date, size, seeders and leachers
 
 # Usage
 

@@ -56,10 +56,15 @@ class SearchToloka(SearchBase):
 
             if SIZE[-2:].upper() in UNITS.keys():
                 SIZE = int(float(SIZE[:-2])) * UNITS[SIZE[-2:].upper()]
+
+            SEEDS = _cols[9].text
+            LEACH = _cols[10].text
             logger.debug(f"COL T: {TITLE} L:{str(INFO)} DL:{str(DL)} S:{str(SIZE)} D:{str(DATE)}")
             self.POSTS.append({'tracker': self.TRACKER_NAME,
                                'title': TITLE,
                                 'info': f"{self.TRACKER_URL}/{INFO}",
                                 'dl': f"{self.TRACKER_URL}/{DL}",
                                 'size' :SIZE,
-                                'date': DATE })
+                                'date': DATE,
+                                'seed': SEEDS,
+                                'leach': LEACH})

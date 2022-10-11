@@ -1,7 +1,7 @@
 from models.SearchBase import SearchBase
 from models.SearchNonameClub import SearchNonameClub
 from models.SearchRUTOR import SearchRUTOR
-# from models.SearchEZTV import SearchEZTV
+# TODO: KAT is down, temporary disabled
 # from models.SearchKAT import SearchKAT
 from models.SearchToloka import SearchToloka
 import hashlib, threading, time, logging
@@ -23,7 +23,7 @@ class SearchTorrents:
      CLASSES={ "nnmclub" : SearchNonameClub,
                "rutor" : SearchRUTOR,
                "toloka" : SearchToloka,
-               # "kat" : SearchKAT
+            #   "kat" : SearchKAT
              }
      CACHE={}
      CACHE_TIMER={}
@@ -49,7 +49,7 @@ class SearchTorrents:
                 TRACKER.search(search_string)
                 posts.extend(TRACKER.POSTS)
             try:
-                sorted_list = sorted(posts, key=lambda d: d[self.SORT_BY], reverse=True)
+                sorted_list = sorted(posts, key=lambda d: f"{d[self.SORT_BY]}".zfill(3), reverse=True)
                 for el in sorted_list:
                     el['size'] = convert_size(el['size'])
                 self.POSTS = sorted_list
