@@ -53,10 +53,6 @@ class SearchToloka(SearchBase):
             DL=_cols[5].select('a')[0].get('href')
             SIZE=_cols[6].text
             DATE=_cols[12].text
-            self.log.debug(f"COL T: {TITLE} L:{str(INFO)} DL:{str(DL)} S:{str(SIZE)} D:{str(DATE)}")
-
-            # if SIZE[-2:].upper() in self.UNITS.keys():
-            #     SIZE = int(float(SIZE[:-2])) * self.UNITS[SIZE[-2:].upper()]
             SEEDS = _cols[9].text
             LEACH = _cols[10].text
             self.log.debug(f"COL T: {TITLE} L:{str(INFO)} DL:{str(DL)} S:{str(SIZE)} D:{str(DATE)}")

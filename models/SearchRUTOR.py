@@ -46,8 +46,6 @@ class SearchRUTOR(SearchBase):
             INFO=_cols[1].select('a')[2].get('href')
             DL=_cols[1].select('a')[1].get('href')
             SIZE = _cols[3].text if len(_cols) == 5 else _cols[2].text
-            # if SIZE.split('\xa0')[1].upper() in self.UNITS.keys():
-            #     SIZE = int(float(SIZE.split('\xa0')[0])) * self.UNITS[SIZE.split('\xa0')[1].upper()]
             DATE=self.convert_date(_cols[0].text)
             if len(_cols) == 5:
                 SEEDS = _cols[4].text.split("\xa0")[1]

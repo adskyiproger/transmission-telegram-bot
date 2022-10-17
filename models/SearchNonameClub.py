@@ -28,11 +28,6 @@ class SearchNonameClub(SearchBase):
             DL=_cols[4].select('a')[0].get('href')
             SIZE="".join(_cols[5].text.split(' ')[1:])
             DATE="".join(_cols[9].text.split(' ')[1:])[0:10]
-            
-            # if SIZE[-2:].upper() in self.UNITS.keys():
-            #     _SIZE = int(float(SIZE[:-2])) * self.UNITS[SIZE[-2:].upper()]
-            # else:
-            #     print(f"WTF {SIZE}")
             SEEDS = _cols[6].text
             LEACH = _cols[7].text
             self.log.debug(f"COL T: {TITLE} L:{str(INFO)} DL:{str(DL)} S:{str(SIZE)} D:{str(DATE)}")
