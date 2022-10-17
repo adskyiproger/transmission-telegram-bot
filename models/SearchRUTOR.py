@@ -55,6 +55,7 @@ class SearchRUTOR(SearchBase):
             else:
                 SEEDS = LEACH = 0
             self.log.debug("COL Title:"+TITLE+" L:"+str(INFO)+" DL:"+str(DL)+" S:"+str(SIZE)+" D:"+str(DATE))
+            self.POSTS = []
             self.POSTS.append({'tracker': self.TRACKER_NAME,
                                'title': TITLE.replace(r'<',''), 
                                'info':"{0}/{1}".format(self.TRACKER_URL,INFO),

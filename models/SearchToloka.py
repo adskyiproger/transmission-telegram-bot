@@ -59,6 +59,7 @@ class SearchToloka(SearchBase):
             SEEDS = _cols[9].text
             LEACH = _cols[10].text
             self.log.debug(f"COL T: {TITLE} L:{str(INFO)} DL:{str(DL)} S:{str(SIZE)} D:{str(DATE)}")
+            self.POSTS = []
             self.POSTS.append({'tracker': self.TRACKER_NAME,
                                'title': TITLE,
                                 'info': f"{self.TRACKER_URL}/{INFO}",
