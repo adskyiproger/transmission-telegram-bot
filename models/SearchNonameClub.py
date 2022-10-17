@@ -10,7 +10,7 @@ class SearchNonameClub(SearchBase):
     TRACKER_SEARCH_URL_TPL="/forum/tracker.php?nm="
 
     def __init__(self, username=None, password=None) -> None:
-        pass
+        self.POSTS = []
 
     def convert_date(self, date: str):
         _date = date.split("-")
@@ -36,7 +36,7 @@ class SearchNonameClub(SearchBase):
             SEEDS = _cols[6].text
             LEACH = _cols[7].text
             self.log.debug(f"COL T: {TITLE} L:{str(INFO)} DL:{str(DL)} S:{str(SIZE)} D:{str(DATE)}")
-            self.POSTS = []
+            
             self.POSTS.append({'tracker': self.TRACKER_NAME,
                                'title': TITLE,
                                'info': f"{self.TRACKER_URL}/forum/{INFO}",

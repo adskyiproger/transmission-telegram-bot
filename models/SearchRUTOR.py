@@ -9,7 +9,7 @@ class SearchRUTOR(SearchBase):
     TRACKER_SEARCH_URL_TPL="/search/0/0/000/0/"
 
     def __init__(self, username=None, password=None) -> None:
-        pass
+        self.POSTS = []
 
     def convert_date(self, date: str):
         _date = date.split("\xa0")
@@ -55,7 +55,7 @@ class SearchRUTOR(SearchBase):
             else:
                 SEEDS = LEACH = 0
             self.log.debug("COL Title:"+TITLE+" L:"+str(INFO)+" DL:"+str(DL)+" S:"+str(SIZE)+" D:"+str(DATE))
-            self.POSTS = []
+            
             self.POSTS.append({'tracker': self.TRACKER_NAME,
                                'title': TITLE.replace(r'<',''), 
                                'info':"{0}/{1}".format(self.TRACKER_URL,INFO),
