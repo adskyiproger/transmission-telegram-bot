@@ -16,13 +16,11 @@ class SearchNonameClub(SearchBase):
         _date = date.split("-")
         return f"{_date[2]}-{_date[1]}-{_date[0]}"
 
-    def search(self,search_string):    
-        logger = logging.getLogger(self.__class__.__name__)
+    def search(self, search_string: str) -> bool:
         """Search data on the web"""
-        self.POSTS=[]
         x=self.TRACKER_URL+self.TRACKER_SEARCH_URL_TPL+search_string
         _data=BeautifulSoup(get(x).content, 'lxml').select('table.forumline > tbody > tr')
-        logger.debug(_data)
+        self.log.debug(_data)
         for row in _data:
             _cols=row.select('td')
             TITLE=_cols[2].text.replace(r'<', '')
@@ -30,17 +28,20 @@ class SearchNonameClub(SearchBase):
             DL=_cols[4].select('a')[0].get('href')
             SIZE="".join(_cols[5].text.split(' ')[1:])
             DATE="".join(_cols[9].text.split(' ')[1:])[0:10]
-            UNITS = {'KB': 1024, 'MB': 1048576, 'GB': 1073741824 }
-            if SIZE[-2:].upper() in UNITS.keys():
-                SIZE = int(float(SIZE[:-2])) * UNITS[SIZE[-2:].upper()]
+            
+            # if SIZE[-2:].upper() in self.UNITS.keys():
+            #     _SIZE = int(float(SIZE[:-2])) * self.UNITS[SIZE[-2:].upper()]
+            # else:
+            #     print(f"WTF {SIZE}")
             SEEDS = _cols[6].text
             LEACH = _cols[7].text
-            logger.debug(f"COL T: {TITLE} L:{str(INFO)} DL:{str(DL)} S:{str(SIZE)} D:{str(DATE)}")
+            self.log.debug(f"COL T: {TITLE} L:{str(INFO)} DL:{str(DL)} S:{str(SIZE)} D:{str(DATE)}")
             self.POSTS.append({'tracker': self.TRACKER_NAME,
                                'title': TITLE,
                                'info': f"{self.TRACKER_URL}/forum/{INFO}",
                                'dl': f"{self.TRACKER_URL}/forum/{DL}",
-                               'size':SIZE,
+                               'size': SIZE,
                                'date': self.convert_date(DATE),
                                'seed': SEEDS,
                                'leach': LEACH})
+        return True

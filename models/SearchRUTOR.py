@@ -1,6 +1,5 @@
 from requests import get
 from bs4 import BeautifulSoup
-import logging
 
 from models.SearchBase import SearchBase
 
@@ -8,6 +7,7 @@ class SearchRUTOR(SearchBase):
     TRACKER_NAME = 'rutor'
     TRACKER_URL="http://rutor.info"
     TRACKER_SEARCH_URL_TPL="/search/0/0/000/0/"
+
     def __init__(self, username=None, password=None) -> None:
         pass
 
@@ -33,13 +33,11 @@ class SearchRUTOR(SearchBase):
             dd = _date[0]
             return f"{yyyy}-{mm}-{dd}"
         else:
-            logging.warn("Date was not converted: %s", date)
+            self.log.warn("Date was not converted: %s", date)
             return date
 
-    def search(self,search_string):    
-        logger = logging.getLogger(self.__class__.__name__)
+    def search(self, search_string: str) -> bool:
         """Search data on the web"""
-        self.POSTS=[]
         x=self.TRACKER_URL+self.TRACKER_SEARCH_URL_TPL+search_string
         _data=BeautifulSoup(get(x).content, 'lxml').select('div#index > table > tr')
         for row in _data[1:]:
@@ -48,17 +46,15 @@ class SearchRUTOR(SearchBase):
             INFO=_cols[1].select('a')[2].get('href')
             DL=_cols[1].select('a')[1].get('href')
             SIZE = _cols[3].text if len(_cols) == 5 else _cols[2].text
-            UNITS = {'KB': 1024, 'KB': 1024, 'MB': 1048576, 'GB': 1073741824 }
-
-            if SIZE.split('\xa0')[1].upper() in UNITS.keys():
-                SIZE = int(float(SIZE.split('\xa0')[0])) * UNITS[SIZE.split('\xa0')[1].upper()]
+            # if SIZE.split('\xa0')[1].upper() in self.UNITS.keys():
+            #     SIZE = int(float(SIZE.split('\xa0')[0])) * self.UNITS[SIZE.split('\xa0')[1].upper()]
             DATE=self.convert_date(_cols[0].text)
             if len(_cols) == 5:
                 SEEDS = _cols[4].text.split("\xa0")[1]
                 LEACH = _cols[4].text.split("\xa0")[3]
             else:
                 SEEDS = LEACH = 0
-            logger.debug("COL Title:"+TITLE+" L:"+str(INFO)+" DL:"+str(DL)+" S:"+str(SIZE)+" D:"+str(DATE))
+            self.log.debug("COL Title:"+TITLE+" L:"+str(INFO)+" DL:"+str(DL)+" S:"+str(SIZE)+" D:"+str(DATE))
             self.POSTS.append({'tracker': self.TRACKER_NAME,
                                'title': TITLE.replace(r'<',''), 
                                'info':"{0}/{1}".format(self.TRACKER_URL,INFO),
@@ -67,3 +63,4 @@ class SearchRUTOR(SearchBase):
                                'date': DATE,
                                'seed': SEEDS,
                                'leach': LEACH})
+        return True
