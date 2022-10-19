@@ -6,10 +6,10 @@ from models.SearchRUTOR import SearchRUTOR
 from models.SearchToloka import SearchToloka
 import hashlib, threading, time, logging
 import math
+import pydash as _
 
 
 def convert_size(size_bytes):
-    print(size_bytes)
     if size_bytes == 0:
         return "0B"
     size_name = ( "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
@@ -38,58 +38,65 @@ class SearchTorrents:
     # Variable for storing search results
     CACHE = {}
 
-    POSTS = []
     FAILED_TRACKERS = []
-    def __init__(self, search_string: str) -> bool:
+    def __init__(self, credentials, sort_by):
+        self.CREDENTIALS = credentials
+        self.SORT_BY = sort_by
 
-        log.info("Searching for: %s", search_string)
+    def search(self,search_string: str) -> list:
+        """Check Cached search results and do search if nothing found in cache"""
         srch_hash = hashlib.md5(str(search_string).encode('utf-8')).hexdigest()
-        if srch_hash in self.CACHE.keys():
-            log.info("Found cached search results for: %s", search_string)
-            self.POSTS=self.CACHE[srch_hash]
-        else:
-            posts = []
-            # Search over enabled trackers
-            for _class in self.CLASSES:
-                try:
-                    if _class in self.CREDENTIALS:
-                        creds = self.CREDENTIALS[_class]
-                        TRACKER = self.CLASSES[_class](username=creds["USERNAME"],
-                                                       password=creds["PASSWORD"])
-                    else:
-                        TRACKER=self.CLASSES[_class]()
+        if srch_hash not in self.CACHE.keys():
+            self.CACHE[srch_hash] = self._search(search_string)
+        return self.sort(self.CACHE[srch_hash])
 
-                    TRACKER.search(search_string)
-                    posts.extend(TRACKER.POSTS)
-                except:
-                    self.FAILED_TRACKERS.append(_class)
-            log.info("Found %s posts on %s trackers", len(posts), ', '.join(self.CLASSES.keys()))
-            if self.SORT_BY == "size":
-                for post in posts:
-                    print(f'{post["tracker"]}: {str(post["size"])[-2:].upper()}')
-                    
-                    try:
-                        post["size"] = int(float(post["size"][:-2])) * self.UNITS[post["size"][-2:].upper()]
-                    except:
-                        continue
-            # Sort search results before returning data back to user
+    def _search(self, search_string: str) -> list:
+        """Search over trackers"""
+        posts = []
+        log.info("Searching for: %s", search_string)
+        # Search over enabled trackers
+        for _class in self.CLASSES:
             try:
-                sorted_list = sorted(posts, 
-                                     key=lambda d: int(d[self.SORT_BY]),
-                                     reverse=self.SORT_REVERSE)
+                TRACKER = self.CLASSES[_class](
+                    username=_.get(self.CREDENTIALS, f"{_class}.USERNAME", None),
+                    password=_.get(self.CREDENTIALS, f"{_class}.PASSWORD", None))
+                TRACKER.search(search_string)
+                posts.extend(TRACKER.POSTS)
+            except:
+                self.FAILED_TRACKERS.append(_class)
+        log.info("Found %s posts on %s trackers", len(posts), ', '.join(self.CLASSES.keys()))
+        return posts
 
-                # Store results in cache if sorting went well
-                self.POSTS = sorted_list
+    def sort(self, posts):
+        try:
+            posts = self.pre_sort_format(posts)
+            sorted_list = sorted(posts, 
+                                    key=lambda d: int(d[self.SORT_BY]),
+                                    reverse=self.SORT_REVERSE)
+            # Store results in cache if sorting went well
+            posts = self.post_sort_format(sorted_list)
+        except Exception as err:
+            log.fatal(err)
+            log.fatal(posts)
+        return posts
+
+    def pre_sort_format(self, posts):
+        if self.SORT_BY != "size":
+            return posts
+        for post in posts:
+            try:
+                post["size"] = int(float(post["size"][:-2])) * self.UNITS[post["size"][-2:].upper()]
+            except:
+                continue
+        return posts
+
+    def post_sort_format(self, posts):
+        # Convert size B -> human readable (K, M, G)
+        if self.SORT_BY != "size":
+            return posts
+        for el in posts:
+            try:
+                el['size'] = convert_size(el['size'])
             except Exception as err:
-                log.fatal(err)
-                log.fatal(self.POSTS)
-                self.POSTS = posts
-            # Convert size B -> human readable (K, M, G)
-            if self.SORT_BY == "size":
-                for el in self.POSTS:
-                    try:
-                        el['size'] = convert_size(el['size'])
-                    except Exception as err:
-                        log.error("Conversion failed: %s", el)
-                self.CACHE[srch_hash]=self.POSTS
-        log.info("Found %s posts on trackers %s", len(self.POSTS), ', '.join(self.CLASSES))
+                log.error("Conversion failed: %s", el)
+        return posts
