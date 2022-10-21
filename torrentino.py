@@ -67,11 +67,11 @@ torrent_reply_markup = ReplyKeyboardMarkup( [[KeyboardButton(text=str(key)) for 
 # tracker_reply_markup = InlineKeyboardMarkup( [[InlineKeyboardButton(key, callback_data=key)] for key in SearchTorrents.CLASSES.keys()], resize_keyboard=True )
 
 tracker_list="|".join(SearchTorrents.CLASSES.keys())
-SearchTorrents.CREDENTIALS = config['CREDENTIALS']
-SearchTorrents.SORT_BY = config['BOT']['SORT_BY']
+SEARCH_TORRENTS = SearchTorrents(credentials=_.get(config, "CREDENTIALS", {}),
+                                 sort_by=_.get(config, "BOT.SORT_BY", "date"))
+
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
-
 def help_command(update, context):
     """Send a message when the command /help is issued."""
     HELP = trans("HELP",update.message.from_user.language_code)
@@ -286,8 +286,8 @@ def searchOnWebTracker(update, context):
 
     msg = update.message.reply_text(text=trans('DOING_SEARCH', update.message.from_user.language_code)+f" {update.message.text}")
 
-    SR=SearchTorrents(update.message.text)
-    context.user_data['posts']=SR.POSTS
+    
+    context.user_data['posts']=SEARCH_TORRENTS.search(update.message.text)
     # Display search results if something was found
     if len(context.user_data['posts'])>0:
         context.bot.edit_message_text(chat_id=msg.chat.id,
