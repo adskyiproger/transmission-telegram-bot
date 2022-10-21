@@ -1,6 +1,17 @@
 # Transmission telegram bot
 
-Telegram bot for Searching torrents and passing to Transmission torrent server.
+Telegram bot for Searching torrents on tracker websites and passing to Transmission torrent server.
+Bot uses website search form to find torrents and returns to user search results in the format of "Title / Size / Publish data / Seeders / Leachers". Results are slit by pages for simplisity and can be sorted by any field.
+
+- Last search results are available by pressing "Search" button.
+- List of downloaded torrents is available by pressing "Torrents" button.
+
+![image](doc/images/screen-0.png)
+
+After initial configuration new users can be added by typing `/adduser` command. As output you will get a registration link and QR-code.
+
+![image](doc/images/screen-1.png)
+
 
 Supported trackers:
 * http://nnmclub.to/
