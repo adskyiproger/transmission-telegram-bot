@@ -5,15 +5,14 @@ class SearchBase:
     SESSION = requests.Session()
     LOGGED_IN = False
     POSTS = []
-    # UNITS = {'KB': 1024, 'MB': 1048576, 'GB': 1073741824 }
     TRACKER_NAME = 'dummy'
     _log_updated = False
     _log = logging.getLogger()
 
-    def __init__(self) -> None:
+    def __init__(self, username, password) -> None:
         pass
 
-    def search(self):
+    async def search(self) -> bool:
         pass
 
     @property

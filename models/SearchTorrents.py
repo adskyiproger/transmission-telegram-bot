@@ -5,19 +5,9 @@ from models.SearchRUTOR import SearchRUTOR
 # from models.SearchKAT import SearchKAT
 from models.SearchToloka import SearchToloka
 import hashlib, threading, time, logging
-import math
+
 import pydash as _
-
-
-def convert_size(size_bytes):
-    if size_bytes == 0:
-        return "0B"
-    size_name = ( "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
-    i = int(math.floor(math.log(size_bytes, 1024)))
-    p = math.pow(1024, i)
-    s = round(size_bytes / p, 2)
-    return "%s %s" % (s, size_name[i])
-
+from lib.func import human_to_bytes, bytes_to_human
 
 log = logging.getLogger(__name__)
 
@@ -25,7 +15,6 @@ log = logging.getLogger(__name__)
 class SearchTorrents:
     # Key to sort search results
     SORT_BY = 'size'
-    UNITS = {'KB': 1024, 'MB': 1048576, 'GB': 1073741824 }
     # reverse sort order
     SORT_REVERSE = True
     CREDENTIALS = {}
@@ -84,10 +73,7 @@ class SearchTorrents:
         if self.SORT_BY != "size":
             return posts
         for post in posts:
-            try:
-                post["size"] = int(float(post["size"][:-2])) * self.UNITS[post["size"][-2:].upper()]
-            except:
-                continue
+            post["size"] = human_to_bytes(post['size'])
         return posts
 
     def post_sort_format(self, posts):
@@ -95,8 +81,5 @@ class SearchTorrents:
         if self.SORT_BY != "size":
             return posts
         for el in posts:
-            try:
-                el['size'] = convert_size(el['size'])
-            except Exception as err:
-                log.error("Conversion failed: %s", el)
+            el['size'] = bytes_to_human(el['size'])
         return posts

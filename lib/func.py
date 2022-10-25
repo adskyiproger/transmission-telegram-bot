@@ -10,6 +10,8 @@ import logging.handlers
 from telegram import KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ParseMode
 import qrcode # Link for website
 import pydash as _
+import math
+size_names = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
 
 # Configure actions to work with torrent
 TORRENT_ACTIONS=[
@@ -113,6 +115,30 @@ def get_qr_code(input_data):
     img = qr.make_image(fill='black', back_color='white')
     img.save(img_file)
     return img_file
+
+
+def bytes_to_human(size_bytes):
+    if size_bytes == 0:
+        return "0B"
+    try:
+        i = int(math.floor(math.log(size_bytes, 1024)))
+        p = math.pow(1024, i)
+        s = round(size_bytes / p, 2)
+        return "%s%s" % (s, size_names[i])
+    except TypeError:
+        return size_bytes
+
+
+def human_to_bytes(size_human):
+    try:
+        size, size_name = size_human[:-2], size_human[-2:]
+        if size_name in size_names:
+            i = size_names.index(size_name)
+            p = math.pow(1024, i)
+            return int(float(size) * p )
+    except TypeError:
+        return size_human
+
 
 CONFIG_FILE = str(Path(__file__).parent.parent) +str(os.path.sep)+ 'torrentino.yaml'
 CONFIG = load_config(CONFIG_FILE)
