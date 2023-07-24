@@ -8,14 +8,11 @@ bot.
 """
 import requests
 import os
-import threading
 import time
 import tempfile
 import random
 import string
 import pydash as _
-import asyncio
-
 from models.TransmissionClient import TransmissionClient
 from models.SearchTorrents import SearchTorrents
 
@@ -37,6 +34,7 @@ BOT_TOKEN = config['BOT']['TOKEN']
 # Client connection to Transmission torrent server
 # User environment variables or defaults from configuration file
 TORRENT_CLIENT = TransmissionClient(
+    telegram_token=BOT_TOKEN,
     host=os.getenv("TR_HOST", config['TRANSMISSION']['HOST'] ),
     port=int(os.getenv("TR_PORT", config['TRANSMISSION']['PORT'])),
     username=os.getenv("TR_USER", config['TRANSMISSION']['USER']),
@@ -51,7 +49,6 @@ reply_markup = InlineKeyboardMarkup(
 WELCOME_HASHES = []
 
 log = get_logger(__file__)
-
 
 # Configure actions to work with torrent
 TORRENT_ACTIONS=[
@@ -70,6 +67,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     HELP = trans("HELP",update.message.from_user.language_code)
     if update.message.chat.id == config['BOT']['SUPER_USER']:
         HELP += "\n"+trans("HELP_ADMIN",update.message.from_user.language_code)
+    log.info("%s, %s, %s", update.message.chat.id, update.message.chat_id, context.user_data)
     await context.bot.send_message(chat_id=update.message.chat.id, text=HELP, parse_mode=ParseMode.HTML, reply_markup=torrent_reply_markup)
 
 
@@ -216,48 +214,34 @@ def getKeyboard(context, _page=1):
 
 
 @restricted
-async def processUserKey(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def addTorrentToTransmission(update: Update, context: ContextTypes.DEFAULT_TYPE):
     log.debug(update)
+
     query = update.callback_query
-    query.answer()
+    await query.answer()
     if context.user_data['torrent']['type'] == 'torrent':
-        await query.edit_message_text(text=trans('FILE_WILL_BE_DOWNLOADED', 
-                                                 query.from_user.language_code).format(context.user_data['torrent']['file_name'],
-                                                                                       str(query.data)))
-        _file = context.bot.getFile(context.user_data['torrent']['file_id'])
         # Temporal file location
-        tmp_file_path = os.path.join(tempfile.gettempdir(), context.user_data['torrent']['file_name'])
-        _file.download(tmp_file_path)
-        log.debug("Torrent file {0} was downloaded into temporal directpry {1}".format(context.user_data['torrent']['file_id'], tmp_file_path))
-        with open(tmp_file_path, 'rb') as f:
-            TORRENT_CLIENT.add_torrent(f, download_dir=query.data)
-
-        log.info("File {0} will be placed into {1}".format(context.user_data['torrent']['file_name'],query.data))
-    elif context.user_data['torrent']['type'] == 'url':
+        _tmp_file_path = os.path.join(tempfile.gettempdir(), context.user_data['torrent']['file_name'])
+        # Download file from telegram bot to temporal location
+        _file = await context.bot.getFile(context.user_data['torrent']['file_id'])
+        await _file.download_to_drive(_tmp_file_path)
+        tmp_file_path = f"file://{_tmp_file_path}"
+    elif context.user_data['torrent']['type'] in ['url', 'magnet']:
+        # Magnet URLs and regular URLs are processed by transmission
+        tmp_file_path = context.user_data['torrent']['url']
         # If tracker has credential, download file and path file path to Transmission
-        if _.has(config['CREDENTIALS'], context.user_data['torrent']['tracker']):
-            file = download_with_auth(context.user_data['torrent']['url'],
+        if _.has(config['CREDENTIALS'], _.get(context.user_data, 'torrent.tracker')):
+            _tmp_file_path = download_with_auth(context.user_data['torrent']['url'],
                                            config['CREDENTIALS'][context.user_data['torrent']['tracker']])
-            with open(file, 'rb') as f:
-                TORRENT_CLIENT.add_torrent(f, download_dir=query.data)
-        else:
-            TORRENT_CLIENT.add_torrent(context.user_data['torrent']['url'], download_dir=query.data)
+            tmp_file_path = f"file://{_tmp_file_path}"
 
-        await query.edit_message_text(text=trans('FILE_WILL_BE_DOWNLOADED', 
-                                        query.from_user.language_code).format(context.user_data['torrent']['url'],
-                                                                                                                    str(query.data)))
-
-    elif context.user_data['torrent']['type'] == 'magnet':
-        file_url = context.user_data['torrent']['url']
-        log.debug(context.user_data['torrent'])
-        download_dir = query.data
-        await query.edit_message_text(text=trans("Magnet {0} will be downloaded into {1}.", query.from_user.language_code).format(file_url, download_dir))
-        try:
-            TORRENT_CLIENT.add_torrent(file_url, download_dir=download_dir)
-            log.info("URL {0} will be placed into {1}".format(file_url, download_dir))
-        except Exception as err:
-            log.error("Failed to download file from URL: %s, error: %s", file_url, err)
-            await query.edit_message_text("Failed to download file: %s".format(file_url))
+    log.info("Adding file/URL %s to Transmission", tmp_file_path)            
+    TORRENT_CLIENT.add_torrent(chat_id=update.effective_user.id,
+                               torrent=tmp_file_path,
+                               download_dir=query.data)
+    await query.edit_message_text(text=trans('FILE_WILL_BE_DOWNLOADED', 
+                                             query.from_user.language_code).format(tmp_file_path,
+                                             str(query.data)))
 
 
 def download_with_auth(file_url: str, auth_info: dict) -> str:
@@ -405,7 +389,7 @@ def welcomeNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     """Start the bot."""
     app = Application.builder().token(BOT_TOKEN).build()
-
+    # scheduler(app.bot)
     # Admin commands
     app.add_handler(MessageHandler(Regex(r'^/(help|start)$'), help_command))
     # Issue user token:
@@ -417,8 +401,7 @@ def main():
     # Show last search results
     app.add_handler(MessageHandler(Regex(r'Search$'), lastSearchResults))
     app.add_handler(MessageHandler(Regex(r'^/info_[0-9]+$'), torrentInfo))
-    app.add_handler(MessageHandler(Regex(r'Stop All$'), torrentStopAll))
-    app.add_handler(MessageHandler(Regex(r'Start All$'), torrentStartAll))
+
     app.add_handler(MessageHandler(Regex(r'^/stop_[0-9]+$'), torrentStop))
     app.add_handler(MessageHandler(Regex(r'^/start_[0-9]+$'), torrentStart))
     app.add_handler(MessageHandler(Regex(r'^/delete_[0-9]+$'), torrentDelete))
@@ -434,10 +417,9 @@ def main():
     # Navigation buttons switcher (inline keyboard)
     app.add_handler(CallbackQueryHandler(getMenuPage, pattern=r'^[x0-9]+$'))
     # Select download folder switcher (inline keyboard)
-    app.add_handler(CallbackQueryHandler(processUserKey))
+    app.add_handler(CallbackQueryHandler(addTorrentToTransmission))
     # Default search input text
     app.add_handler(MessageHandler(ALL, searchOnWebTracker))
-
 
     # Run the bot until the user presses Ctrl-C
     app.run_polling(allowed_updates=Update.ALL_TYPES)
@@ -445,3 +427,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    
