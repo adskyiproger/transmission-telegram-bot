@@ -178,7 +178,7 @@ def getPage(context: ContextTypes.DEFAULT_TYPE, _page: int = 1, user_lang: str =
     return _message
 
 
-def getKeyboard(context, _page=1):
+def getKeyboard(context: ContextTypes.DEFAULT_TYPE, _page: int = 1) -> InlineKeyboardMarkup:
     pages = getNumPages(context)
     # Edge case for first page
     page = int(_page)
@@ -202,6 +202,7 @@ def getKeyboard(context, _page=1):
             idx = KEYBOARD.index(key)
             KEYBOARD.remove(key)
             KEYBOARD.insert(idx, InlineKeyboardButton("...", callback_data="x"))
+            break
 
     return InlineKeyboardMarkup([KEYBOARD, FOOTER_KEYS])
 
