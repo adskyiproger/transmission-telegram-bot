@@ -7,7 +7,7 @@ HELP=Use keyboard to control torrents
 HELP_ADMIN=Following admin commands are available:
            /adduser, issue auth token for new user
 DOING_SEARCH=Please wait, searching:
-NAV_HEADER=Viewing page {} of {}:
+NAV_HEADER=Viewing page {} of {} (total: {} posts):
            -------------------------
 NO_SEARCH_RESULTS=Seems like you have not searched today. Please try to search for something, For instance: Lorf of the rings
 NOTHING_FOUND=Unfortunately, nothing found for your query.
@@ -28,7 +28,7 @@ HELP=Use keyboard to control torrents
 HELP_ADMIN=Following admin commands are available:
            /adduser, issue auth token for new user
 DOING_SEARCH=Подождите, ищу:
-NAV_HEADER=Страница {} из {}:
+NAV_HEADER=Страница {} из {} (всего {} постов):
            -------------------------
 
 NO_SEARCH_RESULTS=Похоже вы ещё не пользовались поиском сегодня. Попробуйте что нибудь найти, например: С лёгким паром
@@ -50,7 +50,7 @@ HELP=Використовуйте клавіатуру для управлінн
 HELP_ADMIN=Команди для адміністрування:
            /adduser, issue auth token for new user
 DOING_SEARCH=Зачекайте, шукаю:
-NAV_HEADER=Сторінка {} з {}:
+NAV_HEADER=Сторінка {} з {} (всього {} постів):
            -------------------------
 
 NO_SEARCH_RESULTS=Схоже ви ще не користувалися пошуком сьогодні. Спробуйте щось знайти, наприклад: Дизель шоу.

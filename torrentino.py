@@ -127,7 +127,7 @@ async def askDownloadDirPageLink(update: Update, context: ContextTypes.DEFAULT_T
 @restricted
 async def getMenuPage(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    query.answer()
+    await query.answer()
     page = query.data
     try:
         if str(page) == 'x':
@@ -153,7 +153,7 @@ async def lastSearchResults(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             parse_mode=ParseMode.HTML,
             disable_web_page_preview=True)
     else:
-        context.bot.send_message(
+        await context.bot.send_message(
             chat_id=update.message.chat.id,
             text=trans('NO_SEARCH_RESULTS',
                        update.message.from_user.language_code),
@@ -167,9 +167,14 @@ def getNumPages(context: ContextTypes.DEFAULT_TYPE) -> int:
 
 def getPage(context, _page=1, user_lang="en"):
     page = int(_page)
-    _message = trans("NAV_HEADER", user_lang).format(page, getNumPages(context))
+    posts = context.user_data['posts']
+    total_num = len(posts)
+    _message = trans("NAV_HEADER", user_lang).format(page, getNumPages(context), total_num)
     # Add first and last posts index
-    first, last = (page * 5) - 5, page * 5
+    first = (page - 1) * 5
+    last = first + 5
+    if last > total_num:
+        last = total_num
     ii = first
     for post in context.user_data['posts'][first:last]:
         _message += f"\n<b>{post['title']}</b>: {post['size']}  {post['date']} ⬆{post['seed']} ⬇{post['leach']}\n" \
