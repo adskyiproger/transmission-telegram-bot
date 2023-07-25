@@ -165,21 +165,16 @@ def getNumPages(context: ContextTypes.DEFAULT_TYPE) -> int:
         num_pages += 1
     return num_pages
 
-def getPage(context, _page=1, user_lang="en"):
+def getPage(context: ContextTypes.DEFAULT_TYPE, _page: int = 1, user_lang: str = "en") -> str:
     page = int(_page)
     posts = context.user_data['posts']
-    total_num = len(posts)
-    _message = trans("NAV_HEADER", user_lang).format(page, getNumPages(context), total_num)
+    _message = trans("NAV_HEADER", user_lang).format(page, getNumPages(context), len(posts))
     # Add first and last posts index
-    first = (page - 1) * 5
-    last = first + 5
-    if last > total_num:
-        last = total_num
-    ii = first
-    for post in context.user_data['posts'][first:last]:
+    post_num = (page - 1) * 5
+    for post in posts[post_num:post_num+5]:
         _message += f"\n<b>{post['title']}</b>: {post['size']}  {post['date']} ⬆{post['seed']} ⬇{post['leach']}\n" \
-                    f"<a href='{post['info']}'>Info</a>     [ ▼ /download_{ii} ]\n"
-        ii += 1
+                    f"<a href='{post['info']}'>Info</a>     [ ▼ /download_{post_num} ]\n"
+        post_num += 1
     return _message
 
 
