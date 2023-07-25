@@ -11,9 +11,10 @@ import logging
 import logging.handlers
 from telegram import KeyboardButton, ReplyKeyboardMarkup
 from telegram.constants import ParseMode
-import qrcode # Link for website
+import qrcode
 import pydash as _
 import math
+
 size_names = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
 
 # Configure actions to work with torrent
@@ -74,7 +75,7 @@ def restricted(func):
     async def wrapped(update, context, *args, **kwargs):
         
         user_id = update.effective_user.id
-        logging.info(CONFIG['BOT'])
+
         if 'SUPER_USER' not in CONFIG['BOT'] or CONFIG['BOT']['SUPER_USER'] == '':
             logging.warn(f"Adding new super user {user_id}")
             CONFIG['BOT']['SUPER_USER'] = user_id
@@ -108,6 +109,9 @@ def get_logger(class_name: str) -> logging.Logger:
     logging.basicConfig( format = '[%(asctime)s] [%(levelname)s]: %(name)s %(message)s',
                         level = logging.getLevelName(log_level),
                         handlers = log_handlers )
+    # Silence for httpx
+    logging.getLogger('httpx').setLevel(logging.WARNING)
+    
     log = logging.getLogger(class_name)
     return log
 

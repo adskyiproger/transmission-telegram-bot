@@ -1,5 +1,4 @@
 import hashlib
-import logging
 import pydash as _
 
 from typing import List
@@ -8,9 +7,11 @@ from models.SearchRUTOR import SearchRUTOR
 # TODO: KAT is down, temporary disabled
 # from models.SearchKAT import SearchKAT
 from models.SearchToloka import SearchToloka
-from lib.func import human_to_bytes, bytes_to_human
+from lib.func import (human_to_bytes,
+                      bytes_to_human,
+                      get_logger)
 
-log = logging.getLogger(__name__)
+log = get_logger("SearchTorrents")
 
 
 class SearchTorrents:

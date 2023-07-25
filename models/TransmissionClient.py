@@ -10,9 +10,9 @@ from transmission_rpc.lib_types import _Timeout
 import logging
 from logging import Logger
 from transmission_rpc.torrent import Torrent
+from lib.func import bytes_to_human
 
-
-log = logging.getLogger(__name__)
+log = logging.getLogger("TransmissionClient")
 
 
 class TransmissionClient(Client):
@@ -97,13 +97,5 @@ class TransmissionClient(Client):
                 "---------------------------\n" \
                 "Files:\n"
         for file in torrent.files():
-            _info += f"{file.name}: completed/size: {sizeof_fmt(file.completed)}/{sizeof_fmt(file.size)} Bytes \n"
+            _info += f"{file.name}: completed/size: {bytes_to_human(file.completed)}/{bytes_to_human(file.size)} Bytes \n"
         return _info
-
-
-def sizeof_fmt(num, suffix='B'):
-    for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
-        if abs(num) < 1024.0:
-            return "%3.1f%s%s" % (num, unit, suffix)
-        num /= 1024.0
-    return "%.1f%s%s" % (num, 'Yi', suffix)
