@@ -1,11 +1,5 @@
-import requests
 from bs4 import BeautifulSoup
-import logging
-
 from models.SearchBase import SearchBase
-
-# logging.basicConfig( format = '[%(asctime)s] [%(levelname)s]: %(name)s %(message)s',
-#                      level = logging.getLevelName("INFO"))
 
 class SearchToloka(SearchBase):
     TRACKER_NAME = 'toloka'
@@ -20,7 +14,7 @@ class SearchToloka(SearchBase):
         self.POSTS = []
 
     def login(self):
-        self.log.info("Loggin in")
+        self.log.info("Loggin in %s", self.TRACKER_LOGIN_URL)
         payload = {
             "username": self.username,
             "password": self.password,
@@ -32,7 +26,7 @@ class SearchToloka(SearchBase):
         self.LOGGED_IN = True
 
     def search(self, search_string: str) -> bool:
-        self.log.info("Searching for something")
+        self.log.info("Searching for %s on %s", search_string, self.TRACKER_NAME)
         if not self.LOGGED_IN:
             self.login()
         raw_data = self.SESSION.get(f"{self.TRACKER_SEARCH_URL_TPL}{search_string}")

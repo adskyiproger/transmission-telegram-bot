@@ -2,14 +2,20 @@ import configparser
 import os
 import yaml
 import sys
+import tempfile
+import uuid
 from pathlib import Path
 from functools import wraps
 from tempfile import mkstemp
 import logging
 import logging.handlers
-from telegram import KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ParseMode
-import qrcode # Link for website
+from telegram import KeyboardButton, ReplyKeyboardMarkup
+from telegram.constants import ParseMode
+import qrcode
 import pydash as _
+import math
+
+size_names = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
 
 # Configure actions to work with torrent
 TORRENT_ACTIONS=[
@@ -50,6 +56,9 @@ def trans(STRING,L_CODE):
     if L_CODE in lang.sections():
         if STRING in lang[L_CODE]:
             STRING=lang[L_CODE][STRING]
+    else:
+        if STRING in lang["en"]:
+            STRING = lang["en"][STRING]
     return STRING
 
 
@@ -66,13 +75,16 @@ def adduser(id):
 
 def restricted(func):
     @wraps(func)
-    def wrapped(update, context, *args, **kwargs):
+    async def wrapped(update, context, *args, **kwargs):
+        
         user_id = update.effective_user.id
+
         if 'SUPER_USER' not in CONFIG['BOT'] or CONFIG['BOT']['SUPER_USER'] == '':
             logging.warn(f"Adding new super user {user_id}")
             CONFIG['BOT']['SUPER_USER'] = user_id
             save_config()
         elif user_id not in CONFIG['BOT']['ALLOWED_USERS']:
+            logging.info(f"{user_id} != {CONFIG['BOT']['ALLOWED_USERS']}")
             context.bot.send_message(chat_id=user_id,
                                      text=trans('ACCESS_RESTRICTED', update.message.from_user.language_code),
                                      parse_mode=ParseMode.HTML,
@@ -80,10 +92,10 @@ def restricted(func):
             logging.debug(update)
             logging.error("Unauthorized access denied for {}.".format(user_id))
             return
-        return func(update, context, *args, **kwargs)
+        return await func(update, context, *args, **kwargs)
     return wrapped
 
-def get_logger(class_name: str):
+def get_logger(class_name: str) -> logging.Logger:
     log_level = os.environ.get('LOG_LEVEL', CONFIG['BOT']['LOG_LEVEL']).upper()
     # Configure telegram bot logging
     log_handlers=[ logging.StreamHandler(sys.stdout) ]
@@ -100,6 +112,9 @@ def get_logger(class_name: str):
     logging.basicConfig( format = '[%(asctime)s] [%(levelname)s]: %(name)s %(message)s',
                         level = logging.getLevelName(log_level),
                         handlers = log_handlers )
+    # Silence for httpx
+    logging.getLogger('httpx').setLevel(logging.WARNING)
+    
     log = logging.getLogger(class_name)
     return log
 
@@ -109,10 +124,53 @@ def get_qr_code(input_data):
     qr.add_data(input_data)
     qr.make(fit=True)
     img_file = mkstemp()[1]
-    logging.debug(f"Temporal file created: {img_file}")
+    log.debug(f"Temporal file created: {img_file}")
     img = qr.make_image(fill='black', back_color='white')
     img.save(img_file)
     return img_file
 
+
+def bytes_to_human(size_bytes: int) -> str:
+    if size_bytes == 0:
+        return "0B"
+    try:
+        i = int(math.floor(math.log(size_bytes, 1024)))
+        p = math.pow(1024, i)
+        s = round(size_bytes / p, 2)
+        return "%s%s" % (s, size_names[i])
+    except TypeError:
+        return size_bytes
+
+
+def save_file(path: str, content: bytes):
+    with open(path, 'wb') as f:
+        f.write(content)
+    return path
+
+def save_torrent_to_tempfile(content: bytes) -> str:
+    """Save torrent as temporal file and return full file path"""
+    temp_file = os.path.join(tempfile.gettempdir(),           # Temporal directory
+                             str(uuid.uuid4()) + ".torrent")  # Random file name
+    with open(temp_file, 'wb') as f:
+        f.write(content)
+    log.info("Temporal file path: %s, size: %s",
+             temp_file,
+             bytes_to_human(os.path.getsize(temp_file)))
+
+    return temp_file
+
+
+def human_to_bytes(size_human: str) -> int:
+    try:
+        size, size_name = size_human[:-2], size_human[-2:]
+        if size_name in size_names:
+            i = size_names.index(size_name)
+            p = math.pow(1024, i)
+            return int(float(size) * p )
+    except TypeError:
+        return size_human
+
+
 CONFIG_FILE = str(Path(__file__).parent.parent) +str(os.path.sep)+ 'torrentino.yaml'
 CONFIG = load_config(CONFIG_FILE)
+log = get_logger("function")

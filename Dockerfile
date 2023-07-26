@@ -1,12 +1,19 @@
 FROM python:slim
 
-WORKDIR /usr/src/app
-RUN groupadd -g 2022 python && useradd -g 2022 -u 2022 --home-dir /usr/src/app python && chown python:python /usr/src/app
+RUN groupadd -g 2022 python && \
+    useradd -g 2022 -u 2022 --create-home --home-dir /usr/src/app python
+
 USER python
-ENV PATH="${PATH}:/usr/src/app/.local/bin"
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+WORKDIR /usr/src/app
 
-COPY . .
+ENV PATH="${PATH}:/usr/src/app/.local/bin:/usr/src/app"
 
-CMD [ "python", "./torrentino.py" ]
+COPY Pipfile Pipfile.lock ./
+COPY lib lib
+COPY models models
+COPY torrentino.py torrentino.lang .
+
+RUN pip install --user pipenv && \
+    pipenv install
+
+ENTRYPOINT [ "pipenv", "run", "./torrentino.py" ]

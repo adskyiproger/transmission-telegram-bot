@@ -7,13 +7,14 @@ HELP=Use keyboard to control torrents
 HELP_ADMIN=Following admin commands are available:
            /adduser, issue auth token for new user
 DOING_SEARCH=Please wait, searching:
-NAV_HEADER=Viewing page {} of {}:
+NAV_HEADER=Viewing page {} of {} (total: {} posts):
            -------------------------
 NO_SEARCH_RESULTS=Seems like you have not searched today. Please try to search for something, For instance: Lorf of the rings
 NOTHING_FOUND=Unfortunately, nothing found for your query.
 CHOOSE_DOWNLOAD_DIR=Please choose download folder for {}
 FILE_WILL_BE_DOWNLOADED=File {0} will be downloaded into {1}
 SOMETHING_WENT_WRONG=Something went wrong, probably too many files in this torrent
+DOWNLOAD_COMPLETED=Download completed: {}
 [ru]
 ACCESS_RESTRICTED=У вас недостаточно прав для выполнения этой команды. Пожалуйста обратитесь к администратору.
 Torrents list=Список торрентов
@@ -28,13 +29,14 @@ HELP=Use keyboard to control torrents
 HELP_ADMIN=Following admin commands are available:
            /adduser, issue auth token for new user
 DOING_SEARCH=Подождите, ищу:
-NAV_HEADER=Страница {} из {}:
+NAV_HEADER=Страница {} из {} (всего {} постов):
            -------------------------
 
 NO_SEARCH_RESULTS=Похоже вы ещё не пользовались поиском сегодня. Попробуйте что нибудь найти, например: С лёгким паром
 NOTHING_FOUND=К сожалению по вашему запросу ничего не найдено.
 CHOOSE_DOWNLOAD_DIR=Выберите папку для загрузки файла {}
 SOMETHING_WENT_WRONG=Something went wrong, probably too many files in this torrent
+DOWNLOAD_COMPLETED=Загрузка {} завершена
 [uk]
 ACCESS_RESTRICTED=У вас недостатньо дозволів для виконання цієї команди. Будь-ласка зверніться до адміністратора.
 Torrents list=Список торрентів
@@ -50,9 +52,10 @@ HELP=Використовуйте клавіатуру для управлінн
 HELP_ADMIN=Команди для адміністрування:
            /adduser, issue auth token for new user
 DOING_SEARCH=Зачекайте, шукаю:
-NAV_HEADER=Сторінка {} з {}:
+NAV_HEADER=Сторінка {} з {} (всього {} постів):
            -------------------------
 
 NO_SEARCH_RESULTS=Схоже ви ще не користувалися пошуком сьогодні. Спробуйте щось знайти, наприклад: Дизель шоу.
 NOTHING_FOUND=Нажаль за вашим запитом нічого не знайдено.
 CHOOSE_DOWNLOAD_DIR=Оберіть папку для завантажання файлу {}
+DOWNLOAD_COMPLETED=Заватаження {} завершено

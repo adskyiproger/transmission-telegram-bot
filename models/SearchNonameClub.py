@@ -18,8 +18,9 @@ class SearchNonameClub(SearchBase):
 
     def search(self, search_string: str) -> bool:
         """Search data on the web"""
+        self.log.info("Searching for %s on %s", search_string, self.TRACKER_NAME)
         x=self.TRACKER_URL+self.TRACKER_SEARCH_URL_TPL+search_string
-        _data=BeautifulSoup(get(x).content, 'lxml').select('table.forumline > tbody > tr')
+        _data=BeautifulSoup(self.SESSION.get(x).content, 'lxml').select('table.forumline > tbody > tr')
         self.log.debug(_data)
         for row in _data:
             _cols=row.select('td')

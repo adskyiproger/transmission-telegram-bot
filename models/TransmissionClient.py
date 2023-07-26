@@ -1,40 +1,100 @@
+import asyncio
+import threading
+import time
+
+from copy import deepcopy
+from telegram.ext import Application
+from typing import Any, BinaryIO
+from typing_extensions import Literal
 from transmission_rpc.client import Client
-from transmission_rpc.lib_types import File
-import logging
-import os
+from transmission_rpc.torrent import Torrent
+from lib.func import bytes_to_human, trans, get_logger
 
+log = get_logger("TransmissionClient")
 
-logger = logging.getLogger(__name__)
 
 class TransmissionClient(Client):
-    def stop_all(self):
+    """
+    Features on top of transmission_rpc Client:
+    - stop/start all torrents at once
+    - get detailed information about torrent
+    - notify user on torrent download done
+    """
+
+    DOWNLOAD_QUEUE = {}
+    QUEUE_CHECK_INTERVAL = 60
+
+    def __init__(self, *, protocol: Literal['http', 'https'] = "http",
+                 username: str = None, password: str = None,
+                 host: str = "127.0.0.1", port: int = 9091,
+                 path: str = "/transmission/", telegram_token: str = None):
+        self.telegram_token = telegram_token
+        # Background thread for tracking torrent status
+        download_status_monitor = threading.Thread(target=self._between_callback)
+        download_status_monitor.start()
+
+        super().__init__(protocol=protocol, username=username, password=password,
+                         host=host, port=port, path=path)
+
+    def _between_callback(self):
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        loop.run_until_complete(self._download_status_monitor())
+        loop.close()
+
+    async def _download_status_monitor(self):
+        """Periodically check download queue"""
+        log.info("Initializing scheduler")
+        while True:
+            time.sleep(TransmissionClient.QUEUE_CHECK_INTERVAL)
+            if not TransmissionClient.DOWNLOAD_QUEUE:
+                continue
+            app = Application.builder().token(self.telegram_token).build()
+            download_queue = deepcopy(TransmissionClient.DOWNLOAD_QUEUE)
+            for torrent_id in download_queue.keys():
+                status = self.status(torrent_id)
+                if not status.seeding:
+                    continue
+                user = TransmissionClient.DOWNLOAD_QUEUE[torrent_id]
+                name = self.get_torrent(torrent_id=torrent_id).name
+                log.info("Download completed: %s %s", name, status.seeding)
+                del TransmissionClient.DOWNLOAD_QUEUE[torrent_id]
+                log.info("User: %s, language: %s", user["chat_id"], user["lang_code"])
+                await app.bot.send_message(chat_id=user["chat_id"], text=trans("DOWNLOAD_COMPLETED", user["lang_code"]).format(name))
+
+    def add_torrent(self, chat_id, lang_code, torrent: BinaryIO | str, **kwargs: Any) -> Torrent:
+        """Add torrent to transmission server"""
+        _torrent = super().add_torrent(torrent, **kwargs)
+
+        # Add torrent to download queue
+        TransmissionClient.DOWNLOAD_QUEUE[_torrent.id] = {"chat_id": chat_id,
+                                                          "lang_code": lang_code}
+
+        return _torrent
+
+    def stop_all(self) -> None:
+        """Stop all torrent on server"""
         for torrent in self.get_torrents():
             self.stop_torrent(torrent.id)
-            logger.info("Stopped torrent {1} (id: {0})".format(torrent.id,torrent.name))
+            log.info("Stopped torrent %s (id: %s)", torrent.id, torrent.name)
 
-    def start_all(self):
+    def start_all(self) -> None:
+        """Start all torrent on server"""
         for torrent in self.get_torrents():
             self.start_torrent(torrent.id)
-            logger.info("Started torrent {1} (id: {0})".format(torrent.id,torrent.name))
-    def status(self,torrent_id):
+            log.info("Started torrent %s (id: %s)", torrent.id, torrent.name)
+
+    def status(self, torrent_id):
         return self.get_torrents(int(torrent_id))[0].status
 
-    def info(self,torrent_id):
-        torrent=self.get_torrents(int(torrent_id))[0]
-        _info=f"\n<b>{torrent.name}</b>:\n" \
-            f"Progress: {round(torrent.progress)}% ETA: {torrent.format_eta()}  Status: {torrent.status}\n" \
-            f"---------------------------\n"
-        _info=_info+"Files:\n"
-        for file_id, file in enumerate(torrent.files()):
-            _info=_info+f"{file_id}: {file.name}: completed/size: {sizeof_fmt(file.completed)}/{sizeof_fmt(file.size)} Bytes \n"
+    def info(self, torrent_id: str) -> str:
+        """Information about torrent (status per file)"""
+        torrent = self.get_torrents(int(torrent_id))[0]
+        _info = f"\n<b>{torrent.name}</b>:\n" \
+                f"Progress: {round(torrent.progress)}% ETA: {torrent.format_eta()}  Status: {torrent.status}\n" \
+                "---------------------------\n" \
+                "Files:\n"
+        for file in torrent.files():
+            _info += f"{file.name}: completed/size: {bytes_to_human(file.completed)}/{bytes_to_human(file.size)} Bytes \n"
         return _info
-
-
-def sizeof_fmt(num, suffix='B'):
-   for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
-      if abs(num) < 1024.0:
-         return "%3.1f%s%s" % (num, unit, suffix)
-      num /= 1024.0
-   return "%.1f%s%s" % (num, 'Yi', suffix)
-
-
