@@ -1,6 +1,4 @@
-from requests import get
 from bs4 import BeautifulSoup
-
 from models.SearchBase import SearchBase
 
 class SearchRUTOR(SearchBase):
@@ -38,8 +36,9 @@ class SearchRUTOR(SearchBase):
 
     def search(self, search_string: str) -> bool:
         """Search data on the web"""
-        x=self.TRACKER_URL+self.TRACKER_SEARCH_URL_TPL+search_string
-        _data=BeautifulSoup(get(x).content, 'lxml').select('div#index > table > tr')
+        self.log.info("Searching for %s on %s", search_string, self.TRACKER_NAME)
+        search_url=self.TRACKER_URL+self.TRACKER_SEARCH_URL_TPL+search_string
+        _data=BeautifulSoup(self.SESSION.get(search_url).content, 'lxml').select('div#index > table > tr')
         for row in _data[1:]:
             _cols=row.select('td')
             TITLE=_cols[1].select('a')[2].text
