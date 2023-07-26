@@ -146,17 +146,17 @@ async def getMenuPage(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @restricted
 async def lastSearchResults(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_lang = update.message.from_user.language_code
     if 'posts' in context.user_data:
         await update.message.reply_text(
-            text=getPage(context, user_lang=update.message.from_user.language_code),
+            text=getPage(context, user_lang=user_lang),
             reply_markup=getKeyboard(context),
             parse_mode=ParseMode.HTML,
             disable_web_page_preview=True)
     else:
         await context.bot.send_message(
             chat_id=update.message.chat.id,
-            text=trans('NO_SEARCH_RESULTS',
-                       update.message.from_user.language_code),
+            text=trans('NO_SEARCH_RESULTS', user_lang),
             reply_markup=torrent_reply_markup)
 
 def getNumPages(context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -228,13 +228,14 @@ async def addTorrentToTransmission(update: Update, context: ContextTypes.DEFAULT
             _tmp_file_path = download_with_auth(context.user_data['torrent']['url'],
                                                 config['CREDENTIALS'][context.user_data['torrent']['tracker']])
             tmp_file_path = f"file://{_tmp_file_path}"
-
+    lang_code = query.from_user.language_code
     log.info("Adding file/URL %s to Transmission", tmp_file_path)
     TORRENT_CLIENT.add_torrent(chat_id=update.effective_user.id,
+                               lang_code=lang_code,
                                torrent=tmp_file_path,
                                download_dir=query.data)
     await query.edit_message_text(text=trans('FILE_WILL_BE_DOWNLOADED',
-                                             query.from_user.language_code).format(tmp_file_path, str(query.data)))
+                                             lang_code).format(tmp_file_path, str(query.data)))
 
 
 def download_with_auth(file_url: str, auth_info: dict) -> str:
@@ -257,15 +258,15 @@ def download_with_auth(file_url: str, auth_info: dict) -> str:
 @restricted
 async def searchOnWebTracker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     log.debug(update)
-
-    msg = await update.message.reply_text(text=trans('DOING_SEARCH', update.message.from_user.language_code)+f" {update.message.text}")
+    lang_code = update.message.from_user.language_code
+    msg = await update.message.reply_text(text=trans('DOING_SEARCH', lang_code)+f" {update.message.text}")
 
     context.user_data['posts'] = SEARCH_TORRENTS.search(update.message.text)
     # Display search results if something was found
     if len(context.user_data['posts']) > 0:
         await context.bot.edit_message_text(chat_id=msg.chat.id,
                                             message_id=msg.message_id,
-                                            text=getPage(context),
+                                            text=getPage(context=context, user_lang=lang_code),
                                             reply_markup=getKeyboard(context),
                                             parse_mode=ParseMode.HTML,
                                             disable_web_page_preview=True)
@@ -274,7 +275,7 @@ async def searchOnWebTracker(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await context.bot.edit_message_text(
             chat_id=update.message.chat.id,
             message_id=msg.message_id,
-            text=trans('NOTHING_FOUND', update.message.from_user.language_code))
+            text=trans('NOTHING_FOUND', lang_code))
 
 
 @restricted

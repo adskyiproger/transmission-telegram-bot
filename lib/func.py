@@ -56,6 +56,9 @@ def trans(STRING,L_CODE):
     if L_CODE in lang.sections():
         if STRING in lang[L_CODE]:
             STRING=lang[L_CODE][STRING]
+    else:
+        if STRING in lang["en"]:
+            STRING = lang["en"][STRING]
     return STRING
 
 

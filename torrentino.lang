@@ -14,6 +14,7 @@ NOTHING_FOUND=Unfortunately, nothing found for your query.
 CHOOSE_DOWNLOAD_DIR=Please choose download folder for {}
 FILE_WILL_BE_DOWNLOADED=File {0} will be downloaded into {1}
 SOMETHING_WENT_WRONG=Something went wrong, probably too many files in this torrent
+DOWNLOAD_COMPLETED=Download completed: {}
 [ru]
 ACCESS_RESTRICTED=У вас недостаточно прав для выполнения этой команды. Пожалуйста обратитесь к администратору.
 Torrents list=Список торрентов
@@ -35,6 +36,7 @@ NO_SEARCH_RESULTS=Похоже вы ещё не пользовались пои�
 NOTHING_FOUND=К сожалению по вашему запросу ничего не найдено.
 CHOOSE_DOWNLOAD_DIR=Выберите папку для загрузки файла {}
 SOMETHING_WENT_WRONG=Something went wrong, probably too many files in this torrent
+DOWNLOAD_COMPLETED=Загрузка {} завершена
 [uk]
 ACCESS_RESTRICTED=У вас недостатньо дозволів для виконання цієї команди. Будь-ласка зверніться до адміністратора.
 Torrents list=Список торрентів
@@ -56,3 +58,4 @@ NAV_HEADER=Сторінка {} з {} (всього {} постів):
 NO_SEARCH_RESULTS=Схоже ви ще не користувалися пошуком сьогодні. Спробуйте щось знайти, наприклад: Дизель шоу.
 NOTHING_FOUND=Нажаль за вашим запитом нічого не знайдено.
 CHOOSE_DOWNLOAD_DIR=Оберіть папку для завантажання файлу {}
+DOWNLOAD_COMPLETED=Заватаження {} завершено
