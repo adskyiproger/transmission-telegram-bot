@@ -33,13 +33,13 @@ class Browser:
         self.prev_page = page
 
         if page == 1 or page < 4:
-            KEYBOARD = [InlineKeyboardButton(str(jj), callback_data=str(jj)) for jj in range(1, 8) if jj < pages]
+            KEYBOARD = [InlineKeyboardButton(str(jj), callback_data=str(jj)) for jj in range(1, 8) if 0 < jj <= pages]
         # Edge case for last page
         elif pages - page < 4:
-            KEYBOARD = [InlineKeyboardButton(str(jj), callback_data=str(jj)) for jj in range(pages - 6, pages + 1) if jj <= pages]
+            KEYBOARD = [InlineKeyboardButton(str(jj), callback_data=str(jj)) for jj in range(pages - 6, pages + 1) if 0 < jj <= pages]
         # Regular navigation
         else:
-            KEYBOARD = [InlineKeyboardButton(str(jj), callback_data=str(jj)) for jj in range(page - 3, page + 4) if jj <= pages]
+            KEYBOARD = [InlineKeyboardButton(str(jj), callback_data=str(jj)) for jj in range(page - 3, page + 4) if 0 < jj <= pages]
 
         FOOTER_KEYS = []
         if page > 10:

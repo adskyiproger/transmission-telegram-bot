@@ -17,8 +17,8 @@ class TorrentsListBrowser(Browser):
             _status = trans(torrent.status, self.user_lang)
             _message += trans("PROGRESS_STATUS",self.user_lang).format(f"{round(torrent.progress)}%", _status)
             if torrent.status in ['seeding', 'downloading']:
-                _message += "\n[ℹ /info_{0}] [⏹  /stop_{0}] [⏏ /delete_{0}]\n".format(torrent.id)
+                _message += "[ℹ /info_{0}] [⏹  /stop_{0}] [⏏ /delete_{0}]".format(torrent.id)
             else:
-                _message += "\n[ℹ /info_{0}] [▶ /start_{0}] [⏏ /delete_{0}]\n".format(torrent.id)
+                _message += "[ℹ /info_{0}] [▶ /start_{0}] [⏏ /delete_{0}]".format(torrent.id)
             post_num += 1
         return _message
