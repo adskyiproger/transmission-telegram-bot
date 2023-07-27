@@ -108,7 +108,7 @@ async def askDownloadDirURL(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Ask download directory for Magnet URL, value is passed to Transimission"""
     log.info(f"Downloading URL {update.message.text}")
     await update.message.reply_text(trans('CHOOSE_DOWNLOAD_DIR',
-                                    update.message.from_user.language_code).format(update.message.text)+":",
+                                    update.message.from_user.language_code).format(update.message.text),
                                     reply_markup=reply_markup)
     context.user_data['torrent'] = {'type': 'url', 'url': update.message.text}
 
@@ -197,8 +197,10 @@ async def addTorrentToTransmission(update: Update, context: ContextTypes.DEFAULT
                                lang_code=lang_code,
                                torrent=tmp_file_path,
                                download_dir=query.data)
-    await query.edit_message_text(text=trans('FILE_WILL_BE_DOWNLOADED',
-                                             lang_code).format(tmp_file_path, str(query.data)))
+    message = query.message.text
+    message += "\n----------------------\n"
+    message += trans('FILE_WILL_BE_DOWNLOADED', lang_code).format(str(query.data))
+    await query.edit_message_text(text=message)
 
 
 def download_with_auth(file_url: str, auth_info: dict) -> str:
