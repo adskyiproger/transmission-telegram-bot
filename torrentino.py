@@ -334,27 +334,27 @@ async def torrentDelete(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 @restricted
-def addNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def addNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.chat.id == config['BOT']['SUPER_USER']:
         hash = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
         WELCOME_HASHES.append(hash)
         log.info(context.bot)
         message = f"https://t.me/{context.bot.username}?start=welcome_{hash}"
         img = get_qr_code(message)
-        context.bot.send_photo(update.message.chat.id,
+        await context.bot.send_photo(update.message.chat.id,
                                open(img, 'rb'),
                                caption=message)
     else:
-        context.bot.send_message(update.message.chat.id, "Nice try!")
+        await context.bot.send_message(update.message.chat.id, "Nice try!")
 
 
-def welcomeNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def welcomeNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
     hash_code = update.message.text.replace('/start welcome_', '')
     if hash_code in WELCOME_HASHES and update.message.chat.id:
         config['BOT']['ALLOWED_USERS'].append(update.message.chat.id)
         adduser(update.message.chat.id)
         WELCOME_HASHES.remove(hash_code)
-        context.bot.send_message(update.message.chat.id,
+        await context.bot.send_message(update.message.chat.id,
                                  f"Welcome {update.message.chat.first_name}!",
                                  reply_markup=torrent_reply_markup)
         log.info(f"New user {update.message.chat.id}, {update.message.chat.first_name} was added.")
