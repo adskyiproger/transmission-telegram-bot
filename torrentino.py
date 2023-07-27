@@ -12,7 +12,7 @@ import tempfile
 import random
 import string
 import pydash as _
-
+import asyncio
 from models.TransmissionClient import TransmissionClient
 from models.SearchTorrents import SearchTorrents
 from models.TorrentsListBrowser import TorrentsListBrowser
@@ -247,27 +247,31 @@ async def searchOnWebTracker(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 @restricted
-def torrentStop(update: Update, _: ContextTypes.DEFAULT_TYPE):
+async def torrentStop(update: Update, _: ContextTypes.DEFAULT_TYPE):
     """Stop torrent by torrent_id"""
     TORRENT_CLIENT.stop_torrent(int(update.message.text.split('_')[1]))
+    await asyncio.sleep(1)
 
 
 @restricted
-def torrentStopAll(_: Update, __: ContextTypes.DEFAULT_TYPE):
+async def torrentStopAll(_: Update, __: ContextTypes.DEFAULT_TYPE):
     """Stop All Torrents"""
     TORRENT_CLIENT.stop_all()
+    await asyncio.sleep(1)
 
 
 @restricted
-def torrentStart(update: Update, _: ContextTypes.DEFAULT_TYPE):
+async def torrentStart(update: Update, __: ContextTypes.DEFAULT_TYPE):
     """Start torrent by torrent_id"""
     TORRENT_CLIENT.start_torrent(int(update.message.text.split('_')[1]))
+    await asyncio.sleep(1)
 
 
 @restricted
-def torrentStartAll(update: Update, _: ContextTypes.DEFAULT_TYPE):
+async def torrentStartAll(_: Update, __: ContextTypes.DEFAULT_TYPE):
     """Stop All Torrents"""
     TORRENT_CLIENT.start_all()
+    await asyncio.sleep(1)
 
 
 @restricted
@@ -299,11 +303,7 @@ async def torrentInfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     context.user_data['nav_type'] = 'torrent_info'
     context.user_data['torrent_info'] = torrent_info
-    # _message = TORRENT_CLIENT.info(int(torrent_id))
-    # # truncate long messages
-    # _message = _message[:4000]+'..\n' if len(_message) > 4000 else _message
-    # _message += "--------------------------\n" \
-    #             "[▶ /start_{0}] [⏹ /stop_{0}] [⏏ /delete_{0}]\n".format(torrent_id)
+
     try:
         await context.bot.send_message(chat_id=user_id,
                                        text=torrent_info.get_page(),

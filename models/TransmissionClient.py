@@ -86,15 +86,4 @@ class TransmissionClient(Client):
             log.info("Started torrent %s (id: %s)", torrent.id, torrent.name)
 
     def status(self, torrent_id):
-        return self.get_torrents(int(torrent_id))[0].status
-
-    def info(self, torrent_id: str) -> str:
-        """Information about torrent (status per file)"""
-        torrent = self.get_torrents(int(torrent_id))[0]
-        _info = f"\n<b>{torrent.name}</b>:\n" \
-                f"Progress: {round(torrent.progress)}% ETA: {torrent.format_eta()}  Status: {torrent.status}\n" \
-                "---------------------------\n" \
-                "Files:\n"
-        for file in torrent.files():
-            _info += f"{file.name}: completed/size: {bytes_to_human(file.completed)}/{bytes_to_human(file.size)} Bytes \n"
-        return _info
+        return self.get_torrent(int(torrent_id)).status
