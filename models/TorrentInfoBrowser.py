@@ -29,7 +29,7 @@ class TorrentInfoBrowser(Browser):
         _message = f"<b>{self.name}</b>: "+trans("TORRENT_INFO_PAGE_HEADER", self.user_lang).format(page,
                                                                                                     self.number_of_pages,
                                                                                                     len(self.posts))
-        _message += " [▶ /start_{0}] [⏹ /stop_{0}] [⏏ /delete_{0}]".format(self.id)
+        _message += "\n[▶ /start_{0}][⏹ /stop_{0}][⏏ /delete_{0}]".format(self.id)
         _message += "\n--------------\n"
 
         for file in self.posts[post_num:post_num+self.posts_per_page]:

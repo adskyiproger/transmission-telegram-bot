@@ -1,19 +1,22 @@
 # Transmission telegram bot
 
-Telegram bot for Searching torrents on tracker websites and passing to Transmission torrent server.
-Bot uses website search form to find torrents and returns to user search results in the format of "Title / Size / Publish data / Seeders / Leachers". Results are slit by pages for simplisity and can be sorted by any field.
 
-- Last search results are available by pressing "Search" button.
-- List of downloaded torrents is available by pressing "Torrents" button.
+**How many time you spend to find torrent on internet, download file on your computer, add it your favorite torrent programm and then wait for file to download?**
 
-![image](doc/images/screen-0.png)
+Telegram bot is a small piece of software for Searching torrents on tracker websites and passing to Transmission torrent server:
 
-After initial configuration new users can be added by typing `/adduser` command. As output you will get a registration link and QR-code.
+- Bot uses website search form to find torrents and returns to user search results in the format of "Title / Size / Publish data / Seeders / Leachers". Results are slit by pages for simplisity and can be sorted by any field. It will help you to find torrents with great number of seaders, or video content with better quality.
+- Bot will allow you to add torrent file to your server from any device running Telegram client. You could use built-in search option on list of predefined trackers or copy/paste torrent file, url or magnet link into the bot chat.
+- Bot allows you to select download folder on Transmission server. Downloaded content is structured withing folders.
+- Bot supports main Transmission server actions such as `Stop`, `Start`, `Delete`, `View info`.
+- Bot uses built-in protection authentication verification. You don't have to worry about hacking.
+- You can easily share access to bot with family members using QR Code or link. Check `/adduser` command.
 
-![image](doc/images/screen-1.png)
+![image](doc/images/network-diagram.jpg)
 
+With help of other tools like Samba [1], Jellyfin [2] or Plex [3] You may streem downloaded Videos and Music on your TV. Check "Advanced setup section".
 
-Supported trackers:
+# Supported trackers:
 * http://nnmclub.to/
 * http://rutor.info 
 * https://kat.sx/
@@ -21,11 +24,20 @@ Supported trackers:
 
 (new will arrive soon)
 
-## Features
-1. Search torrents on trackers and passing to Transmission.
-2. Direct send torrent files and magnet urls to transmission server for download.
-3. Essentials Transmission server actions such as Stop, Start, Delete, View info.
-4. Torrents sort by date, size, seeders and leachers
+# Screenshots
+
+## Bot Main window
+- Last search results are available by pressing "Search" button.
+- List of downloaded torrents is available by pressing "Torrents" button.
+
+![image](doc/images/screen-0.png)
+
+## Adding new user
+
+After initial configuration new users can be added by typing `/adduser` command. As output you will get a registration link and QR-code.
+
+![image](doc/images/screen-1.png)
+
 
 # Usage
 
@@ -46,6 +58,10 @@ Get your telegram user id with https://t.me/userinfobot. See https://github.com/
 ## Run python script
 
 1. Clone this repository
+   ```
+   git clone https://github.com/adskyiproger/transmission-telegram-bot.git
+   ```
+   or download as zip file: https://github.com/adskyiproger/transmission-telegram-bot/archive/refs/heads/master.zip
 2. Update configuration file:
    ```
    # check comments inside the file
@@ -53,8 +69,9 @@ Get your telegram user id with https://t.me/userinfobot. See https://github.com/
    ```
 3. Run:
    ```
-   pip install -r requirements.txt
-   python torrentino.py
+   pip install --user pipenv
+   pipenv install
+   pipenv run ./torrentino.py
    ```
 
 ## Run in docker

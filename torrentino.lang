@@ -7,7 +7,7 @@ HELP=Use keyboard to control torrents
 HELP_ADMIN=Following admin commands are available:
            /adduser, issue auth token for new user
 DOING_SEARCH=Please wait, searching:
-NAV_HEADER=Viewing page {} of {} (total: {} posts):
+NAV_HEADER=Search: page {} of {} (total: {} posts):
            -------------------------
 NO_SEARCH_RESULTS=Seems like you have not searched today. Please try to search for something, For instance: Lorf of the rings
 NOTHING_FOUND=Unfortunately, nothing found for your query.
@@ -15,12 +15,12 @@ CHOOSE_DOWNLOAD_DIR=Please choose download folder for "{}":
 FILE_WILL_BE_DOWNLOADED=File will be downloaded into {}
 SOMETHING_WENT_WRONG=Something went wrong, probably too many files in this torrent
 DOWNLOAD_COMPLETED=Download completed: {}
-TORRENT_INFO_PAGE_HEADER=page {} of {} (total files: {})
-TORRENT_LIST_HEADER=Torrents list: page {} of {} (total files: {}):
+TORRENT_INFO_PAGE_HEADER=page {} of {} ({} files)
+TORRENT_LIST_HEADER=Torrents list: page {} of {} ({} files):
 PROGRESS_STATUS=Progress: {0}, Status: {1}
 [ru]
 ACCESS_RESTRICTED=У вас недостаточно прав для выполнения этой команды. Пожалуйста обратитесь к администратору.
-TORRENT_LIST_HEADER=Список торрентов: страница {} из {} (всего {} файлов):
+TORRENT_LIST_HEADER=Список торрентов: страница {} из {} ({} файлов):
 Nothing found. Please try to use different search query.=Ничего не найдено. Пожалуйста попробуйте использовать другой поисковый запрос.
 FILE_WILL_BE_DOWNLOADED=Файл будет загружен в папку {}
 URL {0} will be downloaded into {1}.=URL {0} будет загружен в папку {1}.
@@ -32,7 +32,7 @@ HELP=Use keyboard to control torrents
 HELP_ADMIN=Following admin commands are available:
            /adduser, issue auth token for new user
 DOING_SEARCH=Подождите, ищу:
-NAV_HEADER=Страница {} из {} (всего {} постов):
+NAV_HEADER=Search: страница {} из {} ({} постов):
            -------------------------
 
 NO_SEARCH_RESULTS=Похоже вы ещё не пользовались поиском сегодня. Попробуйте что нибудь найти, например: С лёгким паром
@@ -40,7 +40,7 @@ NOTHING_FOUND=К сожалению по вашему запросу ничег�
 CHOOSE_DOWNLOAD_DIR=Выберите папку для загрузки файла "{}":
 SOMETHING_WENT_WRONG=Something went wrong, probably too many files in this torrent
 DOWNLOAD_COMPLETED=Загрузка {} завершена
-TORRENT_INFO_PAGE_HEADER=страница {} из {} (всего {} файлов)
+TORRENT_INFO_PAGE_HEADER=страница {} из {} ({} файлов)
 PROGRESS_STATUS=завершено: {0}, статус: {1}
 [uk]
 ACCESS_RESTRICTED=У вас недостатньо дозволів для виконання цієї команди. Будь-ласка зверніться до адміністратора.
@@ -57,14 +57,14 @@ HELP=Використовуйте клавіатуру для управлінн
 HELP_ADMIN=Команди для адміністрування:
            /adduser, issue auth token for new user
 DOING_SEARCH=Зачекайте, шукаю:
-NAV_HEADER=Сторінка {} з {} (всього {} постів):
+NAV_HEADER=Пошук: сторінка {} з {} ({} постів):
            -------------------------
 
 NO_SEARCH_RESULTS=Схоже ви ще не користувалися пошуком сьогодні. Спробуйте щось знайти, наприклад: Дизель шоу.
 NOTHING_FOUND=Нажаль за вашим запитом нічого не знайдено.
 CHOOSE_DOWNLOAD_DIR=Оберіть папку для завантажання файлу "{}":
 DOWNLOAD_COMPLETED=Заватаження {} завершено
-TORRENT_INFO_PAGE_HEADER=сторінка {} з {} (всього {} файлів)
+TORRENT_INFO_PAGE_HEADER=сторінка {} з {} ({} файлів)
 PROGRESS_STATUS=завершено: {0}, статус: {1}
 seeding=Роздається
 downloading=Завантаження
