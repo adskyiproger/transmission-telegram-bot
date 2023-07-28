@@ -12,10 +12,11 @@ import tempfile
 import random
 import string
 import pydash as _
-
+import asyncio
 from models.TransmissionClient import TransmissionClient
 from models.SearchTorrents import SearchTorrents
-
+from models.TorrentsListBrowser import TorrentsListBrowser
+from models.TorrentInfoBrowser import TorrentInfoBrowser
 from lib.func import (
     restricted,
     trans,
@@ -30,6 +31,7 @@ from telegram.ext.filters import Regex, Document, ALL
 from telegram import Update, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 from telegram.constants import ParseMode
 
+from models.PostsBrowser import PostsBrowser
 # Read configuration file, torrentino.ini
 # File is in the same directory as script
 config = get_config()
@@ -106,28 +108,34 @@ async def askDownloadDirURL(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Ask download directory for Magnet URL, value is passed to Transimission"""
     log.info(f"Downloading URL {update.message.text}")
     await update.message.reply_text(trans('CHOOSE_DOWNLOAD_DIR',
-                                    update.message.from_user.language_code).format(update.message.text)+":",
+                                    update.message.from_user.language_code).format(update.message.text),
                                     reply_markup=reply_markup)
     context.user_data['torrent'] = {'type': 'url', 'url': update.message.text}
 
 
 @restricted
 async def askDownloadDirPageLink(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # FIXME: refactor to PostsBrowser
     log.info(f"Downloading page link {update.message.text}")
     _id = int(update.message.text.split("_")[1])
+    post = context.user_data['posts'].posts[_id]
     await update.message.reply_text(trans('CHOOSE_DOWNLOAD_DIR',
-                                    update.message.from_user.language_code).format(context.user_data['posts'][_id]['dl'])+":",
+                                    update.message.from_user.language_code).format(post['title']),
                                     reply_markup=reply_markup)
+
     context.user_data['torrent'] = {'type': 'url',
-                                    'url': context.user_data['posts'][_id]['dl'],
-                                    'tracker': context.user_data['posts'][_id]['tracker']}
-    log.info("Added torrent URL to download list: {}".format(context.user_data['posts'][_id]['dl']))
+                                    'url': post['dl'],
+                                    'tracker': post['tracker']}
+    log.info("Added torrent URL to download list: {}".format(post))
 
 
 @restricted
 async def getMenuPage(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+    nav_type = context.user_data['nav_type']
+
+    posts = context.user_data[nav_type]
     page = query.data
     try:
         if str(page) == 'x':
@@ -136,9 +144,9 @@ async def getMenuPage(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.edit_message_text(
             chat_id=update.callback_query.message.chat_id,
             message_id=update.callback_query.message.message_id,
-            text=getPage(context, int(page), query.from_user.language_code),
+            text=posts.get_page(int(page)),
             parse_mode=ParseMode.HTML,
-            reply_markup=getKeyboard(context, page),
+            reply_markup=posts.get_keyboard(page),
             disable_web_page_preview=True)
     except ValueError as err:
         log.error(f"Wrong menu page {page}: {err}")
@@ -146,65 +154,20 @@ async def getMenuPage(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @restricted
 async def lastSearchResults(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user_lang = update.message.from_user.language_code
-    if 'posts' in context.user_data:
+    if _.has(context.user_data, 'posts'):
+        context.user_data['nav_type'] = 'posts'
+        posts = context.user_data['posts']
         await update.message.reply_text(
-            text=getPage(context, user_lang=user_lang),
-            reply_markup=getKeyboard(context),
+            text=posts.get_page(),
+            reply_markup=posts.get_keyboard(),
             parse_mode=ParseMode.HTML,
             disable_web_page_preview=True)
     else:
+        user_lang = update.message.from_user.language_code
         await context.bot.send_message(
             chat_id=update.message.chat.id,
             text=trans('NO_SEARCH_RESULTS', user_lang),
             reply_markup=torrent_reply_markup)
-
-def getNumPages(context: ContextTypes.DEFAULT_TYPE) -> int:
-    num_pages = int(len(context.user_data['posts']) / 5)
-    if len(context.user_data['posts']) % 5 > 0:
-        num_pages += 1
-    return num_pages
-
-def getPage(context: ContextTypes.DEFAULT_TYPE, _page: int = 1, user_lang: str = "en") -> str:
-    page = int(_page)
-    posts = context.user_data['posts']
-    _message = trans("NAV_HEADER", user_lang).format(page, getNumPages(context), len(posts))
-    # Add first and last posts index
-    post_num = (page - 1) * 5
-    for post in posts[post_num:post_num+5]:
-        _message += f"\n<b>{post['title']}</b>: {post['size']}  {post['date']} ⬆{post['seed']} ⬇{post['leach']}\n" \
-                    f"<a href='{post['info']}'>Info</a>     [ ▼ /download_{post_num} ]\n"
-        post_num += 1
-    return _message
-
-
-def getKeyboard(context: ContextTypes.DEFAULT_TYPE, _page: int = 1) -> InlineKeyboardMarkup:
-    pages = getNumPages(context)
-    # Edge case for first page
-    page = int(_page)
-    if page == 1 or page < 4:
-        KEYBOARD = [InlineKeyboardButton(str(jj), callback_data=str(jj)) for jj in range(1, 8) if jj < pages]
-    # Edge case for last page
-    elif pages - page < 4:
-        KEYBOARD = [InlineKeyboardButton(str(jj), callback_data=str(jj)) for jj in range(pages - 6, pages + 1) if jj <= pages]
-    # Regular navigation
-    else:
-        KEYBOARD = [InlineKeyboardButton(str(jj), callback_data=str(jj)) for jj in range(page - 3, page + 4) if jj <= pages]
-
-    FOOTER_KEYS = []
-    if page > 10:
-        FOOTER_KEYS.append(InlineKeyboardButton("«« -10", callback_data=str(page-10)))
-    if pages > page + 10:
-        FOOTER_KEYS.append(InlineKeyboardButton("+10 »»", callback_data=str(page+10)))
-
-    for key in KEYBOARD:
-        if str(key.text) == str(page):
-            idx = KEYBOARD.index(key)
-            KEYBOARD.remove(key)
-            KEYBOARD.insert(idx, InlineKeyboardButton("...", callback_data="x"))
-            break
-
-    return InlineKeyboardMarkup([KEYBOARD, FOOTER_KEYS])
 
 
 @restricted
@@ -234,8 +197,10 @@ async def addTorrentToTransmission(update: Update, context: ContextTypes.DEFAULT
                                lang_code=lang_code,
                                torrent=tmp_file_path,
                                download_dir=query.data)
-    await query.edit_message_text(text=trans('FILE_WILL_BE_DOWNLOADED',
-                                             lang_code).format(tmp_file_path, str(query.data)))
+    message = query.message.text
+    message += "\n----------------------\n"
+    message += trans('FILE_WILL_BE_DOWNLOADED', lang_code).format(str(query.data))
+    await query.edit_message_text(text=message)
 
 
 def download_with_auth(file_url: str, auth_info: dict) -> str:
@@ -261,13 +226,18 @@ async def searchOnWebTracker(update: Update, context: ContextTypes.DEFAULT_TYPE)
     lang_code = update.message.from_user.language_code
     msg = await update.message.reply_text(text=trans('DOING_SEARCH', lang_code)+f" {update.message.text}")
 
-    context.user_data['posts'] = SEARCH_TORRENTS.search(update.message.text)
+    posts = PostsBrowser(
+        user_id=msg.chat_id,
+        user_lang=lang_code,
+        posts=SEARCH_TORRENTS.search(update.message.text))
+    context.user_data['nav_type'] = 'posts'
+    context.user_data['posts'] = posts
     # Display search results if something was found
-    if len(context.user_data['posts']) > 0:
+    if posts.number_of_pages > 0:
         await context.bot.edit_message_text(chat_id=msg.chat.id,
                                             message_id=msg.message_id,
-                                            text=getPage(context=context, user_lang=lang_code),
-                                            reply_markup=getKeyboard(context),
+                                            text=posts.get_page(),
+                                            reply_markup=posts.get_keyboard(),
                                             parse_mode=ParseMode.HTML,
                                             disable_web_page_preview=True)
     # Tell user about empty search results
@@ -279,44 +249,46 @@ async def searchOnWebTracker(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 @restricted
-def torrentStop(update: Update, _: ContextTypes.DEFAULT_TYPE):
+async def torrentStop(update: Update, _: ContextTypes.DEFAULT_TYPE):
     """Stop torrent by torrent_id"""
     TORRENT_CLIENT.stop_torrent(int(update.message.text.split('_')[1]))
+    await asyncio.sleep(1)
 
 
 @restricted
-def torrentStopAll(_: Update, __: ContextTypes.DEFAULT_TYPE):
+async def torrentStopAll(_: Update, __: ContextTypes.DEFAULT_TYPE):
     """Stop All Torrents"""
     TORRENT_CLIENT.stop_all()
+    await asyncio.sleep(1)
 
 
 @restricted
-def torrentStart(update: Update, _: ContextTypes.DEFAULT_TYPE):
+async def torrentStart(update: Update, __: ContextTypes.DEFAULT_TYPE):
     """Start torrent by torrent_id"""
     TORRENT_CLIENT.start_torrent(int(update.message.text.split('_')[1]))
+    await asyncio.sleep(1)
 
 
 @restricted
-def torrentStartAll(update: Update, _: ContextTypes.DEFAULT_TYPE):
+async def torrentStartAll(_: Update, __: ContextTypes.DEFAULT_TYPE):
     """Stop All Torrents"""
     TORRENT_CLIENT.start_all()
+    await asyncio.sleep(1)
 
 
 @restricted
 async def torrentList(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """List all torrents on Transmission server"""
-    _message = trans("Torrents list", update.message.from_user.language_code)+": \n"
-    for torrent in TORRENT_CLIENT.get_torrents():
-        if torrent.status in ['seeding', 'downloading']:
-            _message += "\n<b>{1}</b>\n Progress: {2}% Status: {3} \n[ℹ /info_{0}] [⏹  /stop_{0}] [⏏ /delete_{0}]\n" \
-                .format(torrent.id, torrent.name, round(torrent.progress), torrent.status)
-        else:
-            _message += "\n<b>{1}</b>\n Progress: {2}% Status: {3} \n[ℹ /info_{0}] [▶ /start_{0}] [⏏ /delete_{0}]\n" \
-                .format(torrent.id, torrent.name, round(torrent.progress), torrent.status)
+    torrents = TorrentsListBrowser(
+        user_id=update.message.chat.id,
+        user_lang=update.message.from_user.language_code,
+        posts=TORRENT_CLIENT.get_torrents())
+    context.user_data['nav_type'] = 'torrents'
+    context.user_data['torrents'] = torrents
     await context.bot.send_message(chat_id=update.message.chat.id,
-                                   text=_message,
+                                   text=torrents.get_page(),
                                    parse_mode=ParseMode.HTML,
-                                   reply_markup=torrent_reply_markup)
+                                   reply_markup=torrents.get_keyboard())
 
 
 @restricted
@@ -324,17 +296,21 @@ async def torrentInfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show detailed information about torrent"""
     log.debug(update)
     torrent_id = update.message.text.split('_')[1]
+    user_id = update.message.chat.id
     log.info("Loading torrent id {0}".format(torrent_id))
-    _message = TORRENT_CLIENT.info(int(torrent_id))
-    # truncate long messages
-    _message = _message[:4000]+'..\n' if len(_message) > 4000 else _message
-    _message += "--------------------------\n" \
-                "[▶ /start_{0}] [⏹ /stop_{0}] [⏏ /delete_{0}]\n".format(torrent_id)
+    torrent_info = TorrentInfoBrowser(
+        user_id=user_id,
+        user_lang=update.message.from_user.language_code,
+        posts=TORRENT_CLIENT.get_torrent(int(torrent_id))
+    )
+    context.user_data['nav_type'] = 'torrent_info'
+    context.user_data['torrent_info'] = torrent_info
+
     try:
-        await context.bot.send_message(chat_id=update.message.chat.id,
-                                       text=_message,
+        await context.bot.send_message(chat_id=user_id,
+                                       text=torrent_info.get_page(),
                                        parse_mode=ParseMode.HTML,
-                                       reply_markup=torrent_reply_markup)
+                                       reply_markup=torrent_info.get_keyboard())
     except Exception as err:
         await context.bot.send_message(chat_id=update.message.chat.id,
                                        text=f"Something went wrong: {err}",
@@ -358,27 +334,27 @@ async def torrentDelete(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 @restricted
-def addNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def addNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.chat.id == config['BOT']['SUPER_USER']:
         hash = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
         WELCOME_HASHES.append(hash)
         log.info(context.bot)
         message = f"https://t.me/{context.bot.username}?start=welcome_{hash}"
         img = get_qr_code(message)
-        context.bot.send_photo(update.message.chat.id,
+        await context.bot.send_photo(update.message.chat.id,
                                open(img, 'rb'),
                                caption=message)
     else:
-        context.bot.send_message(update.message.chat.id, "Nice try!")
+        await context.bot.send_message(update.message.chat.id, "Nice try!")
 
 
-def welcomeNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def welcomeNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
     hash_code = update.message.text.replace('/start welcome_', '')
     if hash_code in WELCOME_HASHES and update.message.chat.id:
         config['BOT']['ALLOWED_USERS'].append(update.message.chat.id)
         adduser(update.message.chat.id)
         WELCOME_HASHES.remove(hash_code)
-        context.bot.send_message(update.message.chat.id,
+        await context.bot.send_message(update.message.chat.id,
                                  f"Welcome {update.message.chat.first_name}!",
                                  reply_markup=torrent_reply_markup)
         log.info(f"New user {update.message.chat.id}, {update.message.chat.first_name} was added.")
