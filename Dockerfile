@@ -10,6 +10,7 @@ ENV PATH="${PATH}:/usr/src/app/.local/bin:/usr/src/app"
 
 COPY Pipfile Pipfile.lock ./
 
+
 RUN pip install --user pipenv && \
     pipenv install
 
