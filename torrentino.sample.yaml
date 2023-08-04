@@ -20,6 +20,8 @@ BOT:
   # Results will be shown in reverse order, from latest to oldest, from biggest to smallest
   SORT_BY: size
 
+  # Add menu button with all available commands
+  USE_MENU: true
 TRANSMISSION:
   # HOST, Transmission server host
   HOST: localhost

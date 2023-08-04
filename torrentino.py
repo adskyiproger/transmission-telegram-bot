@@ -47,9 +47,12 @@ if _.get(config, 'BOT.USE_MENU'):
                 ("last_search", "🔎 Last search"),
                 ("adduser", "👤 Add new user"),
                 ("help", "❓ Help")]
-actions = ["📁 Torrents", "🔍 Search"]
+else:
+    commands = []
 
 bot_config.set_bot_commands(commands)
+
+actions = ["📁 Torrents", "🔍 Search"]
 # Configure actions to work with torrent
 KEYBOARD = bot_config.get_keyboard(actions)
 
@@ -382,8 +385,8 @@ def main():
 
     app.add_handler(MessageHandler(Regex(r'Torrents$'), torrentList))
     app.add_handler(MessageHandler(Regex(r'Search$'), lastSearchResults))
-    app.add_handler(MessageHandler(Regex(r'^/adduser$'), addNewUser))
-    app.add_handler(MessageHandler(Regex(r'^/help$'), help_command))
+    # app.add_handler(MessageHandler(Regex(r'^/adduser$'), addNewUser))
+    # app.add_handler(MessageHandler(Regex(r'^/help$'), help_command))
 
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("adduser", addNewUser))
