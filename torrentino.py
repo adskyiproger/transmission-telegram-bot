@@ -40,16 +40,19 @@ BOT_TOKEN = _.get(config, 'BOT.TOKEN')
 
 bot_config = BotConfigurator(BOT_TOKEN)
 
-if _.get(config, 'BOT.USE_MENU'):
-    commands = [("torrents", "📁 Torrents"),
-                ("stop_all", "⏹ Stop all Torrents"),
-                ("start_all", "▶ Start all Torrents"),
-                ("last_search", "🔎 Last search"),
-                ("adduser", "👤 Add new user"),
-                ("help", "❓ Help")]
-actions = ["📁 Torrents", "🔍 Search"]
+
+commands = [("torrents", "📁 Torrents"),
+            ("stop_all", "⏹ Stop all Torrents"),
+            ("start_all", "▶ Start all Torrents"),
+            ("last_search", "🔎 Last search"),
+            ("adduser", "👤 Add new user"),
+            ("help", "❓ Help")]
+if not _.get(config, 'BOT.USE_MENU'):
+    commands = []
 
 bot_config.set_bot_commands(commands)
+
+actions = ["📁 Torrents", "🔍 Search"]
 # Configure actions to work with torrent
 KEYBOARD = bot_config.get_keyboard(actions)
 
@@ -382,8 +385,8 @@ def main():
 
     app.add_handler(MessageHandler(Regex(r'Torrents$'), torrentList))
     app.add_handler(MessageHandler(Regex(r'Search$'), lastSearchResults))
-    app.add_handler(MessageHandler(Regex(r'^/adduser$'), addNewUser))
-    app.add_handler(MessageHandler(Regex(r'^/help$'), help_command))
+    # app.add_handler(MessageHandler(Regex(r'^/adduser$'), addNewUser))
+    # app.add_handler(MessageHandler(Regex(r'^/help$'), help_command))
 
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("adduser", addNewUser))
