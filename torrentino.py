@@ -40,14 +40,14 @@ BOT_TOKEN = _.get(config, 'BOT.TOKEN')
 
 bot_config = BotConfigurator(BOT_TOKEN)
 
-if _.get(config, 'BOT.USE_MENU'):
-    commands = [("torrents", "📁 Torrents"),
-                ("stop_all", "⏹ Stop all Torrents"),
-                ("start_all", "▶ Start all Torrents"),
-                ("last_search", "🔎 Last search"),
-                ("adduser", "👤 Add new user"),
-                ("help", "❓ Help")]
-else:
+
+commands = [("torrents", "📁 Torrents"),
+            ("stop_all", "⏹ Stop all Torrents"),
+            ("start_all", "▶ Start all Torrents"),
+            ("last_search", "🔎 Last search"),
+            ("adduser", "👤 Add new user"),
+            ("help", "❓ Help")]
+if not _.get(config, 'BOT.USE_MENU'):
     commands = []
 
 bot_config.set_bot_commands(commands)
