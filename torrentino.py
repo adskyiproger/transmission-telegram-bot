@@ -26,18 +26,35 @@ from lib.func import (
     adduser,
     save_torrent_to_tempfile)
 
-from telegram.ext import Application, MessageHandler, CallbackQueryHandler, ContextTypes
-from telegram.ext.filters import Regex, Document, ALL
-from telegram import Update, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
+from telegram.ext import Application, MessageHandler, CallbackQueryHandler, ContextTypes, CommandHandler
+from telegram.ext.filters import Regex, Document, ALL, Entity
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
 
 from models.PostsBrowser import PostsBrowser
+from models.BotConfigurator import BotConfigurator
 # Read configuration file, torrentino.ini
 # File is in the same directory as script
 config = get_config()
+BOT_TOKEN = _.get(config, 'BOT.TOKEN')
+
+bot_config = BotConfigurator(BOT_TOKEN)
+
+if _.get(config, 'BOT.USE_MENU'):
+    commands = [("torrents", "📁 Torrents"),
+                ("stop_all", "⏹ Stop all Torrents"),
+                ("start_all", "▶ Start all Torrents"),
+                ("last_search", "🔎 Last search"),
+                ("adduser", "👤 Add new user"),
+                ("help", "❓ Help")]
+actions = ["📁 Torrents", "🔍 Search"]
+
+bot_config.set_bot_commands(commands)
+# Configure actions to work with torrent
+KEYBOARD = bot_config.get_keyboard(actions)
 
 # Telegram bot token
-BOT_TOKEN = config['BOT']['TOKEN']
+
 # Client connection to Transmission torrent server
 # User environment variables or defaults from configuration file
 TORRENT_CLIENT = TransmissionClient(
@@ -57,14 +74,8 @@ WELCOME_HASHES = []
 
 log = get_logger("main")
 
-# Configure actions to work with torrent
-TORRENT_ACTIONS = ["📁 Torrents", "🔍 Search"]
-
-torrent_reply_markup = ReplyKeyboardMarkup([[KeyboardButton(text=str(key)) for key in TORRENT_ACTIONS]], resize_keyboard=True)
-
-
-SEARCH_TORRENTS = SearchTorrents(credentials=_.get(config, "CREDENTIALS", {}),
-                                 sort_by=_.get(config, "BOT.SORT_BY", "date"))
+SEARCH = SearchTorrents(credentials=_.get(config, "CREDENTIALS", {}),
+                        sort_by=_.get(config, "BOT.SORT_BY", "date"))
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -73,13 +84,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.chat.id == config['BOT']['SUPER_USER']:
         HELP += "\n"+trans("HELP_ADMIN", update.message.from_user.language_code)
     log.info("%s, %s, %s", update.message.chat.id, update.message.chat_id, context.user_data)
-    await context.bot.send_message(chat_id=update.message.chat.id, text=HELP, parse_mode=ParseMode.HTML, reply_markup=torrent_reply_markup)
-
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Echo the user message."""
-    await update.message.reply_text(update.message.text, reply_markup=torrent_reply_markup)
-    log.debug("echo: "+str(update))
+    await context.bot.send_message(chat_id=update.message.chat.id, text=HELP, parse_mode=ParseMode.HTML, reply_markup=KEYBOARD)
 
 
 @restricted
@@ -166,8 +171,7 @@ async def lastSearchResults(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         user_lang = update.message.from_user.language_code
         await context.bot.send_message(
             chat_id=update.message.chat.id,
-            text=trans('NO_SEARCH_RESULTS', user_lang),
-            reply_markup=torrent_reply_markup)
+            text=trans('NO_SEARCH_RESULTS', user_lang))
 
 
 @restricted
@@ -222,14 +226,24 @@ def download_with_auth(file_url: str, auth_info: dict) -> str:
 
 @restricted
 async def searchOnWebTracker(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    log.debug(update)
+    """Search on web trackers and return results back to user"""
     lang_code = update.message.from_user.language_code
+
+    # FIXME: Initial validation for wrong content passed in message
+    # It could be implemented as message handlers
+    if update.message.effective_attachment:
+        await update.message.reply_text(text=trans('UNSUPPORTED_MIME_TYPE', lang_code))
+        return
+    if len(update.message.text) > 256:
+        await update.message.reply_text(text=trans('MESSAGE_IS_TOO_LONG', lang_code))
+        return
+
     msg = await update.message.reply_text(text=trans('DOING_SEARCH', lang_code)+f" {update.message.text}")
 
     posts = PostsBrowser(
         user_id=msg.chat_id,
         user_lang=lang_code,
-        posts=SEARCH_TORRENTS.search(update.message.text))
+        posts=SEARCH.search(update.message.text))
     context.user_data['nav_type'] = 'posts'
     context.user_data['posts'] = posts
     # Display search results if something was found
@@ -314,8 +328,7 @@ async def torrentInfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as err:
         await context.bot.send_message(chat_id=update.message.chat.id,
                                        text=f"Something went wrong: {err}",
-                                       parse_mode=ParseMode.HTML,
-                                       reply_markup=torrent_reply_markup)
+                                       parse_mode=ParseMode.HTML)
 
 
 @restricted
@@ -328,8 +341,7 @@ async def torrentDelete(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id=update.message.chat.id,
         text=trans('TORRENT_REMOVED',
                    update.message.from_user.language_code).format(TORRENT_CLIENT.get_torrents(int(torrent_id))[0].name),
-        parse_mode=ParseMode.HTML,
-        reply_markup=torrent_reply_markup)
+        parse_mode=ParseMode.HTML)
     TORRENT_CLIENT.remove_torrent(int(torrent_id), delete_data=config['TRANSMISSION']['DELETE_DATA'])
 
 
@@ -342,8 +354,8 @@ async def addNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message = f"https://t.me/{context.bot.username}?start=welcome_{hash}"
         img = get_qr_code(message)
         await context.bot.send_photo(update.message.chat.id,
-                               open(img, 'rb'),
-                               caption=message)
+                                     open(img, 'rb'),
+                                     caption=message)
     else:
         await context.bot.send_message(update.message.chat.id, "Nice try!")
 
@@ -355,8 +367,8 @@ async def welcomeNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
         adduser(update.message.chat.id)
         WELCOME_HASHES.remove(hash_code)
         await context.bot.send_message(update.message.chat.id,
-                                 f"Welcome {update.message.chat.first_name}!",
-                                 reply_markup=torrent_reply_markup)
+                                       f"Welcome {update.message.chat.first_name}!",
+                                       reply_markup=KEYBOARD)
         log.info(f"New user {update.message.chat.id}, {update.message.chat.first_name} was added.")
         help_command(update, context)
 
@@ -364,17 +376,22 @@ async def welcomeNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     """Start the bot."""
     app = Application.builder().token(BOT_TOKEN).build()
-    # scheduler(app.bot)
-    # Admin commands
-    app.add_handler(MessageHandler(Regex(r'^/(help|start)$'), help_command))
-    # Issue user token:
-    app.add_handler(MessageHandler(Regex(r'^/adduser$'), addNewUser))
     # Process new user request:
     app.add_handler(MessageHandler(Regex(r'^/start\ welcome_[A-Za-z0-9]+$'), welcomeNewUser))
     # Add Transmission handlers to dispatcher:
+
     app.add_handler(MessageHandler(Regex(r'Torrents$'), torrentList))
-    # Show last search results
     app.add_handler(MessageHandler(Regex(r'Search$'), lastSearchResults))
+    app.add_handler(MessageHandler(Regex(r'^/adduser$'), addNewUser))
+    app.add_handler(MessageHandler(Regex(r'^/help$'), help_command))
+
+    app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CommandHandler("adduser", addNewUser))
+    app.add_handler(CommandHandler("last_search", lastSearchResults))
+    app.add_handler(CommandHandler("torrents", torrentList))
+    app.add_handler(CommandHandler("stop_all", torrentStopAll))
+    app.add_handler(CommandHandler("start_all", torrentStartAll))
+
     app.add_handler(MessageHandler(Regex(r'^/info_[0-9]+$'), torrentInfo))
 
     app.add_handler(MessageHandler(Regex(r'^/stop_[0-9]+$'), torrentStop))
@@ -385,12 +402,14 @@ def main():
     app.add_handler(MessageHandler(Regex(r'^/download_[0-9]+$'), askDownloadDirPageLink))
     # Ask download directory for magnet/http(s) link
     app.add_handler(
-        MessageHandler(Regex(r'(magnet:\?xt=urn:btih:[a-zA-Z0-9]*|[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*))'),
+        MessageHandler(Regex(r'^(magnet:\?xt=urn:btih:[a-zA-Z0-9]*|[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*))$'),
                        askDownloadDirURL))
+    app.add_handler(
+        MessageHandler(Entity("url"), askDownloadDirURL))
     # Ask download directory for torrent file
     app.add_handler(MessageHandler(Document.MimeType('application/x-bittorrent'), askDownloadDirFile))
 
-    app.add_handler(MessageHandler(Document.ALL, unsupportedMime))
+    # app.add_handler(MessageHandler(Document.IMAGE, unsupportedMime))
     # Navigation buttons switcher (inline keyboard)
     app.add_handler(CallbackQueryHandler(getMenuPage, pattern=r'^[x0-9]+$'))
     # Select download folder switcher (inline keyboard)

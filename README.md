@@ -1,22 +1,29 @@
 # Transmission telegram bot
 
 
-**How many time you spend to find torrent on internet, download file on your computer, add it your favorite torrent programm and then wait for file to download?**
+This Telegram bot is a small piece of software for Searching torrents on tracker websites and passing to Transmission torrent server.
 
-Telegram bot is a small piece of software for Searching torrents on tracker websites and passing to Transmission torrent server:
+**Features:**
 
-- Bot uses website search form to find torrents and returns to user search results in the format of "Title / Size / Publish data / Seeders / Leachers". Results are slit by pages for simplisity and can be sorted by any field. It will help you to find torrents with great number of seaders, or video content with better quality.
-- Bot will allow you to add torrent file to your server from any device running Telegram client. You could use built-in search option on list of predefined trackers or copy/paste torrent file, url or magnet link into the bot chat.
-- Bot allows you to select download folder on Transmission server. Downloaded content is structured withing folders.
-- Bot supports main Transmission server actions such as `Stop`, `Start`, `Delete`, `View info`.
-- Bot uses built-in protection authentication verification. You don't have to worry about hacking.
-- You can easily share access to bot with family members using QR Code or link. Check `/adduser` command.
+- **Manage** torrents on Transmission server:
+  - Start, Stop, Delete and view torrents on transmission server
+  - Select download folder before adding torrent to transmission
+  - You could use built-in search option on list of predefined trackers or copy/paste torrent file, url or magnet link into the bot chat.
+- **Search** torrents using bot:
+  - Bot has pre-configured websites to find torrents
+  - You can configure the way to display search results by changing sort and filter options. It will help you to find torrents with great number of seaders, or video content with better quality.
+- **Authentication and Security**:
+  - Bot uses built-in protection authentication verification. You don't have to worry about hacking.
+  - You can easily share access to bot with family members using QR Code or link. Check `/adduser` command.
+
+Features are independent of each other. E/g: If you would like to manage torrents only you could disable search and vice versa.
+
+Additionally you could setup home DLNA server like Jellyfin, Plex or MiniDLNA and stream downloaded Video and Audio content to your smartTV, speakers, etc.
 
 ![image](doc/images/network-diagram.jpg)
 
-With help of other tools like Samba [1], Jellyfin [2] or Plex [3] You may streem downloaded Videos and Music on your TV. Check "Advanced setup section".
 
-# Supported trackers:
+**Supported trackers:**
 * http://nnmclub.to/
 * http://rutor.info 
 * https://kat.sx/
@@ -24,38 +31,29 @@ With help of other tools like Samba [1], Jellyfin [2] or Plex [3] You may streem
 
 (new will arrive soon)
 
-# Screenshots
+# Installation
 
-## Bot Main window
-- Last search results are available by pressing "Search" button.
-- List of downloaded torrents is available by pressing "Torrents" button.
-
-![image](doc/images/screen-0.png)
-
-## Adding new user
-
-After initial configuration new users can be added by typing `/adduser` command. As output you will get a registration link and QR-code.
-
-![image](doc/images/screen-1.png)
-
-
-# Usage
-
-This Bot could be used as satelite for Transmission server for search torrent files on predifined web sites. 
-Additionally you could setup home DLNA server like Jellyfin or MiniDLNA.
-
-Before building docker image or running python script please register new telegram bot using `BotFather`.
-Place bot security token into torrents.yaml.
-
-Get your telegram user id with https://t.me/userinfobot. See https://github.com/nadam/userinfobot for more details.
+## What you will need to run bot?
+1. **Hardware:**
+   - If you are planning to use Bot as standalone application for searching torrent and pushing them to external Transmission, no specific configuration is required.
+   - If you are planning to run Bot and Transmission on the same hardware, make sure you have at least 2G of RAM and 100G+ storage. Actual setup takes less then 1G, but you will need place to download torrents.
+   - Bot and transmission will run on any hardware architecture including Apple M1/2 chips and ARMs.
+2. **Software:** 
+   - Bot will work well on one of the following configuration:
+      - Any Windows, Mac OS, Linux, FreeBSD OS/distribution with Python 3.10+. Bot may also run on any other operating system with Python 3.10+ support.
+      - Any OS with support for Docker 20.0.4+ and docker-compose 3+.
+   - Transmission, please check available packages at: https://transmissionbt.com/download or use one of the available docker images
+   
+   
 
 ## Preparation
-1. Install and configure transmission server web interface with username and password.
-   You could use docker image https://hub.docker.com/r/linuxserver/transmission instead of manual (rpm/deb) setup.
-   Please check `docker-compose.yaml`
-2. Update torrentino.yaml configuration file.
+1. Register new telegram bot using [@BotFather](https://t.me/botfather).
+2. Configure Transmission server authentication with username and password:
+   - For rpm or deb package use official doc: https://github.com/transmission/transmission/tree/main
+   - For docker image https://hub.docker.com/r/linuxserver/transmission please check `docker-compose.yaml` for available options.
+3. Update torrentino.yaml configuration file. Follow up comments inside configuration file.
 
-## Run python script
+## Run bot locally
 
 1. Clone this repository
    ```
@@ -162,4 +160,20 @@ For example: Video, TVShows, Soft, Music.:
 
 * Jellyfin web interface is available at `http://<Pi4 hostname or ip>:8096`
 * Transmission web interface is available at `http://<Pi4 hostname or ip>:9091`
+
+
+
+# Screenshots
+
+## Bot Main window
+- Last search results are available by pressing "Search" button.
+- List of downloaded torrents is available by pressing "Torrents" button.
+
+![image](doc/images/screen-0.png)
+
+## Adding new user
+
+After initial configuration new users can be added by typing `/adduser` command. As output you will get a registration link and QR-code.
+
+![image](doc/images/screen-1.png)
 
