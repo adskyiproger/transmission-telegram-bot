@@ -77,7 +77,7 @@ WELCOME_HASHES = []
 
 log = get_logger("main")
 
-SEARCH = SearchTorrents(credentials=_.get(config, "CREDENTIALS", {}),
+SEARCH = SearchTorrents(credentials=_.get(config, "trackers", {}),
                         sort_by=_.get(config, "BOT.SORT_BY", "date"))
 
 
@@ -188,9 +188,9 @@ async def addTorrentToTransmission(update: Update, context: ContextTypes.DEFAULT
         # Magnet URLs and regular URLs are processed by transmission
         tmp_file_path = context.user_data['torrent']['url']
         # If tracker has credential, download file and path file path to Transmission
-        if _.has(config['CREDENTIALS'], _.get(context.user_data, 'torrent.tracker')):
-            _tmp_file_path = download_with_auth(context.user_data['torrent']['url'],
-                                                config['CREDENTIALS'][context.user_data['torrent']['tracker']])
+        if _.has(config['trackers'], _.get(context.user_data, 'torrent.tracker')):
+            _tmp_file_path = SEARCH.download(context.user_data['torrent']['url'],
+                                             context.user_data['torrent']['tracker'])
             tmp_file_path = f"file://{_tmp_file_path}"
     lang_code = query.from_user.language_code
     log.info("Adding file/URL %s to Transmission", tmp_file_path)
@@ -210,23 +210,6 @@ async def addTorrentToTransmission(update: Update, context: ContextTypes.DEFAULT
             message += trans('ADDING_FILE_SOMETHING_WENT_WRONG', lang_code) + ':\n' + str(err)
         log.error("File %s was not added due to error %s", tmp_file_path, str(err))
     await query.edit_message_text(text=message)
-
-
-def download_with_auth(file_url: str, auth_info: dict) -> str:
-    """Download file from phpbb torrent tracker, return path to downloaded file"""
-    x = requests.Session()
-    headers = {'User-Agent': 'Mozilla/5.0'}
-    payload = {
-        "username": auth_info['USERNAME'],
-        "password": auth_info['PASSWORD'],
-        'redirect': 'index.php?',
-        'sid': '',
-        'login': 'Login'
-    }
-    x.post(auth_info['login_url'], headers=headers, data=payload)
-    content = x.get(file_url, allow_redirects=True).content
-    log.info("Downloading file %s with authorization", file_url)
-    return save_torrent_to_tempfile(content)
 
 
 @restricted

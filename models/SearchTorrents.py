@@ -1,9 +1,10 @@
 import hashlib
 import pydash as _
 
-from typing import List
+from typing import List, Dict
 from models.SearchNonameClub import SearchNonameClub
 from models.SearchRUTOR import SearchRUTOR
+from models.SearchBase import SearchBase
 # TODO: KAT is down, temporary disabled
 # from models.SearchKAT import SearchKAT
 from models.SearchToloka import SearchToloka
@@ -38,6 +39,24 @@ class SearchTorrents:
     def __init__(self, credentials: dict, sort_by: str) -> None:
         self.CREDENTIALS = credentials
         self.SORT_BY = sort_by
+        self._trackers = {}
+
+    @property
+    def trackers(self) -> Dict[str, SearchBase]:
+        if self._trackers:
+            return self._trackers
+
+        for _class in self.CLASSES:
+            try:
+                tracker = self.CLASSES[_class](
+                    username=_.get(self.CREDENTIALS, f"{_class}.user", None),
+                    password=_.get(self.CREDENTIALS, f"{_class}.password", None))
+                self._trackers[_class] = tracker
+                log.info("Initialised tracker %s", _class)
+            except Exception as err:
+                self.FAILED_TRACKERS.append(_class)
+                log.error("Failed search on tracker %s: %s", _class, err)
+        return self._trackers
 
     def search(self, search_string: str) -> List:
         """Check Cached search results and do search if nothing found in cache"""
@@ -48,23 +67,13 @@ class SearchTorrents:
 
     def _search(self, search_string: str) -> List:
         """Search over trackers"""
-        posts = []
         log.info("Searching for: %s", search_string)
         # Search over enabled trackers
-        for _class in self.CLASSES:
-            try:
-                TRACKER = self.CLASSES[_class](
-                    username=_.get(self.CREDENTIALS, f"{_class}.USERNAME", None),
-                    password=_.get(self.CREDENTIALS, f"{_class}.PASSWORD", None))
-                TRACKER.search(search_string)
-                posts.extend(TRACKER.POSTS)
-            except Exception as err:
-                self.FAILED_TRACKERS.append(_class)
-                log.error("Failed search on tracker %s: %s", _class, err)
-        log.info("Found %s posts on %s trackers", len(posts), ', '.join(self.CLASSES.keys()))
+        posts = [item for _, tracker in self.trackers.items() for item in tracker.search(search_string)]
+        log.info("Found %s posts on %s trackers", len(posts), ', '.join(self.trackers.keys()))
         return posts
 
-    def sort(self, posts):
+    def sort(self, posts: List) -> List:
         try:
             posts = self.pre_sort_format(posts)
             sorted_list = sorted(posts,
@@ -91,3 +100,6 @@ class SearchTorrents:
         for el in posts:
             el['size'] = bytes_to_human(el['size'])
         return posts
+
+    def download(self, url: str, tracker: str) -> str:
+        return self.trackers[tracker].download(url)

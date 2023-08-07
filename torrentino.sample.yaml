@@ -42,10 +42,12 @@ DIRECTORIES:
   Music: /downloads/Music
   Soft: /downloads/Soft
 
-# Credentioals section will be responsible for authorization
-# Currently only toloka requires authorizaion
-CREDENTIALS:
+# Trackers section to store user credentials:
+
+trackers:
+  nnmclub:
+    user: <email or login>
+    password: <password>
   toloka:
-     USERNAME: <email or login>
-     PASSWORD: <password>
-     login_url: https://toloka.to/login.php
+    user: <email or login>
+    password: <password>
