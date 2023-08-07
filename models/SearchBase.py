@@ -10,7 +10,9 @@ class SearchBase:
     _log = None
 
     def __init__(self, username, password) -> None:
-        pass
+        self.username = username
+        self.password = password
+        self.POSTS = []
 
     async def search(self) -> bool:
         pass

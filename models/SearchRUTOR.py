@@ -3,11 +3,8 @@ from models.SearchBase import SearchBase
 
 class SearchRUTOR(SearchBase):
     TRACKER_NAME = 'rutor'
-    TRACKER_URL="http://rutor.info"
-    TRACKER_SEARCH_URL_TPL="/search/0/0/000/0/"
-
-    def __init__(self, username=None, password=None) -> None:
-        self.POSTS = []
+    TRACKER_URL = "http://rutor.info"
+    TRACKER_SEARCH_URL_TPL = "/search/0/0/000/0/"
 
     def convert_date(self, date: str):
         _date = date.split("\xa0")
@@ -37,27 +34,27 @@ class SearchRUTOR(SearchBase):
     def search(self, search_string: str) -> bool:
         """Search data on the web"""
         self.log.info("Searching for %s on %s", search_string, self.TRACKER_NAME)
-        search_url=self.TRACKER_URL+self.TRACKER_SEARCH_URL_TPL+search_string
-        _data=BeautifulSoup(self.SESSION.get(search_url).content, 'lxml').select('div#index > table > tr')
+        search_url = self.TRACKER_URL+self.TRACKER_SEARCH_URL_TPL+search_string
+        _data = BeautifulSoup(self.SESSION.get(search_url).content, 'lxml').select('div#index > table > tr')
         for row in _data[1:]:
-            _cols=row.select('td')
-            TITLE=_cols[1].select('a')[2].text
-            INFO=_cols[1].select('a')[2].get('href')
-            DL=_cols[1].select('a')[1].get('href')
+            _cols = row.select('td')
+            TITLE = _cols[1].select('a')[2].text
+            INFO = _cols[1].select('a')[2].get('href')
+            DL = _cols[1].select('a')[1].get('href')
             SIZE = _cols[3].text if len(_cols) == 5 else _cols[2].text
-            DATE=self.convert_date(_cols[0].text)
+            DATE = self.convert_date(_cols[0].text)
             if len(_cols) == 5:
                 SEEDS = _cols[4].text.split("\xa0")[1]
                 LEACH = _cols[4].text.split("\xa0")[3]
             else:
                 SEEDS = LEACH = 0
             self.log.debug("COL Title:"+TITLE+" L:"+str(INFO)+" DL:"+str(DL)+" S:"+str(SIZE)+" D:"+str(DATE))
-            
+
             self.POSTS.append({'tracker': self.TRACKER_NAME,
-                               'title': TITLE.replace(r'<',''), 
-                               'info':"{0}/{1}".format(self.TRACKER_URL,INFO),
-                               'dl': "{1}".format(self.TRACKER_URL,DL),
-                               'size':SIZE,
+                               'title': TITLE.replace(r'<', ''),
+                               'info': "{0}/{1}".format(self.TRACKER_URL, INFO),
+                               'dl': DL,
+                               'size': SIZE,
                                'date': DATE,
                                'seed': SEEDS,
                                'leach': LEACH})
