@@ -1,7 +1,5 @@
 import asyncio
 import threading
-import pydash as _
-from typing import List
 from lib.func import get_logger
 from telegram import Bot, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 

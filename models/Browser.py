@@ -1,5 +1,5 @@
-from lib.func import trans
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
 
 class Browser:
     def __init__(self, user_id: int = None, user_lang: str = "en", posts: dict = None, posts_per_page: int = 5) -> None:

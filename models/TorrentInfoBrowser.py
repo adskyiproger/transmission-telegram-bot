@@ -23,7 +23,7 @@ class TorrentInfoBrowser(Browser):
 
         page = int(_page)
         self.prev_page = page
-        
+
         # Add first and last posts index
         post_num = (page - 1) * self.posts_per_page
         _message = f"<b>{self.name}</b>: "+trans("TORRENT_INFO_PAGE_HEADER", self.user_lang).format(page,

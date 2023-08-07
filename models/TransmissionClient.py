@@ -8,7 +8,7 @@ from typing import Any, BinaryIO
 from typing_extensions import Literal
 from transmission_rpc.client import Client
 from transmission_rpc.torrent import Torrent
-from lib.func import bytes_to_human, trans, get_logger
+from lib.func import trans, get_logger
 
 log = get_logger("TransmissionClient")
 
