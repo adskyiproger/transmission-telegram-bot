@@ -6,12 +6,6 @@ class SearchToloka(SearchBase):
     TRACKER_URL = "https://toloka.to"
     TRACKER_SEARCH_URL_TPL = "https://toloka.to/tracker.php?nm="
     TRACKER_LOGIN_URL = "https://toloka.to/login.php"
-    
-
-    def __init__(self, username, password) -> None:
-        self.username = username
-        self.password = password
-        self.POSTS = []
 
     def login(self):
         self.log.info("Loggin in %s", self.TRACKER_LOGIN_URL)

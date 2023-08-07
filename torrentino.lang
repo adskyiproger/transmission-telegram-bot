@@ -12,7 +12,12 @@ NAV_HEADER=Search: page {} of {} (total: {} posts):
 NO_SEARCH_RESULTS=Seems like you have not searched today. Please try to search for something, For instance: Lorf of the rings
 NOTHING_FOUND=Unfortunately, nothing found for your query.
 CHOOSE_DOWNLOAD_DIR=Please choose download folder for "{}":
-FILE_WILL_BE_DOWNLOADED=File will be downloaded into {}
+ADDING_TORRENT_FILE_WILL_BE_DOWNLOADED=File will be downloaded into {}
+ADDING_TORRENT_FILE_IS_CORRUPTED=File is corrupted or link doesn't contain a torrent file. One of the issues is possible:
+                                 - Torrent tracker requires authorization
+                                 - Website or file is not accessible
+                                 - Corrupted file or wrong file
+ADDING_FILE_SOMETHING_WENT_WRONG=Something went wrong
 SOMETHING_WENT_WRONG=Something went wrong, probably too many files in this torrent
 DOWNLOAD_COMPLETED=Download completed: {}
 TORRENT_INFO_PAGE_HEADER=page {} of {} ({} files)
@@ -22,7 +27,12 @@ PROGRESS_STATUS=Progress: {0}, Status: {1}
 ACCESS_RESTRICTED=У вас недостаточно прав для выполнения этой команды. Пожалуйста обратитесь к администратору.
 TORRENT_LIST_HEADER=Список торрентов: страница {} из {} ({} файлов):
 Nothing found. Please try to use different search query.=Ничего не найдено. Пожалуйста попробуйте использовать другой поисковый запрос.
-FILE_WILL_BE_DOWNLOADED=Файл будет загружен в папку {}
+ADDING_TORRENT_FILE_WILL_BE_DOWNLOADED=Файл будет загружен в папку {}
+ADDING_TORRENT_FILE_IS_CORRUPTED=Файл поврежден или ссылка не содержит торрент-файл. Возможна одна из проблем:
+                                 - торрент трекер требует авторизацию
+                                 - сайт или файл не доступен
+                                 - поврежденный или неправильный файл
+ADDING_FILE_SOMETHING_WENT_WRONG=Что то пошло не так
 URL {0} will be downloaded into {1}.=URL {0} будет загружен в папку {1}.
 TORRENT_REMOVED=Торрент {0} был удалён с Transmission сервера
 I will notify you once download complete.=Я уведомлю вас о завершении загрузки.
@@ -46,7 +56,12 @@ PROGRESS_STATUS=завершено: {0}, статус: {1}
 ACCESS_RESTRICTED=У вас недостатньо дозволів для виконання цієї команди. Будь-ласка зверніться до адміністратора.
 TORRENT_LIST_HEADER=Список торрентів: сторінка {} з {} (всього {} файлів):
 Nothing found. Please try to use different search query.=Нічого не знайдено. Спробуйте пошукати з іншою фразою.
-FILE_WILL_BE_DOWNLOADED=Файл буде завантажено в папку {}. Я повідомлю вас щойно завершиться завантажання.
+ADDING_TORRENT_FILE_WILL_BE_DOWNLOADED=Файл буде завантажено в папку {}. Я повідомлю вас щойно завершиться завантажання.
+ADDING_TORRENT_FILE_IS_CORRUPTED=Файл пошкоджено або посилання не містить торрент-файл. Можлива одна із проблем:
+                                 - торрент трекер вимагає авторизацію
+                                 - сайт або файл не доступний
+                                 - пошкоджений чи неправильний файл
+ADDING_FILE_SOMETHING_WENT_WRONG=Щось пішло не так
 URL {0} will be downloaded into {1}.=URL {0} буде завантажено в папку {1}. Я повідомлю вас щойно завершиться завантажання.
 TORRENT_REMOVED=Торрент {} видалено з Transmission серверу
 I will notify you once download complete.=Я повідомлю вас щойно файл буде завантажено.

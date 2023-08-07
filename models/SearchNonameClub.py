@@ -9,9 +9,6 @@ class SearchNonameClub(SearchBase):
     TRACKER_URL="https://nnmclub.to"
     TRACKER_SEARCH_URL_TPL="/forum/tracker.php?nm="
 
-    def __init__(self, username=None, password=None) -> None:
-        self.POSTS = []
-
     def convert_date(self, date: str):
         _date = date.split("-")
         return f"{_date[2]}-{_date[1]}-{_date[0]}"

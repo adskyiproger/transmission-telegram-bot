@@ -6,9 +6,6 @@ class SearchRUTOR(SearchBase):
     TRACKER_URL="http://rutor.info"
     TRACKER_SEARCH_URL_TPL="/search/0/0/000/0/"
 
-    def __init__(self, username=None, password=None) -> None:
-        self.POSTS = []
-
     def convert_date(self, date: str):
         _date = date.split("\xa0")
         months = {

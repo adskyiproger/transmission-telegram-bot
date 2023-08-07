@@ -128,7 +128,7 @@ async def askDownloadDirPageLink(update: Update, context: ContextTypes.DEFAULT_T
     context.user_data['torrent'] = {'type': 'url',
                                     'url': post['dl'],
                                     'tracker': post['tracker']}
-    log.info("Added torrent URL to download list: {}".format(post))
+    log.info("Added torrent URL to download list: %s", post)
 
 
 @restricted
@@ -158,7 +158,7 @@ async def getMenuPage(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def lastSearchResults(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if _.has(context.user_data, 'posts'):
         context.user_data['nav_type'] = 'posts'
-        posts = context.user_data['posts']
+        posts: PostsBrowser = context.user_data['posts']
         await update.message.reply_text(
             text=posts.get_page(),
             reply_markup=posts.get_keyboard(),
@@ -202,7 +202,7 @@ async def addTorrentToTransmission(update: Update, context: ContextTypes.DEFAULT
             lang_code=lang_code,
             torrent=tmp_file_path,
             download_dir=query.data)
-        message += trans('FILE_WILL_BE_DOWNLOADED', lang_code).format(str(query.data))
+        message += trans('ADDING_TORRENT_FILE_WILL_BE_DOWNLOADED', lang_code).format(str(query.data))
     except Exception as err:
         if 'invalid or corrupt torrent file' in str(err):
             message += trans('ADDING_TORRENT_FILE_IS_CORRUPTED', lang_code)
