@@ -52,8 +52,8 @@ if not _.get(config, 'BOT.USE_MENU'):
 
 bot_config.set_bot_commands(commands)
 
-actions = ["📁 Torrents", "🔍 Search"]
 # Configure actions to work with torrent
+actions = ["📁 Torrents", "🔍 Search"]
 KEYBOARD = bot_config.get_keyboard(actions)
 
 # Telegram bot token
@@ -103,12 +103,6 @@ async def askDownloadDirFile(update: Update, context: ContextTypes.DEFAULT_TYPE)
         'type': 'torrent',
         'file_name': update.message.document.file_name,
         'file_id': update.message.document.file_id}
-
-
-async def unsupportedMime(update: Update, _: ContextTypes.DEFAULT_TYPE):
-    update.message.reply_text("Error: File %s has unsupported mime type %s",
-                              update.message.document.file_name,
-                              update.message.document.mime_type)
 
 
 @restricted
@@ -200,13 +194,21 @@ async def addTorrentToTransmission(update: Update, context: ContextTypes.DEFAULT
             tmp_file_path = f"file://{_tmp_file_path}"
     lang_code = query.from_user.language_code
     log.info("Adding file/URL %s to Transmission", tmp_file_path)
-    TORRENT_CLIENT.add_torrent(chat_id=update.effective_user.id,
-                               lang_code=lang_code,
-                               torrent=tmp_file_path,
-                               download_dir=query.data)
     message = query.message.text
     message += "\n----------------------\n"
-    message += trans('FILE_WILL_BE_DOWNLOADED', lang_code).format(str(query.data))
+    try:
+        TORRENT_CLIENT.add_torrent(
+            chat_id=update.effective_user.id,
+            lang_code=lang_code,
+            torrent=tmp_file_path,
+            download_dir=query.data)
+        message += trans('FILE_WILL_BE_DOWNLOADED', lang_code).format(str(query.data))
+    except Exception as err:
+        if 'invalid or corrupt torrent file' in str(err):
+            message += trans('ADDING_TORRENT_FILE_IS_CORRUPTED', lang_code)
+        else:
+            message += trans('ADDING_FILE_SOMETHING_WENT_WRONG', lang_code) + ':\n' + str(err)
+        log.error("File %s was not added due to error %s", tmp_file_path, str(err))
     await query.edit_message_text(text=message)
 
 
@@ -381,12 +383,10 @@ def main():
     app = Application.builder().token(BOT_TOKEN).build()
     # Process new user request:
     app.add_handler(MessageHandler(Regex(r'^/start\ welcome_[A-Za-z0-9]+$'), welcomeNewUser))
-    # Add Transmission handlers to dispatcher:
 
+    # Add Transmission handlers to dispatcher:
     app.add_handler(MessageHandler(Regex(r'Torrents$'), torrentList))
     app.add_handler(MessageHandler(Regex(r'Search$'), lastSearchResults))
-    # app.add_handler(MessageHandler(Regex(r'^/adduser$'), addNewUser))
-    # app.add_handler(MessageHandler(Regex(r'^/help$'), help_command))
 
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("adduser", addNewUser))
@@ -412,7 +412,6 @@ def main():
     # Ask download directory for torrent file
     app.add_handler(MessageHandler(Document.MimeType('application/x-bittorrent'), askDownloadDirFile))
 
-    # app.add_handler(MessageHandler(Document.IMAGE, unsupportedMime))
     # Navigation buttons switcher (inline keyboard)
     app.add_handler(CallbackQueryHandler(getMenuPage, pattern=r'^[x0-9]+$'))
     # Select download folder switcher (inline keyboard)
