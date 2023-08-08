@@ -33,44 +33,52 @@ from telegram.constants import ParseMode
 
 from models.PostsBrowser import PostsBrowser
 from models.BotConfigurator import BotConfigurator
-# Read configuration file, torrentino.ini
+# Read configuration file, torrentino.yaml
 # File is in the same directory as script
 config = get_config()
-BOT_TOKEN = _.get(config, 'BOT.TOKEN')
+BOT_token = _.get(config, 'bot.token')
 
-bot_config = BotConfigurator(BOT_TOKEN)
-
-
-commands = [("torrents", "📁 Torrents"),
-            ("stop_all", "⏹ Stop all Torrents"),
-            ("start_all", "▶ Start all Torrents"),
-            ("last_search", "🔎 Last search"),
-            ("adduser", "👤 Add new user"),
-            ("help", "❓ Help")]
-if not _.get(config, 'BOT.USE_MENU'):
-    commands = []
-
-bot_config.set_bot_commands(commands)
-
-# Configure actions to work with torrent
-actions = ["📁 Torrents", "🔍 Search"]
-KEYBOARD = bot_config.get_keyboard(actions)
-
-# Telegram bot token
+bot_config = BotConfigurator(BOT_token)
 
 # Client connection to Transmission torrent server
 # User environment variables or defaults from configuration file
-TORRENT_CLIENT = TransmissionClient(
-    telegram_token=BOT_TOKEN,
-    host=os.getenv("TR_HOST", config['TRANSMISSION']['HOST']),
-    port=int(os.getenv("TR_PORT", config['TRANSMISSION']['PORT'])),
-    username=os.getenv("TR_USER", config['TRANSMISSION']['USER']),
-    password=os.getenv("TR_PASSWORD", config['TRANSMISSION']['PASSWORD']))
+try:
+    TORRENT_CLIENT = TransmissionClient(
+        telegram_token=BOT_token,
+        host=os.getenv("TR_HOST", _.get(config, 'transmission.host')),
+        port=int(os.getenv("TR_PORT", _.get(config, 'transmission.port'))),
+        username=os.getenv("TR_USER", _.get(config, 'transmission.user')),
+        password=os.getenv("TR_PASSWORD", _.get(config, 'transmission.password')))
+except:
+    TORRENT_CLIENT = None
+
+# Configure actions to work with torrent
+commands = []
+actions = []
+
+if TORRENT_CLIENT:
+    actions.append("📁 Torrents")
+    if _.get(config, 'bot.use_menu'):
+        commands.extend([
+            ("torrents", "📁 Torrents"),
+            ("stop_all", "⏹ Stop all Torrents"),
+            ("start_all", "▶ Start all Torrents")
+        ])
+
+actions.append("🔍 Search")
+if _.get(config, 'bot.use_menu'):
+    commands.extend([
+        ("last_search", "🔎 Last search"),
+        ("adduser", "👤 Add new user"),
+        ("help", "❓ Help")])
+
+KEYBOARD = bot_config.get_keyboard(actions)
+bot_config.set_bot_commands(commands)
 
 # Download directories
 # Transmission server needs write access to these directories
 reply_markup = InlineKeyboardMarkup(
-    [[InlineKeyboardButton(key.capitalize(), callback_data=value) for key, value in dict(config['DIRECTORIES']).items()]])
+    [[InlineKeyboardButton(key.capitalize(), callback_data=value) for key, value in dict(config['directories']).items()]])
 
 # This variable is used to auth new users
 WELCOME_HASHES = []
@@ -78,13 +86,14 @@ WELCOME_HASHES = []
 log = get_logger("main")
 
 SEARCH = SearchTorrents(credentials=_.get(config, "trackers", {}),
-                        sort_by=_.get(config, "BOT.SORT_BY", "date"))
+                        sort_by=_.get(config, "bot.sort_by", "date"))
+
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Send a message when the command /help is issued."""
     HELP = trans("HELP", update.message.from_user.language_code)
-    if update.message.chat.id == config['BOT']['SUPER_USER']:
+    if update.message.chat.id == config['bot']['super_user']:
         HELP += "\n"+trans("HELP_ADMIN", update.message.from_user.language_code)
     log.info("%s, %s, %s", update.message.chat.id, update.message.chat_id, context.user_data)
     await context.bot.send_message(chat_id=update.message.chat.id, text=HELP, parse_mode=ParseMode.HTML, reply_markup=KEYBOARD)
@@ -330,12 +339,12 @@ async def torrentDelete(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text=trans('TORRENT_REMOVED',
                    update.message.from_user.language_code).format(TORRENT_CLIENT.get_torrents(int(torrent_id))[0].name),
         parse_mode=ParseMode.HTML)
-    TORRENT_CLIENT.remove_torrent(int(torrent_id), delete_data=config['TRANSMISSION']['DELETE_DATA'])
+    TORRENT_CLIENT.remove_torrent(int(torrent_id), delete_data=config['transmission']['delete_data'])
 
 
 @restricted
 async def addNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.message.chat.id == config['BOT']['SUPER_USER']:
+    if update.message.chat.id == config['bot']['super_user']:
         hash = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
         WELCOME_HASHES.append(hash)
         log.info(context.bot)
@@ -351,7 +360,7 @@ async def addNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def welcomeNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
     hash_code = update.message.text.replace('/start welcome_', '')
     if hash_code in WELCOME_HASHES and update.message.chat.id:
-        config['BOT']['ALLOWED_USERS'].append(update.message.chat.id)
+        config['bot']['allowed_users'].append(update.message.chat.id)
         adduser(update.message.chat.id)
         WELCOME_HASHES.remove(hash_code)
         await context.bot.send_message(update.message.chat.id,
@@ -363,7 +372,7 @@ async def welcomeNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def main():
     """Start the bot."""
-    app = Application.builder().token(BOT_TOKEN).build()
+    app = Application.builder().token(BOT_token).build()
     # Process new user request:
     app.add_handler(MessageHandler(Regex(r'^/start\ welcome_[A-Za-z0-9]+$'), welcomeNewUser))
 

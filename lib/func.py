@@ -68,8 +68,8 @@ def save_config():
 
 
 def adduser(id):
-    if id not in CONFIG['BOT']['ALLOWED_USERS']:
-        CONFIG['BOT']['ALLOWED_USERS'].append(id)
+    if id not in CONFIG['bot']['allowed_users']:
+        CONFIG['bot']['allowed_users'].append(id)
         save_config()
 
 
@@ -79,12 +79,12 @@ def restricted(func):
         
         user_id = update.effective_user.id
 
-        if 'SUPER_USER' not in CONFIG['BOT'] or CONFIG['BOT']['SUPER_USER'] == '':
+        if 'super_user' not in CONFIG['bot'] or CONFIG['bot']['super_user'] == '':
             logging.warn(f"Adding new super user {user_id}")
-            CONFIG['BOT']['SUPER_USER'] = user_id
+            CONFIG['bot']['super_user'] = user_id
             save_config()
-        elif user_id not in CONFIG['BOT']['ALLOWED_USERS']:
-            logging.info(f"{user_id} != {CONFIG['BOT']['ALLOWED_USERS']}")
+        elif user_id not in CONFIG['bot']['allowed_users']:
+            logging.info(f"{user_id} != {CONFIG['bot']['allowed_users']}")
             context.bot.send_message(chat_id=user_id,
                                      text=trans('ACCESS_RESTRICTED', update.message.from_user.language_code),
                                      parse_mode=ParseMode.HTML,
@@ -96,15 +96,15 @@ def restricted(func):
     return wrapped
 
 def get_logger(class_name: str) -> logging.Logger:
-    log_level = os.environ.get('LOG_LEVEL', CONFIG['BOT']['LOG_LEVEL']).upper()
+    log_level = os.environ.get('log_level', CONFIG['bot']['log_level']).upper()
     # Configure telegram bot logging
     log_handlers=[ logging.StreamHandler(sys.stdout) ]
-    if CONFIG['BOT']['LOG_FILE']:
+    if CONFIG['bot']['log_file']:
         # First run: create directory
-        if not os.path.isdir(os.path.dirname(CONFIG['BOT']['LOG_FILE'])):
-            os.makedirs(os.path.dirname(CONFIG['BOT']['LOG_FILE']))
+        if not os.path.isdir(os.path.dirname(CONFIG['bot']['log_file'])):
+            os.makedirs(os.path.dirname(CONFIG['bot']['log_file']))
         log_handlers.append(logging.handlers.RotatingFileHandler(
-                                            filename = CONFIG['BOT']['LOG_FILE'],
+                                            filename = CONFIG['bot']['log_file'],
                                             maxBytes = (1048576*5),
                                             backupCount = 1,
                                             )

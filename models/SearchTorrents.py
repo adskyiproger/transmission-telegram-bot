@@ -21,7 +21,7 @@ class SearchTorrents:
     trackers defined in CLASSES.
     """
     # Key to sort search results
-    SORT_BY = 'size'
+    sort_by = 'size'
     # reverse sort order
     SORT_REVERSE = True
     CREDENTIALS = {}
@@ -38,7 +38,7 @@ class SearchTorrents:
 
     def __init__(self, credentials: dict, sort_by: str) -> None:
         self.CREDENTIALS = credentials
-        self.SORT_BY = sort_by
+        self.sort_by = sort_by
         self._trackers = {}
 
     @property
@@ -77,7 +77,7 @@ class SearchTorrents:
         try:
             posts = self.pre_sort_format(posts)
             sorted_list = sorted(posts,
-                                 key=lambda d: int(d[self.SORT_BY]),
+                                 key=lambda d: int(d[self.sort_by]),
                                  reverse=self.SORT_REVERSE)
             # Store results in cache if sorting went well
             posts = self.post_sort_format(sorted_list)
@@ -87,7 +87,7 @@ class SearchTorrents:
         return posts
 
     def pre_sort_format(self, posts):
-        if self.SORT_BY != "size":
+        if self.sort_by != "size":
             return posts
         for post in posts:
             post["size"] = human_to_bytes(post['size'])
@@ -95,7 +95,7 @@ class SearchTorrents:
 
     def post_sort_format(self, posts):
         # Convert size B -> human readable (K, M, G)
-        if self.SORT_BY != "size":
+        if self.sort_by != "size":
             return posts
         for el in posts:
             el['size'] = bytes_to_human(el['size'])

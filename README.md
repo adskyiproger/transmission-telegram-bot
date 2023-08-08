@@ -111,7 +111,7 @@ For example: Video, TVShows, Soft, Music.:
    ```
    mkdir -p /data/Media/{Video,TVShows,Soft,Music}
    ```
-   **NOTE:** You are not limited to single directory and you can use existing folders. Check `DIRECTORIES` section in configuration file `torrentino.yaml`
+   **NOTE:** You are not limited to single directory and you can use existing folders. Check `directories` section in configuration file `torrentino.yaml`
 
 2. Create dedicated user `dlna` for running docker containers and make this user owner of `/data/Media`:
    ```
@@ -142,7 +142,7 @@ For example: Video, TVShows, Soft, Music.:
    ```
    chown -R 2022:2022 ~/docker/torrentino/
    ```
-8. Open `~/docker/torrentino/config/torrentino.yaml` in text editor and update `TOKEN`, `SUPER_USER` and `ALLOWED_USERS` variables.
+8. Open `~/docker/torrentino/config/torrentino.yaml` in text editor and update `token`, `super_user` and `allowed_users` variables.
 9. Copy docker-compose.yaml into `~/docker` directory
    ```
    cp ~/transmission-telegram-bot/docker-compose.yaml docker/
