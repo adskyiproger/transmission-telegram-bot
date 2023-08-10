@@ -109,7 +109,7 @@ def get_logger(class_name: str) -> logging.Logger:
                                             backupCount = 1,
                                             )
                         )
-    logging.basicConfig( format = '[%(asctime)s] [%(levelname)s]: %(name)s %(message)s',
+    logging.basicConfig( format = '[%(asctime)s] [%(levelname)s] %(name)s %(message)s',
                         level = logging.getLevelName(log_level),
                         handlers = log_handlers )
     # Silence for httpx

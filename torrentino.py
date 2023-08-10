@@ -6,7 +6,7 @@ Usage:
 Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
-import requests
+import sys
 import os
 import tempfile
 import random
@@ -17,14 +17,15 @@ from models.TransmissionClient import TransmissionClient
 from models.SearchTorrents import SearchTorrents
 from models.TorrentsListBrowser import TorrentsListBrowser
 from models.TorrentInfoBrowser import TorrentInfoBrowser
+from models.DownloadHistory import DownloadHistory
+
 from lib.func import (
     restricted,
     trans,
     get_config,
     get_logger,
     get_qr_code,
-    adduser,
-    save_torrent_to_tempfile)
+    adduser)
 
 from telegram.ext import Application, MessageHandler, CallbackQueryHandler, ContextTypes, CommandHandler
 from telegram.ext.filters import Regex, Document, ALL, Entity
@@ -33,24 +34,32 @@ from telegram.constants import ParseMode
 
 from models.PostsBrowser import PostsBrowser
 from models.BotConfigurator import BotConfigurator
+
+
+log = get_logger("main")
+
 # Read configuration file, torrentino.yaml
 # File is in the same directory as script
 config = get_config()
-BOT_token = _.get(config, 'bot.token')
+token = _.get(config, 'bot.token')
 
-bot_config = BotConfigurator(BOT_token)
+bot_config = BotConfigurator(config)
+
+if not bot_config.validate():
+    sys.exit(1)
 
 # Client connection to Transmission torrent server
 # User environment variables or defaults from configuration file
 try:
     TORRENT_CLIENT = TransmissionClient(
-        telegram_token=BOT_token,
+        telegram_token=token,
         host=os.getenv("TR_HOST", _.get(config, 'transmission.host')),
         port=int(os.getenv("TR_PORT", _.get(config, 'transmission.port'))),
         username=os.getenv("TR_USER", _.get(config, 'transmission.user')),
         password=os.getenv("TR_PASSWORD", _.get(config, 'transmission.password')))
-except:
+except Exception as err:
     TORRENT_CLIENT = None
+    log.error("Transmission is not available: %s", err)
 
 # Configure actions to work with torrent
 commands = []
@@ -62,7 +71,8 @@ if TORRENT_CLIENT:
         commands.extend([
             ("torrents", "📁 Torrents"),
             ("stop_all", "⏹ Stop all Torrents"),
-            ("start_all", "▶ Start all Torrents")
+            ("start_all", "▶ Start all Torrents"),
+            ("history", "Download history")
         ])
 
 actions.append("🔍 Search")
@@ -83,8 +93,6 @@ reply_markup = InlineKeyboardMarkup(
 # This variable is used to auth new users
 WELCOME_HASHES = []
 
-log = get_logger("main")
-
 SEARCH = SearchTorrents(credentials=_.get(config, "trackers", {}),
                         sort_by=_.get(config, "bot.sort_by", "date"))
 
@@ -98,6 +106,9 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     log.info("%s, %s, %s", update.message.chat.id, update.message.chat_id, context.user_data)
     await context.bot.send_message(chat_id=update.message.chat.id, text=HELP, parse_mode=ParseMode.HTML, reply_markup=KEYBOARD)
 
+@restricted
+async def history(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await context.bot.send_message(chat_id=update.message.chat.id, text=DownloadHistory.show())
 
 @restricted
 async def askDownloadDirFile(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -245,9 +256,14 @@ async def searchOnWebTracker(update: Update, context: ContextTypes.DEFAULT_TYPE)
     context.user_data['posts'] = posts
     # Display search results if something was found
     if posts.number_of_pages > 0:
+        text = posts.get_page()
+        if len(SEARCH.FAILED_SEARCH) > 0:
+            text += "--------------\n" \
+            "⚠ Failed search on trackers: " + ", ".join(SEARCH.FAILED_SEARCH)
+
         await context.bot.edit_message_text(chat_id=msg.chat.id,
                                             message_id=msg.message_id,
-                                            text=posts.get_page(),
+                                            text=text,
                                             reply_markup=posts.get_keyboard(),
                                             parse_mode=ParseMode.HTML,
                                             disable_web_page_preview=True)
@@ -372,7 +388,7 @@ async def welcomeNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def main():
     """Start the bot."""
-    app = Application.builder().token(BOT_token).build()
+    app = Application.builder().token(token).build()
     # Process new user request:
     app.add_handler(MessageHandler(Regex(r'^/start\ welcome_[A-Za-z0-9]+$'), welcomeNewUser))
 
@@ -386,6 +402,7 @@ def main():
     app.add_handler(CommandHandler("torrents", torrentList))
     app.add_handler(CommandHandler("stop_all", torrentStopAll))
     app.add_handler(CommandHandler("start_all", torrentStartAll))
+    app.add_handler(CommandHandler("history", history))
 
     app.add_handler(MessageHandler(Regex(r'^/info_[0-9]+$'), torrentInfo))
 

@@ -34,12 +34,12 @@ class SearchTorrents:
     # Variable for storing search results
     CACHE = {}
 
-    FAILED_TRACKERS = []
-
     def __init__(self, credentials: dict, sort_by: str) -> None:
         self.CREDENTIALS = credentials
         self.sort_by = sort_by
         self._trackers = {}
+        self.FAILED_SEARCH = []
+        self.FAILED_TRACKERS = []
 
     @property
     def trackers(self) -> Dict[str, SearchBase]:
@@ -68,9 +68,16 @@ class SearchTorrents:
     def _search(self, search_string: str) -> List:
         """Search over trackers"""
         log.info("Searching for: %s", search_string)
+        posts = []
+        self.FAILED_SEARCH = []
         # Search over enabled trackers
-        posts = [item for _, tracker in self.trackers.items() for item in tracker.search(search_string)]
-        log.info("Found %s posts on %s trackers", len(posts), ', '.join(self.trackers.keys()))
+        for tracker_name, tracker in self.trackers.items():
+            try:
+                posts.extend(tracker.search(search_string))
+                log.info("Found %s posts on %s trackers", len(posts), ', '.join(self.trackers.keys()))
+            except Exception as err:
+                self.FAILED_SEARCH.append(tracker_name)
+                log.error("Failed search due to error: %s", err)
         return posts
 
     def sort(self, posts: List) -> List:

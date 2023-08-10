@@ -9,7 +9,7 @@ from typing_extensions import Literal
 from transmission_rpc.client import Client
 from transmission_rpc.torrent import Torrent
 from lib.func import trans, get_logger
-
+from models.DownloadHistory import DownloadHistory
 log = get_logger("TransmissionClient")
 
 
@@ -23,7 +23,7 @@ class TransmissionClient(Client):
 
     DOWNLOAD_QUEUE = {}
     QUEUE_CHECK_INTERVAL = 60
-
+    HISTORY = DownloadHistory()
     def __init__(self, *, protocol: Literal['http', 'https'] = "http",
                  username: str = None, password: str = None,
                  host: str = "127.0.0.1", port: int = 9091,
@@ -57,11 +57,14 @@ class TransmissionClient(Client):
                 if not status.seeding:
                     continue
                 user = TransmissionClient.DOWNLOAD_QUEUE[torrent_id]
-                name = self.get_torrent(torrent_id=torrent_id).name
-                log.info("Download completed: %s %s", name, status.seeding)
+                torrent = self.get_torrent(torrent_id=torrent_id)
+
+                log.info("Download completed: %s %s", torrent.name, status.seeding)
+
+                DownloadHistory.add(torrent.date_done, torrent.name, torrent.download_dir, torrent.size_when_done)
                 del TransmissionClient.DOWNLOAD_QUEUE[torrent_id]
                 log.info("User: %s, language: %s", user["chat_id"], user["lang_code"])
-                await app.bot.send_message(chat_id=user["chat_id"], text=trans("DOWNLOAD_COMPLETED", user["lang_code"]).format(name))
+                await app.bot.send_message(chat_id=user["chat_id"], text=trans("DOWNLOAD_COMPLETED", user["lang_code"]).format(torrent.name))
 
     def add_torrent(self, chat_id, lang_code, torrent: BinaryIO | str, **kwargs: Any) -> Torrent:
         """Add torrent to transmission server"""
