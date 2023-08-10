@@ -18,7 +18,7 @@ from models.SearchTorrents import SearchTorrents
 from models.TorrentsListBrowser import TorrentsListBrowser
 from models.TorrentInfoBrowser import TorrentInfoBrowser
 from models.DownloadHistory import DownloadHistory
-
+from models.HistoryBrowser import HistoryBrowser
 from lib.func import (
     restricted,
     trans,
@@ -44,7 +44,7 @@ config = get_config()
 token = _.get(config, 'bot.token')
 
 bot_config = BotConfigurator(config)
-
+DownloadHistory.set_log_file(_.get(config, 'bot.download_log_file', 'download.log'))
 if not bot_config.validate():
     sys.exit(1)
 
@@ -108,7 +108,17 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @restricted
 async def history(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await context.bot.send_message(chat_id=update.message.chat.id, text=DownloadHistory.show())
+    history = HistoryBrowser(
+        user_id=update.message.chat.id,
+        user_lang=update.message.from_user.language_code,
+        posts=DownloadHistory.show())
+    context.user_data['nav_type'] = 'history'
+    context.user_data['history'] = history
+    await context.bot.send_message(chat_id=update.message.chat.id,
+                                   text=history.get_page(),
+                                   parse_mode=ParseMode.HTML,
+                                   reply_markup=history.get_keyboard())    
+
 
 @restricted
 async def askDownloadDirFile(update: Update, context: ContextTypes.DEFAULT_TYPE):

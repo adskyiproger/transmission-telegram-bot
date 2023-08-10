@@ -19,7 +19,9 @@ bot:
   # - leach, number of leachers
   # Results will be shown in reverse order, from latest to oldest, from biggest to smallest
   sort_by: size
-
+  download_log_file: download.log
+  # Add menu button with all available commands
+  use_menu: true
 transmission:
   # host, Transmission server host
   host: transmission
@@ -40,10 +42,12 @@ directories:
   Music: /downloads/Music
   Soft: /downloads/Soft
 
-# Credentioals section will be responsible for authorization
-# Currently only toloka requires authorizaion
-CREDENTIALS:
+# Trackers section to store user credentials:
+
+trackers:
+  nnmclub:
+    user: <email or login>
+    password: <password>
   toloka:
-     USERNAME: <email or login>
-     password: <password>
-     login_url: https://toloka.to/login.php
+    user: <email or login>
+    password: <password>

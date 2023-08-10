@@ -2,7 +2,6 @@
 version: "2.1"
 services:
   jellyfin:
-  jellyfin:
     image: ghcr.io/linuxserver/jellyfin
     container_name: jellyfin
     environment:
@@ -26,8 +25,9 @@ services:
     depends_on:
       - "transmission"
     volumes:
-      - /home/dnla/docker/torrentino/config/torrentino.ini:/usr/src/app/torrentino.ini
+      - /home/dnla/docker/torrentino/config/torrentino.yaml:/usr/src/app/torrentino.ini
       - /home/dnla/docker/torrentino/torrentino.log:/usr/src/app/torrentino.log
+      - /home/dnla/docker/torrentino/download.log:/usr/src/app/download.log
   transmission:
     image: ghcr.io/linuxserver/transmission
     container_name: transmission

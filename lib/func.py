@@ -131,14 +131,16 @@ def get_qr_code(input_data):
 
 
 def bytes_to_human(size_bytes: int) -> str:
-    if size_bytes == 0:
+    size_bytes = int(size_bytes)
+    if int(size_bytes) == 0:
         return "0B"
     try:
         i = int(math.floor(math.log(size_bytes, 1024)))
         p = math.pow(1024, i)
         s = round(size_bytes / p, 2)
         return "%s%s" % (s, size_names[i])
-    except TypeError:
+    except TypeError as err:
+        log.warning("Wrong value for conversion to bytes %s: %s", size_bytes, err)
         return size_bytes
 
 

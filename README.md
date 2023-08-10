@@ -49,9 +49,9 @@ Additionally you could setup home DLNA server like Jellyfin, Plex or MiniDLNA an
 ## Preparation
 1. Register new telegram bot using [@BotFather](https://t.me/botfather).
 2. Configure Transmission server authentication with username and password:
-   - For rpm or deb package use official doc: https://github.com/transmission/transmission/tree/main
+   - For rpm or deb package use official doc: https://github.com/transmission/transmission/tree/main. Detailed setup instruction is [here](doc/Transmission-setup.md)
    - For docker image https://hub.docker.com/r/linuxserver/transmission please check `docker-compose.yaml` for available options.
-3. Update torrentino.yaml configuration file. Follow up comments inside configuration file.
+
 
 ## Run bot locally
 
@@ -60,9 +60,8 @@ Additionally you could setup home DLNA server like Jellyfin, Plex or MiniDLNA an
    git clone https://github.com/adskyiproger/transmission-telegram-bot.git
    ```
    or download as zip file: https://github.com/adskyiproger/transmission-telegram-bot/archive/refs/heads/master.zip
-2. Update configuration file:
+2. Update torrentino.yaml configuration file. Follow up comments inside configuration file:
    ```
-   # check comments inside the file
    torrentino.yaml
    ```
 3. Run:
@@ -74,16 +73,24 @@ Additionally you could setup home DLNA server like Jellyfin, Plex or MiniDLNA an
 
 ## Run in docker
 
+1. Clone this repository
+   ```
+   git clone https://github.com/adskyiproger/transmission-telegram-bot.git
+   ```
+2. Update torrentino.yaml configuration file. Follow up comments inside configuration file:
+   ```
+   torrentino.yaml
+   ```
 
-1. Build docker image:
+3. Build docker image:
    ```
    docker build -t my-bot . 
    ```
-2. Start docker container as daemon process:
+4. Start docker container as daemon process:
    ```
    docker run -d -v `pwd`/torrentino.yaml:/usr/src/app/torrentino.yaml my-bot
    ```
-3. Check container logs.
+5. Check container logs.
 
 
 

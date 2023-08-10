@@ -19,7 +19,7 @@ bot:
   # - leach, number of leachers
   # Results will be shown in reverse order, from latest to oldest, from biggest to smallest
   sort_by: size
-
+  download_log_file: download.log
   # Add menu button with all available commands
   use_menu: true
 transmission:
