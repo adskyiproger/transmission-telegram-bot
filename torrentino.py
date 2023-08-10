@@ -45,9 +45,6 @@ token = _.get(config, 'bot.token')
 
 DownloadHistory.set_log_file(_.get(config, 'bot.download_log_file', 'download.log'))
 
-bot_config = BotConfigurator(config)
-if not bot_config.validate():
-    sys.exit(1)
 
 # Client connection to Transmission torrent server
 # User environment variables or defaults from configuration file
@@ -61,6 +58,10 @@ try:
 except Exception as err:
     TORRENT_CLIENT = None
     log.error("Transmission is not available: %s", err)
+
+bot_config = BotConfigurator(config)
+if not bot_config.validate():
+    sys.exit(1)
 
 # Configure actions to work with torrent
 commands = []
