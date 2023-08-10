@@ -13,7 +13,6 @@ class SearchBase:
         self.username = username
         self.password = password
         self.POSTS = []
-    
         self._session = None
 
     def get_status(self):

@@ -24,6 +24,7 @@ class TransmissionClient(Client):
     DOWNLOAD_QUEUE = {}
     QUEUE_CHECK_INTERVAL = 60
     HISTORY = DownloadHistory()
+
     def __init__(self, *, protocol: Literal['http', 'https'] = "http",
                  username: str = None, password: str = None,
                  host: str = "127.0.0.1", port: int = 9091,

@@ -1,5 +1,5 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-
+from lib.func import get_logger
 
 class Browser:
     def __init__(self, user_id: int = None, user_lang: str = "en", posts: dict = None, posts_per_page: int = 5) -> None:
@@ -12,6 +12,12 @@ class Browser:
     @property
     def len(self):
         return len(self.posts)
+
+    @property
+    def log(self):
+        if not self._log:
+            self._log = get_logger(self.__class__.__name__)
+        return self._log
 
     @property
     def number_of_pages(self) -> int:
@@ -32,7 +38,9 @@ class Browser:
         page = int(_page)
         self.prev_page = page
 
-        if page == 1 or page < 4:
+        if pages == 1:
+            KEYBOARD = []
+        elif page == 1 or page < 4:
             KEYBOARD = [InlineKeyboardButton(str(jj), callback_data=str(jj)) for jj in range(1, 8) if 0 < jj <= pages]
         # Edge case for last page
         elif pages - page < 4:

@@ -18,10 +18,10 @@ class BotConfigurator():
         failed_checks = []
         if not _.has(self.config, 'bot.token'):
             failed_checks.append("You must pass the token you received from https://t.me/Botfather!")
-        if not ( _.has(self.config, 'transmission.host') and \
-                 _.has(self.config, 'transmission.port') and \
-                 _.has(self.config, 'transmission.user') and \
-                 _.has(self.config, 'transmission.password')):
+        if not (_.has(self.config, 'transmission.host') and \
+                _.has(self.config, 'transmission.port') and \
+                _.has(self.config, 'transmission.user') and \
+                _.has(self.config, 'transmission.password')):
             failed_checks.append(
                 "Provide transmission configuration options: host, user, password")
         if failed_checks:

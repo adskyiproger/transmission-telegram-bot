@@ -4,9 +4,10 @@ log = get_logger("DownloadHistory")
 
 class DownloadHistory():
     download_log_file = 'download.log'
+
     def show():
         logs = ''
-        with open(DownloadHistory.download_log_file, "r",  encoding="utf-8") as f:
+        with open(DownloadHistory.download_log_file, "r", encoding="utf-8") as f:
             logs = (str(f.read()))
         return logs.split('\n')
 
