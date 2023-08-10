@@ -43,8 +43,9 @@ log = get_logger("main")
 config = get_config()
 token = _.get(config, 'bot.token')
 
-bot_config = BotConfigurator(config)
 DownloadHistory.set_log_file(_.get(config, 'bot.download_log_file', 'download.log'))
+
+bot_config = BotConfigurator(config)
 if not bot_config.validate():
     sys.exit(1)
 
