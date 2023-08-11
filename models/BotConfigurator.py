@@ -5,7 +5,7 @@ from lib.func import get_logger
 from telegram import Bot, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 
 
-log = get_logger("configurator")
+log = get_logger("BotConfigurator")
 
 
 class BotConfigurator():

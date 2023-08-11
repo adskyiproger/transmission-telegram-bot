@@ -4,30 +4,21 @@ import yaml
 import sys
 import tempfile
 import uuid
-from pathlib import Path
-from functools import wraps
-from tempfile import mkstemp
 import logging
 import logging.handlers
-from telegram import KeyboardButton, ReplyKeyboardMarkup
-from telegram.constants import ParseMode
 import qrcode
 import pydash as _
 import math
 
+from functools import wraps
+from tempfile import mkstemp
+from lib.constants import LANGUAGE_FILE, CONFIG_FILE
+
+
 size_names = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
 
-# Configure actions to work with torrent
-TORRENT_ACTIONS=[
-        "🔍 List",
-       # "⏹ Stop All",
-       # "▶️ Start All"
-        ]
-torrent_reply_markup = ReplyKeyboardMarkup( [[KeyboardButton(text=str(key)) for key in TORRENT_ACTIONS]], resize_keyboard=True )
-
-
 lang = configparser.ConfigParser()
-lang.read(str(Path(__file__).parent.parent) +str(os.path.sep)+ 'torrentino.lang')
+lang.read(LANGUAGE_FILE)
 
 CONFIG = None
 
@@ -37,34 +28,33 @@ def load_config(config_file):
         print(f"Configuration file {config_file} not found.")
         sys.exit(1)
     with open(config_file, 'r') as config_file:
-        CONFIG = yaml.load(config_file, Loader=yaml.FullLoader)
-        return CONFIG
+        return yaml.load(config_file, Loader=yaml.FullLoader)
+
 
 def get_config():
-    CONFIG = load_config(str(Path(__file__).parent.parent) +str(os.path.sep)+ 'torrentino.yaml')
-    return CONFIG
-
-def sizeof_fmt(num, suffix='B'):
-   for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
-      if abs(num) < 1024.0:
-         return "%3.1f%s%s" % (num, unit, suffix)
-      num /= 1024.0
-   return "%.1f%s%s" % (num, 'Yi', suffix)
-
-def trans(STRING,L_CODE):
-    logging.debug(f"Translate: {STRING}, {L_CODE}")
-    if L_CODE in lang.sections():
-        if STRING in lang[L_CODE]:
-            STRING=lang[L_CODE][STRING]
-    else:
-        if STRING in lang["en"]:
-            STRING = lang["en"][STRING]
-    return STRING
+    config = load_config(CONFIG_FILE)
+    return config
 
 
 def save_config():
     with open(CONFIG_FILE, 'w') as f:
         yaml.dump(CONFIG, f)
+
+
+def trans(text, lang_code):
+    logging.debug(f"Translate: {text}, {lang_code}")
+    return _.get(lang,
+                 [lang_code, text],
+                 _.get(lang,
+                       ['en', text],
+                       text))
+    # if _.has(lang.sections(), lang_code):
+    #     if STRING in lang[lang_code]:
+    #         STRING=lang[lang_code][STRING]
+    # else:
+    #     if STRING in lang["en"]:
+    #         STRING = lang["en"][STRING]
+    # return STRING
 
 
 def adduser(id):
@@ -86,9 +76,7 @@ def restricted(func):
         elif user_id not in CONFIG['bot']['allowed_users']:
             logging.info(f"{user_id} != {CONFIG['bot']['allowed_users']}")
             context.bot.send_message(chat_id=user_id,
-                                     text=trans('ACCESS_RESTRICTED', update.message.from_user.language_code),
-                                     parse_mode=ParseMode.HTML,
-                                     reply_markup=torrent_reply_markup)
+                                     text=trans('ACCESS_RESTRICTED', update.message.from_user.language_code))
             logging.debug(update)
             logging.error("Unauthorized access denied for {}.".format(user_id))
             return
@@ -173,6 +161,5 @@ def human_to_bytes(size_human: str) -> int:
         return size_human
 
 
-CONFIG_FILE = str(Path(__file__).parent.parent) +str(os.path.sep)+ 'torrentino.yaml'
 CONFIG = load_config(CONFIG_FILE)
 log = get_logger("function")

@@ -69,20 +69,18 @@ actions = []
 
 if TORRENT_CLIENT:
     actions.append("📁 Torrents")
-    if _.get(config, 'bot.use_menu'):
-        commands.extend([
-            ("torrents", "📁 Torrents"),
-            ("stop_all", "⏹ Stop all Torrents"),
-            ("start_all", "▶ Start all Torrents"),
-            ("history", "Download history")
-        ])
+    commands.extend([
+        ("torrents", "📁 Torrents"),
+        ("stop_all", "⏹ Stop all Torrents"),
+        ("start_all", "⏩ Start all Torrents"),
+        ("history", "🕑 Download history")
+    ])
 
 actions.append("🔍 Search")
-if _.get(config, 'bot.use_menu'):
-    commands.extend([
-        ("last_search", "🔎 Last search"),
-        ("adduser", "👤 Add new user"),
-        ("help", "❓ Help")])
+commands.extend([
+    ("last_search", "🔎 Last search"),
+    ("adduser", "👤 Add new user"),
+    ("help", "❓ Help")])
 
 KEYBOARD = bot_config.get_keyboard(actions)
 bot_config.set_bot_commands(commands)
