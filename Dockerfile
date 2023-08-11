@@ -16,6 +16,6 @@ RUN pip install --user pipenv && \
 COPY lib lib
 COPY config config
 COPY models models
-COPY torrentino.py torrentino.lang .
+COPY torrentino.py .
 
 ENTRYPOINT [ "pipenv", "run", "./torrentino.py" ]
