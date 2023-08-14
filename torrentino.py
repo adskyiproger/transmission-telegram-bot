@@ -45,12 +45,12 @@ DownloadHistory.set_log_file(_.get(config, 'bot.download_log_file', 'download.lo
 
 # Client connection to Transmission torrent server
 # User environment variables or defaults from configuration file
-try:
-    host = os.getenv("HOST", _.get(config, 'transmission.host'))
-    port = os.getenv("PORT", _.get(config, 'transmission.port'))
-    user = os.getenv("USERNAME", _.get(config, 'transmission.user'))
-    password = os.getenv("PASSWORD", _.get(config, 'transmission.password'))
+host = os.getenv("HOST", _.get(config, 'transmission.host'))
+port = os.getenv("PORT", _.get(config, 'transmission.port'))
+user = os.getenv("USERNAME", _.get(config, 'transmission.user'))
+password = os.getenv("PASSWORD", _.get(config, 'transmission.password'))
 
+try:
     TORRENT_CLIENT = TransmissionClient(
         telegram_token=token,
         host=host,
