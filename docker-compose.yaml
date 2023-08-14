@@ -33,8 +33,8 @@ services:
       # Transmission connection properties
       # - HOST=127.0.0.1
       # - PORT=9091
-      # - USER=<user>
-      # - PASS=<passoword>
+      # - USERNAME=<user>
+      # - PASSWORD=<passoword>
     depends_on:
       - "transmission"
     volumes:

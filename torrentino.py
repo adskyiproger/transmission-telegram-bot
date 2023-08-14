@@ -48,16 +48,19 @@ DownloadHistory.set_log_file(_.get(config, 'bot.download_log_file', 'download.lo
 try:
     host = os.getenv("HOST", _.get(config, 'transmission.host'))
     port = os.getenv("PORT", _.get(config, 'transmission.port'))
+    user = os.getenv("USERNAME", _.get(config, 'transmission.user'))
+    password = os.getenv("PASSWORD", _.get(config, 'transmission.password'))
+    print()
     TORRENT_CLIENT = TransmissionClient(
         telegram_token=token,
         host=host,
         port=port,
-        username=os.getenv("USER", _.get(config, 'transmission.user')),
-        password=os.getenv("PASSWORD", _.get(config, 'transmission.password')))
+        username=user,
+        password=password)
     log.info("Connection to Transmission server ininitialized: %s:%s", host, port)
 except Exception as err:
     TORRENT_CLIENT = None
-    log.error("Transmission is not available: %s", err)
+    log.error("Transmission %s:%s is not available due to error: %s", host, port, err)
 
 if not bot_config.validate():
     sys.exit(1)
