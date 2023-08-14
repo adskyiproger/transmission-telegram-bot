@@ -28,6 +28,13 @@ services:
   torrentino:
     image: transmission-telegram-bot
     container_name: transmission-telegram-bot
+    # Transmission connection properties
+    # environment:
+      # Transmission connection properties
+      # - HOST=127.0.0.1
+      # - PORT=9091
+      # - USER=<user>
+      # - PASS=<passoword>
     depends_on:
       - "transmission"
     volumes:
@@ -39,8 +46,8 @@ services:
       - PUID=<dnla uid>
       - PGID=<dnla guid>
       - TZ=Europe/London
-      - USER=test
-      - PASS=test
+      - USER=<transmission user name>
+      - PASS=<transmission user passoword>
     volumes:
       - <download folder on host>:/downloads
       - <config folder on host>/transmission/config:/config

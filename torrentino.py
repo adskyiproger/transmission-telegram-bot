@@ -46,13 +46,15 @@ DownloadHistory.set_log_file(_.get(config, 'bot.download_log_file', 'download.lo
 # Client connection to Transmission torrent server
 # User environment variables or defaults from configuration file
 try:
+    host = os.getenv("HOST", _.get(config, 'transmission.host'))
+    port = os.getenv("PORT", _.get(config, 'transmission.port'))
     TORRENT_CLIENT = TransmissionClient(
         telegram_token=token,
-        host=os.getenv("TR_HOST", _.get(config, 'transmission.host')),
-        port=int(os.getenv("TR_PORT", _.get(config, 'transmission.port'))),
-        username=os.getenv("TR_USER", _.get(config, 'transmission.user')),
-        password=os.getenv("TR_PASSWORD", _.get(config, 'transmission.password')))
-    log.info("Ininitialized")
+        host=host,
+        port=port,
+        username=os.getenv("USER", _.get(config, 'transmission.user')),
+        password=os.getenv("PASSWORD", _.get(config, 'transmission.password')))
+    log.info("Connection to Transmission server ininitialized: %s:%s", host, port)
 except Exception as err:
     TORRENT_CLIENT = None
     log.error("Transmission is not available: %s", err)
