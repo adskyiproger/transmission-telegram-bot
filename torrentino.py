@@ -34,7 +34,11 @@ from lib.func import (
     get_qr_code)
 
 
+# Initialize Bot configuration and do validation
 bot_config = BotConfigurator()
+if not bot_config.validate():
+    sys.exit(1)
+
 # Read configuration file, torrentino.yaml
 # File is in the same directory as script
 config = bot_config.config
@@ -62,8 +66,6 @@ except Exception as err:
     TORRENT_CLIENT = None
     log.error("Transmission %s:%s is not available due to error: %s", host, port, err)
 
-if not bot_config.validate():
-    sys.exit(1)
 
 # Configure actions to work with torrent
 commands = []
