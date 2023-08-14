@@ -9,7 +9,7 @@ class HistoryBrowser(Browser):
 
         page = int(_page)
         self.prev_page = page
-        _message = trans("DOWNLOAD_HISTORY_NAV", self.user_lang).format(page, self.number_of_pages, len(self.posts)) + "\n"
+        _message = trans("DOWNLOAD_HISTORY_NAV", self.user_lang).format(page, self.number_of_pages, self.len) + "\n"
         # Add first and last posts index
         post_num = (page - 1) * self.posts_per_page
         for post in self.posts[post_num:post_num+self.posts_per_page]:

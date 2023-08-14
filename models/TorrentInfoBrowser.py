@@ -13,10 +13,6 @@ class TorrentInfoBrowser(Browser):
         self.posts_per_page = posts_per_page
         self.prev_page = 1
 
-    @property
-    def len(self):
-        return len(self.posts)
-
     def get_page(self, _page: int = None) -> str:
         if not _page:
             _page = self.prev_page
@@ -28,7 +24,7 @@ class TorrentInfoBrowser(Browser):
         post_num = (page - 1) * self.posts_per_page
         _message = f"<b>{self.name}</b>: "+trans("TORRENT_INFO_PAGE_HEADER", self.user_lang).format(page,
                                                                                                     self.number_of_pages,
-                                                                                                    len(self.posts))
+                                                                                                    self.len)
         _message += "\n[▶ /start_{0}][⏹ /stop_{0}][⏏ /delete_{0}]".format(self.id)
         _message += "\n--------------\n"
 

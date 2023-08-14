@@ -12,7 +12,7 @@ import math
 
 from functools import wraps
 from tempfile import mkstemp
-from lib.constants import LANGUAGE_FILE, CONFIG_FILE
+from lib.constants import LANGUAGE_FILE, DEFAULT_LANGUAGE, CONFIG_FILE
 
 
 size_names = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
@@ -42,69 +42,36 @@ def save_config():
 
 
 def trans(text, lang_code):
+    """"""
     logging.debug(f"Translate: {text}, {lang_code}")
     return _.get(lang,
                  [lang_code, text],
                  _.get(lang,
-                       ['en', text],
+                       [DEFAULT_LANGUAGE, text],
                        text))
-    # if _.has(lang.sections(), lang_code):
-    #     if STRING in lang[lang_code]:
-    #         STRING=lang[lang_code][STRING]
-    # else:
-    #     if STRING in lang["en"]:
-    #         STRING = lang["en"][STRING]
-    # return STRING
 
 
-def adduser(id):
-    if id not in CONFIG['bot']['allowed_users']:
-        CONFIG['bot']['allowed_users'].append(id)
-        save_config()
-
-
-def restricted(func):
-    @wraps(func)
-    async def wrapped(update, context, *args, **kwargs):
-        
-        user_id = update.effective_user.id
-
-        if 'super_user' not in CONFIG['bot'] or CONFIG['bot']['super_user'] == '':
-            logging.warn(f"Adding new super user {user_id}")
-            CONFIG['bot']['super_user'] = user_id
-            save_config()
-        elif user_id not in CONFIG['bot']['allowed_users']:
-            logging.info(f"{user_id} != {CONFIG['bot']['allowed_users']}")
-            context.bot.send_message(chat_id=user_id,
-                                     text=trans('ACCESS_RESTRICTED', update.message.from_user.language_code))
-            logging.debug(update)
-            logging.error("Unauthorized access denied for {}.".format(user_id))
-            return
-        return await func(update, context, *args, **kwargs)
-    return wrapped
-
-def get_logger(class_name: str) -> logging.Logger:
-    log_level = os.environ.get('log_level', CONFIG['bot']['log_level']).upper()
+def get_logger(class_name: str, log_level: str = None, log_file: str = None) -> logging.Logger:
+    if not log_level:
+        log_level = os.environ.get('log_level', "INFO").upper()
     # Configure telegram bot logging
     log_handlers=[ logging.StreamHandler(sys.stdout) ]
-    if CONFIG['bot']['log_file']:
+    if log_file:
+        logging.info("Adding file handler: %s", log_file)
         # First run: create directory
-        if not os.path.isdir(os.path.dirname(CONFIG['bot']['log_file'])):
-            os.makedirs(os.path.dirname(CONFIG['bot']['log_file']))
-        log_handlers.append(logging.handlers.RotatingFileHandler(
-                                            filename = CONFIG['bot']['log_file'],
-                                            maxBytes = (1048576*5),
-                                            backupCount = 1,
-                                            )
-                        )
+        if not os.path.isdir(os.path.dirname(log_file)):
+            os.makedirs(os.path.dirname(log_file))
+        log_handlers.append(
+            logging.handlers.RotatingFileHandler(filename = log_file,
+                                                 maxBytes = (1048576*5),
+                                                 backupCount = 1))
     logging.basicConfig( format = '[%(asctime)s] [%(levelname)s] %(name)s %(message)s',
                         level = logging.getLevelName(log_level),
                         handlers = log_handlers )
     # Silence for httpx
     logging.getLogger('httpx').setLevel(logging.WARNING)
     
-    log = logging.getLogger(class_name)
-    return log
+    return logging.getLogger(class_name)
 
 
 def get_qr_code(input_data):

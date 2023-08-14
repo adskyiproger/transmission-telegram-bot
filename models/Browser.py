@@ -1,8 +1,11 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
 from lib.func import get_logger
+from lib.constants import POSTS_PER_PAGE
+
 
 class Browser:
-    def __init__(self, user_id: int = None, user_lang: str = "en", posts: dict = None, posts_per_page: int = 5) -> None:
+    def __init__(self, user_id: int = None, user_lang: str = "en", posts: dict = None, posts_per_page: int = POSTS_PER_PAGE) -> None:
         self.user_id = user_id
         self.user_lang = user_lang
         self.posts = posts

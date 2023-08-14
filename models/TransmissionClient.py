@@ -8,8 +8,13 @@ from typing import Any, BinaryIO
 from typing_extensions import Literal
 from transmission_rpc.client import Client
 from transmission_rpc.torrent import Torrent
+
 from lib.func import trans, get_logger
+from lib.constants import QUEUE_CHECK_INTERVAL
+
 from models.DownloadHistory import DownloadHistory
+
+
 log = get_logger("TransmissionClient")
 
 
@@ -22,8 +27,6 @@ class TransmissionClient(Client):
     """
 
     DOWNLOAD_QUEUE = {}
-    QUEUE_CHECK_INTERVAL = 60
-    HISTORY = DownloadHistory()
 
     def __init__(self, *, protocol: Literal['http', 'https'] = "http",
                  username: str = None, password: str = None,
@@ -48,7 +51,7 @@ class TransmissionClient(Client):
         """Periodically check download queue"""
         log.info("Initializing scheduler")
         while True:
-            time.sleep(TransmissionClient.QUEUE_CHECK_INTERVAL)
+            time.sleep(QUEUE_CHECK_INTERVAL)
             if not TransmissionClient.DOWNLOAD_QUEUE:
                 continue
             app = Application.builder().token(self.telegram_token).build()

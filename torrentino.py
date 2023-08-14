@@ -13,36 +13,33 @@ import random
 import string
 import pydash as _
 import asyncio
-from models.TransmissionClient import TransmissionClient
-from models.SearchTorrents import SearchTorrents
-from models.TorrentsListBrowser import TorrentsListBrowser
-from models.TorrentInfoBrowser import TorrentInfoBrowser
-from models.DownloadHistory import DownloadHistory
-from models.HistoryBrowser import HistoryBrowser
-from lib.func import (
-    restricted,
-    trans,
-    get_config,
-    get_logger,
-    get_qr_code,
-    adduser)
 
 from telegram.ext import Application, MessageHandler, CallbackQueryHandler, ContextTypes, CommandHandler
 from telegram.ext.filters import Regex, Document, ALL, Entity
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
 
+from models.TransmissionClient import TransmissionClient
+from models.SearchTorrents import SearchTorrents
 from models.PostsBrowser import PostsBrowser
+from models.TorrentsListBrowser import TorrentsListBrowser
+from models.TorrentInfoBrowser import TorrentInfoBrowser
+from models.DownloadHistory import DownloadHistory
+from models.HistoryBrowser import HistoryBrowser
 from models.BotConfigurator import BotConfigurator
+from lib.auth import restricted
+from lib.func import (
+    trans,
+    get_logger,
+    get_qr_code)
 
 
-log = get_logger("main")
-
+bot_config = BotConfigurator()
 # Read configuration file, torrentino.yaml
 # File is in the same directory as script
-config = get_config()
+config = bot_config.config
 token = _.get(config, 'bot.token')
-
+log = get_logger("main", _.get(config, 'bot.log_file'))
 DownloadHistory.set_log_file(_.get(config, 'bot.download_log_file', 'download.log'))
 
 
@@ -55,11 +52,11 @@ try:
         port=int(os.getenv("TR_PORT", _.get(config, 'transmission.port'))),
         username=os.getenv("TR_USER", _.get(config, 'transmission.user')),
         password=os.getenv("TR_PASSWORD", _.get(config, 'transmission.password')))
+    log.info("Ininitialized")
 except Exception as err:
     TORRENT_CLIENT = None
     log.error("Transmission is not available: %s", err)
 
-bot_config = BotConfigurator(config)
 if not bot_config.validate():
     sys.exit(1)
 
@@ -67,6 +64,7 @@ if not bot_config.validate():
 commands = []
 actions = []
 
+# Add Transmission buttons and menus only if server is available
 if TORRENT_CLIENT:
     actions.append("📁 Torrents")
     commands.extend([
@@ -82,13 +80,8 @@ commands.extend([
     ("adduser", "👤 Add new user"),
     ("help", "❓ Help")])
 
-KEYBOARD = bot_config.get_keyboard(actions)
 bot_config.set_bot_commands(commands)
 
-# Download directories
-# Transmission server needs write access to these directories
-reply_markup = InlineKeyboardMarkup(
-    [[InlineKeyboardButton(key.capitalize(), callback_data=value) for key, value in dict(config['directories']).items()]])
 
 # This variable is used to auth new users
 WELCOME_HASHES = []
@@ -104,7 +97,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.chat.id == config['bot']['super_user']:
         HELP += "\n"+trans("HELP_ADMIN", update.message.from_user.language_code)
     log.info("%s, %s, %s", update.message.chat.id, update.message.chat_id, context.user_data)
-    await context.bot.send_message(chat_id=update.message.chat.id, text=HELP, parse_mode=ParseMode.HTML, reply_markup=KEYBOARD)
+    await context.bot.send_message(chat_id=update.message.chat.id, text=HELP, parse_mode=ParseMode.HTML, reply_markup=bot_config.get_actions_keyboard(actions))
 
 @restricted
 async def history(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -128,7 +121,8 @@ async def askDownloadDirFile(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     await update.message.reply_text(
         trans('Please choose download folder for {}',
-              update.message.from_user.language_code).format(update.message.document.file_name)+":", reply_markup=reply_markup)
+              update.message.from_user.language_code).format(update.message.document.file_name)+":", 
+        reply_markup=bot_config.get_downloads_keyboard())
     context.user_data['torrent'] = {
         'type': 'torrent',
         'file_name': update.message.document.file_name,
@@ -141,7 +135,7 @@ async def askDownloadDirURL(update: Update, context: ContextTypes.DEFAULT_TYPE):
     log.info(f"Downloading URL {update.message.text}")
     await update.message.reply_text(trans('CHOOSE_DOWNLOAD_DIR',
                                     update.message.from_user.language_code).format(update.message.text),
-                                    reply_markup=reply_markup)
+                                    reply_markup=bot_config.get_downloads_keyboard())
     context.user_data['torrent'] = {'type': 'url', 'url': update.message.text}
 
 
@@ -387,11 +381,11 @@ async def welcomeNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
     hash_code = update.message.text.replace('/start welcome_', '')
     if hash_code in WELCOME_HASHES and update.message.chat.id:
         config['bot']['allowed_users'].append(update.message.chat.id)
-        adduser(update.message.chat.id)
+        bot_config.add_user(update.message.chat.id)
         WELCOME_HASHES.remove(hash_code)
         await context.bot.send_message(update.message.chat.id,
                                        f"Welcome {update.message.chat.first_name}!",
-                                       reply_markup=KEYBOARD)
+                                       reply_markup=bot_config.get_actions_keyboard(actions))
         log.info(f"New user {update.message.chat.id}, {update.message.chat.first_name} was added.")
         help_command(update, context)
 
