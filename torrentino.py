@@ -50,7 +50,7 @@ try:
     port = os.getenv("PORT", _.get(config, 'transmission.port'))
     user = os.getenv("USERNAME", _.get(config, 'transmission.user'))
     password = os.getenv("PASSWORD", _.get(config, 'transmission.password'))
-    print()
+
     TORRENT_CLIENT = TransmissionClient(
         telegram_token=token,
         host=host,
