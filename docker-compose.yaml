@@ -1,3 +1,9 @@
+# Update required before running this file with docker-compose
+# - <dnla uid>, User ID on host system, must have access write to download folder
+# - <dnla guid>, Group ID on host system, must have access read or write to download folder,
+#                depends on how access is organised, by group or user
+# - <download folder on host>, Path to download folder on host system
+# - <config folder on host>, Path to configuration folder on host system
 ---
 version: "2.1"
 services:
@@ -9,9 +15,9 @@ services:
       - PGID=<dnla guid>
       - TZ=Europe/London
     volumes:
-      - /data/Media/Video:/Video
-      - /data/Media/TVShows:/TVShows
-      - /home/dnla/docker/jellyfin/config:/config
+      - <download folder on host>/Video:/Video
+      - <download folder on host>/TVShows:/TVShows
+      - <config folder on host>/jellyfin/config:/config
     ports:
       - 8096:8096
       - 8920:8920 
@@ -25,7 +31,7 @@ services:
     depends_on:
       - "transmission"
     volumes:
-      - /home/dnla/docker/torrentino/config:/usr/src/app/config
+      - <config folder on host>/torrentino/config:/usr/src/app/config
   transmission:
     image: ghcr.io/linuxserver/transmission
     container_name: transmission
@@ -36,8 +42,8 @@ services:
       - USER=test
       - PASS=test
     volumes:
-      - /data/Media:/downloads
-      - /home/dnla/docker/transmission/config:/config
+      - <download folder on host>:/downloads
+      - <config folder on host>/transmission/config:/config
     ports:
       - 9091:9091
       - 51413:51413
