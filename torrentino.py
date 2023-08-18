@@ -42,13 +42,23 @@ if not bot_config.validate():
 # Read configuration file, torrentino.yaml
 # File is in the same directory as script
 config = bot_config.config
-token = _.get(config, 'bot.token')
+# Get logger
 log = get_logger("main", _.get(config, 'bot.log_file'))
+
+
+token = os.getenv("TOKEN", _.get(config, 'bot.token'))
+if not token:
+    log.critical("You must pass the token you received from https://t.me/Botfather!, check documentation")
+
+# Init download history file
 DownloadHistory.set_log_file(_.get(config, 'bot.download_log_file', 'download.log'))
 
+# Init search object with trackers
+SEARCH = SearchTorrents(credentials=_.get(config, "trackers", {}),
+                        sort_by=_.get(config, "bot.sort_by", "date"))
 
 # Client connection to Transmission torrent server
-# User environment variables or defaults from configuration file
+# Use environment variables or defaults from configuration file
 host = os.getenv("HOST", _.get(config, 'transmission.host'))
 port = os.getenv("PORT", _.get(config, 'transmission.port'))
 user = os.getenv("USERNAME", _.get(config, 'transmission.user'))
@@ -67,7 +77,7 @@ except Exception as err:
     log.error("Transmission %s:%s is not available due to error: %s", host, port, err)
 
 
-# Configure actions to work with torrent
+# Configure Bot commands and actions
 commands = []
 actions = []
 
@@ -80,7 +90,7 @@ if TORRENT_CLIENT:
         ("start_all", "⏩ Start all Torrents"),
         ("history", "🕑 Download history")
     ])
-
+# Add search related commands
 actions.append("🔍 Search")
 commands.extend([
     ("last_search", "🔎 Last search"),
@@ -92,10 +102,6 @@ bot_config.set_bot_commands(commands)
 
 # This variable is used to auth new users
 WELCOME_HASHES = []
-
-SEARCH = SearchTorrents(credentials=_.get(config, "trackers", {}),
-                        sort_by=_.get(config, "bot.sort_by", "date"))
-
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -124,7 +130,6 @@ async def history(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def askDownloadDirFile(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Ask for download file directory, value is passed to Transimission"""
     log.debug(update)
-    log.info("Searching for download file dir")
 
     await update.message.reply_text(
         trans('Please choose download folder for {}',
@@ -154,7 +159,7 @@ async def askDownloadDirPageLink(update: Update, context: ContextTypes.DEFAULT_T
     post = context.user_data['posts'].posts[_id]
     await update.message.reply_text(trans('CHOOSE_DOWNLOAD_DIR',
                                     update.message.from_user.language_code).format(post['title']),
-                                    reply_markup=reply_markup)
+                                    reply_markup=bot_config.get_downloads_keyboard())
 
     context.user_data['torrent'] = {'type': 'url',
                                     'url': post['dl'],
@@ -394,7 +399,7 @@ async def welcomeNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                        f"Welcome {update.message.chat.first_name}!",
                                        reply_markup=bot_config.get_actions_keyboard(actions))
         log.info(f"New user {update.message.chat.id}, {update.message.chat.first_name} was added.")
-        help_command(update, context)
+        await help_command(update, context)
 
 
 def main():

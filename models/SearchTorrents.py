@@ -24,6 +24,12 @@ class SearchTorrents:
     sort_by = 'size'
     # reverse sort order
     SORT_REVERSE = True
+    # CREDENTIALS: {
+    # "trakcer_name": {
+    #     "user": <user name>,
+    #     "password": <password>
+    # }}
+    # TODO: For 2-factor auth we need to implement authentication with phpbb tokens
     CREDENTIALS = {}
     # List of enabled trackers
     CLASSES = {"nnmclub": SearchNonameClub,
@@ -43,19 +49,22 @@ class SearchTorrents:
 
     @property
     def trackers(self) -> Dict[str, SearchBase]:
+        if self.FAILED_TRACKERS:
+            self._trackers = None
+            self.FAILED_TRACKERS = None
         if self._trackers:
             return self._trackers
 
         for _class in self.CLASSES:
             try:
                 tracker = self.CLASSES[_class](
-                    username=_.get(self.CREDENTIALS, f"{_class}.user", None),
-                    password=_.get(self.CREDENTIALS, f"{_class}.password", None))
+                    username=_.get(self.CREDENTIALS, [_class, "user"]),
+                    password=_.get(self.CREDENTIALS, [_class, "password"]))
                 self._trackers[_class] = tracker
                 log.info("Initialised tracker %s", _class)
             except Exception as err:
                 self.FAILED_TRACKERS.append(_class)
-                log.error("Failed search on tracker %s: %s", _class, err)
+                log.error("Failed initialise tracker %s due to error: %s", _class, err)
         return self._trackers
 
     def search(self, search_string: str) -> List:

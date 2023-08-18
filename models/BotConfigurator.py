@@ -48,14 +48,18 @@ class BotConfigurator():
 
     def validate(self) -> bool:
         failed_checks = []
+        warning_checks = []
         if not _.has(self.config, 'bot.token'):
-            failed_checks.append("You must pass the token you received from https://t.me/Botfather!")
+            warning_checks.append("You must pass the token you received from https://t.me/Botfather!")
         if not (_.has(self.config, 'transmission.host') and \
                 _.has(self.config, 'transmission.port') and \
                 _.has(self.config, 'transmission.user') and \
                 _.has(self.config, 'transmission.password')):
-            failed_checks.append(
-                "Provide transmission configuration options: host, user, password")
+            warning_checks.append(
+                "Provide add transmission configuration options to configuration file: host, user, password")
+        if warning_checks:
+            for check in warning_checks:
+                log.warning(check)
         if failed_checks:
             for check in failed_checks:
                 log.critical(check)
