@@ -83,10 +83,12 @@ class BotConfigurator():
         _thread = threading.Thread(target=self._between_callback)
         _thread.start()
 
-    def add_user(self, id):
+    def add_user(self, id: int) -> "BotConfigurator":
         if id not in self._config['bot']['allowed_users']:
+            log.info("Adding user_id %s to allowed users", id)
             self._config['bot']['allowed_users'].append(id)
             self.save_config()
+            return self
 
     def _between_callback(self):
         loop = asyncio.new_event_loop()

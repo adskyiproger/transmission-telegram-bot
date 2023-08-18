@@ -10,35 +10,15 @@ import qrcode
 import pydash as _
 import math
 
-from functools import wraps
+# from functools import wraps
 from tempfile import mkstemp
-from lib.constants import LANGUAGE_FILE, DEFAULT_LANGUAGE, CONFIG_FILE
+from lib.constants import LANGUAGE_FILE, DEFAULT_LANGUAGE
 
 
 size_names = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
 
 lang = configparser.ConfigParser()
 lang.read(LANGUAGE_FILE)
-
-CONFIG = None
-
-
-def load_config(config_file):
-    if not os.path.isfile(config_file):
-        print(f"Configuration file {config_file} not found.")
-        sys.exit(1)
-    with open(config_file, 'r') as config_file:
-        return yaml.load(config_file, Loader=yaml.FullLoader)
-
-
-def get_config():
-    config = load_config(CONFIG_FILE)
-    return config
-
-
-def save_config():
-    with open(CONFIG_FILE, 'w') as f:
-        yaml.dump(CONFIG, f)
 
 
 def trans(text, lang_code):
@@ -127,6 +107,4 @@ def human_to_bytes(size_human: str) -> int:
     except TypeError:
         return size_human
 
-
-CONFIG = load_config(CONFIG_FILE)
 log = get_logger("function")

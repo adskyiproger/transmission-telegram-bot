@@ -392,7 +392,7 @@ async def addNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def welcomeNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
     hash_code = update.message.text.replace('/start welcome_', '')
     if hash_code in WELCOME_HASHES and update.message.chat.id:
-        config['bot']['allowed_users'].append(update.message.chat.id)
+        # config['bot']['allowed_users'].append(update.message.chat.id)
         bot_config.add_user(update.message.chat.id)
         WELCOME_HASHES.remove(hash_code)
         await context.bot.send_message(update.message.chat.id,
