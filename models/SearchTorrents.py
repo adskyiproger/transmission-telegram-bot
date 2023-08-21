@@ -1,6 +1,6 @@
 import hashlib
 import pydash as _
-
+import time
 from typing import List, Dict
 from models.SearchNonameClub import SearchNonameClub
 from models.SearchRUTOR import SearchRUTOR
@@ -11,7 +11,7 @@ from models.SearchToloka import SearchToloka
 from lib.func import (human_to_bytes,
                       bytes_to_human,
                       get_logger)
-
+from lib.constants import CACHE_TIMEOUT
 log = get_logger("SearchTorrents")
 
 
@@ -39,7 +39,7 @@ class SearchTorrents:
                "toloka": SearchToloka}
     # Variable for storing search results
     CACHE = {}
-
+    CACHE_TIMER = {}
     def __init__(self, credentials: dict, sort_by: str) -> None:
         self.CREDENTIALS = credentials
         self.sort_by = sort_by
@@ -70,7 +70,9 @@ class SearchTorrents:
     def search(self, search_string: str) -> List:
         """Check Cached search results and do search if nothing found in cache"""
         srch_hash = hashlib.md5(str(search_string).encode('utf-8')).hexdigest()
-        if srch_hash not in self.CACHE.keys():
+
+        if _.get(self.CACHE_TIMER, srch_hash, time.time() - CACHE_TIMEOUT * 2) < time.time() - CACHE_TIMEOUT:
+            self.CACHE_TIMER[srch_hash] = time.time()
             self.CACHE[srch_hash] = self._search(search_string)
         return self.sort(self.CACHE[srch_hash])
 

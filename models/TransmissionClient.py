@@ -68,7 +68,8 @@ class TransmissionClient(Client):
                 DownloadHistory.add(torrent.date_done, torrent.name, torrent.download_dir, torrent.size_when_done)
                 del TransmissionClient.DOWNLOAD_QUEUE[torrent_id]
                 log.info("User: %s, language: %s", user["chat_id"], user["lang_code"])
-                await app.bot.send_message(chat_id=user["chat_id"], text=trans("DOWNLOAD_COMPLETED", user["lang_code"]).format(torrent.name))
+                await app.bot.send_message(chat_id=user["chat_id"],
+                                           text=trans("DOWNLOAD_COMPLETED", user["lang_code"]).format(torrent.name))
 
     def add_torrent(self, chat_id, lang_code, torrent: BinaryIO | str, **kwargs: Any) -> Torrent:
         """Add torrent to transmission server"""

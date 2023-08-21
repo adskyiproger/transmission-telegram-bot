@@ -26,3 +26,6 @@ QUEUE_CHECK_INTERVAL = 60
 # Number of posts per page to display user while
 # browsing torrent, search results, download history, etc
 POSTS_PER_PAGE = 5
+
+# How long keep search results cached? 
+CACHE_TIMEOUT = 3600
