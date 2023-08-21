@@ -1,3 +1,4 @@
+import os
 from lib.func import get_logger
 
 log = get_logger("DownloadHistory")
@@ -7,6 +8,9 @@ class DownloadHistory():
 
     def show():
         logs = ''
+        if not os.path.isfile(DownloadHistory.download_log_file):
+            log.warning("File %s doesn't exist")
+            return []
         with open(DownloadHistory.download_log_file, "r", encoding="utf-8") as f:
             logs = (str(f.read()))
         return logs.split('\n')
