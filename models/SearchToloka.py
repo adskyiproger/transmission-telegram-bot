@@ -26,6 +26,7 @@ class SearchToloka(SearchBase):
         for row in rows[1:]:
             _cols = row.select('td')
             if not len(_cols) == 13:
+                self.log.debug("Skipped record due to length != 13: %s", _cols)
                 continue
 
             TITLE = _cols[2].text.replace(r'<', '')
