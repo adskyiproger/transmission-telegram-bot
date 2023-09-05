@@ -2,7 +2,6 @@ import os
 import yaml
 import sys
 import asyncio
-import threading
 import pydash as _
 
 from lib.func import get_logger
@@ -51,10 +50,10 @@ class BotConfigurator():
         warning_checks = []
         if not _.has(self.config, 'bot.token'):
             warning_checks.append("You must pass the token you received from https://t.me/Botfather!")
-        if not (_.has(self.config, 'transmission.host') and \
-                _.has(self.config, 'transmission.port') and \
-                _.has(self.config, 'transmission.user') and \
-                _.has(self.config, 'transmission.password')):
+        if not (_.has(self.config, 'transmission.host')
+                and _.has(self.config, 'transmission.port')
+                and _.has(self.config, 'transmission.user')
+                and _.has(self.config, 'transmission.password')):
             warning_checks.append(
                 "Provide add transmission configuration options to configuration file: host, user, password")
         if warning_checks:
@@ -79,9 +78,12 @@ class BotConfigurator():
             [[InlineKeyboardButton(key.capitalize(), callback_data=value) for key, value in dict(self.config['directories']).items()]])
 
     def set_bot_commands(self, commands):
+        """Adds/Updates Bot menu commands"""
         self.commands = commands
-        _thread = threading.Thread(target=self._between_callback)
-        _thread.start()
+        loop = asyncio.get_event_loop()
+        coroutine = Bot(token=self.config['bot']['token']).set_my_commands(self.commands)
+        loop.run_until_complete(coroutine)
+        log.info("Synchronized bots's commands: \n - %s", "\n - ".join([':\t\t'.join(c) for c in self.commands]))
 
     def add_user(self, id: int) -> "BotConfigurator":
         if id not in self._config['bot']['allowed_users']:
@@ -89,14 +91,3 @@ class BotConfigurator():
             self._config['bot']['allowed_users'].append(id)
             self.save_config()
             return self
-
-    def _between_callback(self):
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-        loop.run_until_complete(self._set_bot_commands())
-        loop.close()
-
-    async def _set_bot_commands(self):
-        await Bot(token=self.config['bot']['token']).set_my_commands(self.commands)
-        log.info("Commands updated")
