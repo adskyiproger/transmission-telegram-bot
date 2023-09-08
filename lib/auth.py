@@ -9,8 +9,8 @@ from lib.func import get_logger, trans
 bot_config = BotConfigurator()
 # config = bot_config.config
 
-log_file = _.get(bot_config.config, 'bot.log_file')
-log = get_logger("Authentication", log_file)
+# log_file = _.get(bot_config.config, 'bot.log_file')
+log = get_logger("Authentication")
 
 def restricted(func):
     @wraps(func)

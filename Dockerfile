@@ -14,7 +14,6 @@ RUN pip install --user pipenv && \
     pipenv install
 
 COPY lib lib
-COPY config config
 COPY models models
 COPY torrentino.py .
 

@@ -1,0 +1,63 @@
+bot:
+  # token, Use BotFather to create new token
+  token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+  # Admin telegram account ID or comma separated IDs
+  # Use https://github.com/nadam/userinfobot to get your ID
+  super_user: "<Your telegram account ID>"
+  # List of your family and friends telegram account ID(s)
+  # This list can be managed by user registration feature
+  allowed_users: []
+
+  # Log file and log level configuration
+  log_file: logs/torrentino.log
+  log_level: INFO
+
+  # Sorting field, specify any of values
+  # - size, torrent size
+  # - date, torrent adding date
+  # - seed, number of seeders
+  # - leach, number of leachers
+  # Results will be shown in reverse order, from latest to oldest, from biggest to smallest
+  sort_by: size
+  # download_log_file, Download log, or History log will hold all downloads from the 
+  # beginning of the time, If you decide to review what/when was downloaded, all information 
+  # will be there. This file have 2 goals:
+  # - Track downloaded content for security reasons
+  # - Help your family to recall what movie they watched on Chrismas Eve.
+  download_log_file: download.log
+  # Add menu button with all available commands
+  use_menu: true
+transmission:
+  # host, Transmission server host
+  host: localhost
+  # port, Transmission server port
+  port: 9091
+  # user, Transmission server user name
+  user: test
+  # password, Transmission server user password
+  password: test
+  # delete_data, delete torrent from transmission and remove data from file system
+  delete_data: true
+
+directories:
+  # List names and file system path to directories on Transmission server
+  # Names will be displayed as telegram buttons to user while selecting download location
+  # Paths will passed to transmission server
+  # Make sure directories are created and Transmission has R/W access to these folders
+  # Example: multiple folders:
+  # You will be able to store downloaded files in 4 locations
+  # and you could also configure samba, nfs or DNLA service to access your downloaded files
+  Movies: /downloads/Video
+  TVShows: /downloads/TVShows
+  Music: /downloads/Music
+  Soft: /downloads/Soft
+
+# Trackers section to store user credentials:
+
+trackers:
+  nnmclub:
+    user: <email or login>
+    password: <password>
+  toloka:
+    user: <email or login>
+    password: <password>

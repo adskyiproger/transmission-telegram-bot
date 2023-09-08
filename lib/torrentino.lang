@@ -23,6 +23,7 @@ DOWNLOAD_COMPLETED=Download completed: {}
 TORRENT_INFO_PAGE_HEADER=page {} of {} ({} files)
 TORRENT_LIST_HEADER=Torrents list: page {} of {} ({} files):
 PROGRESS_STATUS=Progress: {0}, Status: {1}
+BAD_PAGE_ACCESS=Page not found. Use bot menu or search again. Probably bot was restarted
 [ru]
 ACCESS_RESTRICTED=У вас недостаточно прав для выполнения этой команды. Пожалуйста обратитесь к администратору.
 TORRENT_LIST_HEADER=Список торрентов: страница {} из {} ({} файлов):
@@ -52,6 +53,7 @@ SOMETHING_WENT_WRONG=Something went wrong, probably too many files in this torre
 DOWNLOAD_COMPLETED=Загрузка {} завершена
 TORRENT_INFO_PAGE_HEADER=страница {} из {} ({} файлов)
 PROGRESS_STATUS=завершено: {0}, статус: {1}
+BAD_PAGE_ACCESS=Страница не найдена, используйте меню бота для навигации, или попробуйте повторить поиск
 [uk]
 ACCESS_RESTRICTED=У вас недостатньо дозволів для виконання цієї команди. Будь-ласка зверніться до адміністратора.
 TORRENT_LIST_HEADER=Список торрентів: сторінка {} з {} (всього {} файлів):
@@ -87,3 +89,4 @@ downloading=Завантаження
 stopped=Зупинено
 UNSUPPORTED_MIME_TYPE=Формат файлу не підтримується
 MESSAGE_IS_TOO_LONG=Занадто довга фраза для пошуку, спробуйте щось коротше, наприклад "Дизель шоу"
+BAD_PAGE_ACCESS=Сторінку не знайдено, використайте меню бота для навігації, або спробуйте повторити пошук

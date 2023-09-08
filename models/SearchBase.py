@@ -26,7 +26,7 @@ class SearchBase:
         self._session = requests.Session()
         self.log.debug("%s %s", self.username, self.password)
         if self.TRACKER_LOGIN_URL:
-            self.log.debug("Loggin in %s", self.TRACKER_LOGIN_URL)
+            self.log.info("Loggin in %s", self.TRACKER_LOGIN_URL)
             payload = {
                 "username": self.username,
                 "password": self.password,

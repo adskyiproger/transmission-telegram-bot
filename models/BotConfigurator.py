@@ -3,7 +3,8 @@ import yaml
 import sys
 import asyncio
 import pydash as _
-
+import argparse
+import shutil
 from lib.func import get_logger
 from telegram import (Bot,
                       ReplyKeyboardMarkup,
@@ -11,35 +12,133 @@ from telegram import (Bot,
                       ReplyKeyboardRemove,
                       InlineKeyboardMarkup,
                       InlineKeyboardButton)
-
-from lib.constants import CONFIG_FILE
+from telegram.error import InvalidToken
+from lib.constants import CONFIG_FILE, BOT_FOLDER
 
 log = get_logger("BotConfigurator")
 
 
 class BotConfigurator():
 
-    def __init__(self, config_file: str = CONFIG_FILE, update_config_file: bool = True) -> None:
-        self.config_file = config_file
+    config_file = None
+    args = None
+    _init_args = False
+
+    def argparser():
+        """
+        Method is used to parse CLI input and environment variables and merge
+        input data with existing values in configuration file.
+
+        Values precedence:
+        - CLI
+        - Environemnt variables
+        - Configuration file
+        """
+
+        parser = argparse.ArgumentParser(
+            prog="Torrentino",
+            description="Torrentino configuration options: ",
+            epilog="Passed as command line arguments or environment variables"
+                   "are stored to configuration file and available for next run.")
+        parser.add_argument('--config', type=str,
+                            default=os.getenv("CONFIG_FILE", CONFIG_FILE),
+                            help='Path to the configuration file')
+        parser.add_argument('--token', type=str, default=os.getenv("TOKEN"),
+                            help='Token you received from https://t.me/Botfather!')
+        parser.add_argument('--transmission-host', type=str, 
+                            default=os.getenv("TRANSMISSION_HOST"),
+                            help='Transmission server host')
+        parser.add_argument('--transmission-port', type=str, 
+                            default=os.getenv("TRANSMISSION_PORT"),
+                            help='Transmission server port')
+        parser.add_argument('--transmission-user', type=str,
+                            default=os.getenv("TRANSMISSION_USER"),
+                            help='User name for remote transmission authentication')
+        parser.add_argument('--transmission-password', type=str,
+                            default=os.getenv("TRANSMISSION_PASSWORD"),
+                            help='Password for remote transmission user')
+        parser.add_argument('--log', type=str,
+                            default=os.getenv("LOG_FILE", 'logs/torrentino.log'),
+                            help='Log file')
+        parser.add_argument('--log-level', type=str,
+                            default=os.getenv("LOG_LEVEL"),
+                            help='Log level')
+        parser.add_argument('--download-log', type=str,
+                            default=os.getenv("DOWNLOAD_LOG", ),
+                            help='Download history log file')
+        BotConfigurator.args = parser.parse_args()
+        BotConfigurator.config_file = BotConfigurator.args.config or CONFIG_FILE
+        BotConfigurator._init_args = True
+
+    def __init__(self, token: str = None, update_config_file: bool = True) -> None:
         self.update_config_file = update_config_file
+        self.token = token
         self.commands = None
         self._config = None
+
+        if BotConfigurator._init_args:
+            # Make sure this logic will run only once
+            BotConfigurator._init_args = False
+            self.init_args()
+
+    @property
+    def config_file(self) -> str:
+        if not os.path.exists(BotConfigurator.config_file):
+            log.info("Configuration file %s not found", BotConfigurator.config_file)
+            try:
+                shutil.copy(os.path.join(BOT_FOLDER, 'templates', 'torrentino.template.yaml'), BotConfigurator.config_file)
+                log.info("Created new configuration file from template: %s", BotConfigurator.config_file)
+            except Exception as e:
+                log.critical("Configuration file %s not found. Failed to create configuration file from template",
+                            BotConfigurator.config_file)
+                sys.exit(1)
+        return BotConfigurator.config_file
+
+    def init_args(self):
+        args = BotConfigurator.args
+        args_list = {
+            'bot.token': args.token,
+            'bot.log_file': args.log,
+            'bot.log_level': args.log_level,
+            'bot.download_log_file': args.download_log,
+            'transmission.host': args.transmission_host,
+            'transmission.port': args.transmission_port,
+            'transmission.user': args.transmission_user,
+            'transmission.password': args.transmission_password,
+        }
+        for k in args_list:
+            self.set(k, args_list[k])
 
     @property
     def config(self) -> dict:
         if self._config:
             return self._config
-        if not os.path.isfile(self.config_file):
-            log.critical(f"Configuration file {self.config_file} not found.")
-            sys.exit(1)
-        with open(self.config_file, 'r') as config_file:
+        if not os.path.exists(BotConfigurator.config_file):
+            log.info("Configuration file %s not found", BotConfigurator.config_file)
+            try:
+                shutil.copy(os.path.join(BOT_FOLDER, 'templates', 'torrentino.template.yaml'), BotConfigurator.config_file)
+                log.info("Created new configuration file from template: %s", BotConfigurator.config_file)
+            except Exception as e:
+                log.critical("Configuration file %s not found. Failed to create configuration file from template",
+                            BotConfigurator.config_file)
+                sys.exit(1)
+        with open(BotConfigurator.config_file, 'r') as config_file:
             self._config = yaml.load(config_file, Loader=yaml.FullLoader)
+        if self.token:
+            self.set('bot.token', self.token)
         return self._config
 
     def set(self, path, value) -> None:
+        if not (value and value != _.get(self.config, path)):
+            return
         _.set_(self._config, path, value)
+        log.info('Added configuration value: %s = %s', path, value)
         if self.update_config_file:
+            log.info("Updating configuration file: %s", self.config_file)
             self.save_config()
+
+    def get(self, path, default = None):
+        return _.get(self.config, path, default)
 
     def save_config(self) -> None:
         with open(self.config_file, 'w') as f:
@@ -82,7 +181,13 @@ class BotConfigurator():
         self.commands = commands
         loop = asyncio.get_event_loop()
         coroutine = Bot(token=self.config['bot']['token']).set_my_commands(self.commands)
-        loop.run_until_complete(coroutine)
+        try:
+            loop.run_until_complete(coroutine)
+        except InvalidToken as err:
+            log.critical("Invalid token provided: %s", str(err))
+            sys.exit(1)
+        except Exception as err:
+            log.critical("Generic error occured: %s", str(err))
         log.info("Synchronized bots's commands: \n - %s", "\n - ".join([':\t\t'.join(c) for c in self.commands]))
 
     def add_user(self, id: int) -> "BotConfigurator":

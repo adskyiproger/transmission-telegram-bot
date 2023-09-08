@@ -25,7 +25,6 @@ class TransmissionClient(Client):
     - get detailed information about torrent
     - notify user on torrent download done
     """
-
     DOWNLOAD_QUEUE = {}
 
     def __init__(self, *, protocol: Literal['http', 'https'] = "http",
