@@ -24,6 +24,20 @@ class BotConfigurator():
     args = None
     _init_args = False
 
+
+    def __init__(self) -> None:
+        if not BotConfigurator.config_file:
+            log.critical("Please set BotConfigurator.config_file before instantiating class objects")
+            raise ValueError("BotConfigurator.config_file not set")
+        self.commands = None
+        self._config = None
+
+        if BotConfigurator._init_args:
+            # Make sure this logic will run only once
+            BotConfigurator._init_args = False
+            self.init_args()
+
+    @staticmethod
     def argparser():
         """
         Method is used to parse CLI input and environment variables and merge
@@ -70,30 +84,6 @@ class BotConfigurator():
         BotConfigurator.config_file = BotConfigurator.args.config or CONFIG_FILE
         BotConfigurator._init_args = True
 
-    def __init__(self, token: str = None, update_config_file: bool = True) -> None:
-        self.update_config_file = update_config_file
-        self.token = token
-        self.commands = None
-        self._config = None
-
-        if BotConfigurator._init_args:
-            # Make sure this logic will run only once
-            BotConfigurator._init_args = False
-            self.init_args()
-
-    @property
-    def config_file(self) -> str:
-        if not os.path.exists(BotConfigurator.config_file):
-            log.info("Configuration file %s not found", BotConfigurator.config_file)
-            try:
-                shutil.copy(os.path.join(BOT_FOLDER, 'templates', 'torrentino.template.yaml'), BotConfigurator.config_file)
-                log.info("Created new configuration file from template: %s", BotConfigurator.config_file)
-            except Exception as e:
-                log.critical("Configuration file %s not found. Failed to create configuration file from template",
-                            BotConfigurator.config_file)
-                sys.exit(1)
-        return BotConfigurator.config_file
-
     def init_args(self):
         args = BotConfigurator.args
         args_list = {
@@ -124,8 +114,7 @@ class BotConfigurator():
                 sys.exit(1)
         with open(BotConfigurator.config_file, 'r') as config_file:
             self._config = yaml.load(config_file, Loader=yaml.FullLoader)
-        if self.token:
-            self.set('bot.token', self.token)
+
         return self._config
 
     def set(self, path, value) -> None:
@@ -133,14 +122,13 @@ class BotConfigurator():
             return
         _.set_(self._config, path, value)
         log.info('Added configuration value: %s = %s', path, value)
-        if self.update_config_file:
-            log.info("Updating configuration file: %s", self.config_file)
-            self.save_config()
+        self.save_config()
 
     def get(self, path, default = None):
         return _.get(self.config, path, default)
 
     def save_config(self) -> None:
+        log.info("Updating configuration file: %s", self.config_file)
         with open(self.config_file, 'w') as f:
             yaml.dump(self._config, f)
 
