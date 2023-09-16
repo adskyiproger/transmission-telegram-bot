@@ -51,7 +51,9 @@ Additionally you could setup home DLNA server like Jellyfin, Plex or MiniDLNA an
 2. Configure Transmission server authentication with username and password:
    - For rpm or deb package use official doc: https://github.com/transmission/transmission/tree/main. Detailed setup instruction is [here](doc/Transmission-setup.md)
    - For docker image https://hub.docker.com/r/linuxserver/transmission please check `docker-compose.yaml` for available options.
-
+3. Register accounts on torrent trackers (credentials needs to be added to configuration file later):
+   * http://nnmclub.to
+   * https://toloka.to
 
 ## Run bot locally
 
@@ -60,9 +62,10 @@ Additionally you could setup home DLNA server like Jellyfin, Plex or MiniDLNA an
    git clone https://github.com/adskyiproger/transmission-telegram-bot.git
    ```
    or download as zip file: https://github.com/adskyiproger/transmission-telegram-bot/archive/refs/heads/master.zip
-2. Update torrentino.yaml configuration file. Follow up comments inside configuration file:
+2. Update config/torrentino.yaml configuration file. Follow up comments inside configuration file:
    ```
-   torrentino.yaml
+   cp templates/torrentino.sample.yaml config/torrentino.yaml
+   nano config/torrentino.yaml
    ```
 3. Run:
    ```
