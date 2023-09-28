@@ -96,7 +96,7 @@ Additionally you could setup home DLNA server like Jellyfin, Plex or MiniDLNA an
 5. Check container logs.
 
 
-**Complete installation Guide for Raspberry Pi 4 can be found at [Home DLNA on Raspberry Pi4 setup guide](doc/Home-DNLA-setup.md)
+**Complete installation Guide for Raspberry Pi 4 can be found at [Home DLNA on Raspberry Pi4 setup guide](doc/Home-DNLA-setup.md)**
 
 
 # User Guide
