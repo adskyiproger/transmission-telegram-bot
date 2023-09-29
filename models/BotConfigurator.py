@@ -3,6 +3,7 @@ import yaml
 import sys
 import asyncio
 import pydash as _
+from typing import Dict, Any
 import argparse
 import shutil
 from lib.func import get_logger
@@ -26,7 +27,6 @@ class BotConfigurator():
 
 
     def __init__(self) -> None:
-        log.info(BotConfigurator.config_file)
         if not BotConfigurator.config_file:
             log.critical("Please set BotConfigurator.config_file before instantiating class objects")
             raise ValueError("BotConfigurator.config_file not set")
@@ -103,7 +103,7 @@ class BotConfigurator():
             self.set(k, args_list[k])
 
     @property
-    def config(self) -> dict:
+    def config(self) -> Dict:
         if self._config:
             return self._config
         if not os.path.exists(BotConfigurator.config_file):
@@ -120,14 +120,14 @@ class BotConfigurator():
 
         return self._config
 
-    def set(self, path, value) -> None:
+    def set(self, path: str, value: str) -> None:
         if not (value and value != _.get(self.config, path)):
             return
         _.set_(self._config, path, value)
         log.info('Added configuration value: %s = %s', path, value)
         self.save_config()
 
-    def get(self, path, default = None):
+    def get(self, path: str, default: Any = None) -> Dict:
         return _.get(self.config, path, default)
 
     def save_config(self) -> None:
@@ -155,19 +155,19 @@ class BotConfigurator():
             return False
         return True
 
-    def get_actions_keyboard(self, actions):
+    def get_actions_keyboard(self, actions) -> ReplyKeyboardMarkup:
         if actions:
             return ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text=str(key)) for key in actions]],
                                        resize_keyboard=True)
         return ReplyKeyboardRemove()
 
-    def get_downloads_keyboard(self):
+    def get_downloads_keyboard(self) -> InlineKeyboardMarkup:
         # Download directories
         # Transmission server needs write access to these directories
         return InlineKeyboardMarkup(
             [[InlineKeyboardButton(key.capitalize(), callback_data=value) for key, value in dict(self.config['directories']).items()]])
 
-    def set_bot_commands(self, commands):
+    def set_bot_commands(self, commands) -> "BotConfigurator":
         """Adds/Updates Bot menu commands"""
         self.commands = commands
         loop = asyncio.get_event_loop()
@@ -180,6 +180,7 @@ class BotConfigurator():
         except Exception as err:
             log.critical("Generic error occured: %s", str(err))
         log.info("Synchronized bots's commands: \n - %s", "\n - ".join([':\t\t'.join(c) for c in self.commands]))
+        return self
 
     def add_user(self, id: int) -> "BotConfigurator":
         if id not in self._config['bot']['allowed_users']:
