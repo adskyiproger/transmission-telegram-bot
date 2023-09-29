@@ -104,6 +104,10 @@ class BotConfigurator():
 
     @property
     def config(self) -> Dict:
+        """
+        Return configuration file as dict:
+        - if file doesn't exist, create new file from template
+        """
         if self._config:
             return self._config
         if not os.path.exists(BotConfigurator.config_file):
