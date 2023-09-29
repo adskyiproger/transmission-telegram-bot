@@ -15,7 +15,7 @@ from models.DownloadHistory import DownloadHistory
 
 from lib.func import get_logger
 from lib.bot_handlers import HANDLERS, commands
-
+from lib.constants import CONFIG_FILE
 
 def bot():
 

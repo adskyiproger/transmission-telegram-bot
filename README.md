@@ -139,4 +139,3 @@ Search window content:
 After initial configuration new users can be added by typing `/adduser` command. As output you will get a registration link and QR-code.
 
 ![image](doc/images/screen-1.png)
-

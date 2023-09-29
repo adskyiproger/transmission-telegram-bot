@@ -20,12 +20,13 @@ log = get_logger("BotConfigurator")
 
 class BotConfigurator():
 
-    config_file = None
+    config_file = CONFIG_FILE
     args = None
     _init_args = False
 
 
     def __init__(self) -> None:
+        log.info(BotConfigurator.config_file)
         if not BotConfigurator.config_file:
             log.critical("Please set BotConfigurator.config_file before instantiating class objects")
             raise ValueError("BotConfigurator.config_file not set")
@@ -43,6 +44,8 @@ class BotConfigurator():
         Method is used to parse CLI input and environment variables and merge
         input data with existing values in configuration file.
 
+        NOTE: Most properties can be changed only inside configuration file.
+
         Values precedence:
         - CLI
         - Environemnt variables
@@ -56,9 +59,9 @@ class BotConfigurator():
                    "are stored to configuration file and available for next run.")
         parser.add_argument('--config', type=str,
                             default=os.getenv("CONFIG_FILE", CONFIG_FILE),
-                            help='Path to the configuration file')
+                            help='Configuration file location')
         parser.add_argument('--token', type=str, default=os.getenv("TOKEN"),
-                            help='Token you received from https://t.me/Botfather!')
+                            help='Token received from https://t.me/Botfather!')
         parser.add_argument('--transmission-host', type=str, 
                             default=os.getenv("TRANSMISSION_HOST"),
                             help='Transmission server host')
@@ -73,7 +76,7 @@ class BotConfigurator():
                             help='Password for remote transmission user')
         parser.add_argument('--log', type=str,
                             default=os.getenv("LOG_FILE", 'logs/torrentino.log'),
-                            help='Log file')
+                            help='Log file location')
         parser.add_argument('--log-level', type=str,
                             default=os.getenv("LOG_LEVEL"),
                             help='Log level')
