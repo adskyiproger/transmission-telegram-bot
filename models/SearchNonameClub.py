@@ -56,6 +56,8 @@ class SearchNonameClub(SearchBase):
                     'seed': SEEDS,
                     'leach': LEACH})
             except Exception as e:
+                # seems that there is some problem with this tr, let's just continue to the next one
+                # self.log.warning(_cols)
                 self.log.critical(e, exc_info=True)
-                raise e
+                pass
         return posts
