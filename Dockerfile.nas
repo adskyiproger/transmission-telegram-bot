@@ -21,4 +21,3 @@ RUN mkdir -p ./config
 COPY config/torrentino.yaml /usr/src/app/config/torrentino.yaml
 
 ENTRYPOINT [ "pipenv", "run", "./torrentino.py" ]
-# ENTRYPOINT [ "/bin/bash"]
