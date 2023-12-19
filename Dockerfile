@@ -1,4 +1,4 @@
-FROM python:slim
+FROM python:3.11-slim
 
 RUN groupadd -g 2022 python && \
     useradd -g 2022 -u 2022 --create-home --home-dir /usr/src/app python
