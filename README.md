@@ -62,10 +62,12 @@ Additionally you could setup home DLNA server like Jellyfin, Plex or MiniDLNA an
 1. Clone this repository
    ```
    git clone https://github.com/adskyiproger/transmission-telegram-bot.git
+   cd transmission-telegram-bot
    ```
    or download as zip file: https://github.com/adskyiproger/transmission-telegram-bot/archive/refs/heads/master.zip
 2. Update config/torrentino.yaml configuration file. Follow up comments inside configuration file:
    ```
+   mkdir -p config
    cp templates/torrentino.sample.yaml config/torrentino.yaml
    nano config/torrentino.yaml
    ```
