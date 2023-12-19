@@ -1,6 +1,9 @@
 import requests
 from typing import List
 from lib.func import get_logger, save_torrent_to_tempfile
+from models.BotConfigurator import BotConfigurator
+
+bot_config = BotConfigurator()
 
 class SearchBase:
     LOGGED_IN = False
@@ -23,13 +26,36 @@ class SearchBase:
         if self._session:
             return self._session
 
+
         self._session = requests.Session()
+        self._session.headers.update(
+            {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.5563.65 Safari/537.36'})
+
+        # this helps debugging
+        if bot_config.get('proxy.enabled'):
+            proxies = {}
+            if bot_config.get('proxy.url'):
+                proxies['http'] = bot_config.get('proxy.url')
+                proxies['https'] = bot_config.get('proxy.url')
+            self._session.proxies.update(proxies)
+            self._session.verify = False
+
         self.log.debug("%s %s", self.username, self.password)
         if self.TRACKER_LOGIN_URL:
             self.log.info("Loggin in %s", self.TRACKER_LOGIN_URL)
+            username_field = "username"
+            password_field = "password"
+
+            try:
+                if self.TRACKER_LOGIN_FIELDS:
+                    username_field = self.TRACKER_LOGIN_FIELDS['username']
+                    password_field = self.TRACKER_LOGIN_FIELDS['password']
+            except Exception as e:
+                self.log.warning(e)
+                pass
             payload = {
-                "username": self.username,
-                "password": self.password,
+                username_field: self.username,
+                password_field: self.password,
                 'redirect': 'index.php?',
                 'sid': '',
                 'login': 'Login'

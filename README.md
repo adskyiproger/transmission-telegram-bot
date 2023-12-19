@@ -28,6 +28,7 @@ Additionally you could setup home DLNA server like Jellyfin, Plex or MiniDLNA an
 * http://rutor.info 
 * https://kat.sx/
 * https://toloka.to
+* https://rutracker.to
 
 (new will arrive soon)
 
@@ -54,6 +55,7 @@ Additionally you could setup home DLNA server like Jellyfin, Plex or MiniDLNA an
 3. Register accounts on torrent trackers (credentials needs to be added to configuration file later):
    * http://nnmclub.to
    * https://toloka.to
+   * https://rutracker.to
 
 ## Run bot locally
 
