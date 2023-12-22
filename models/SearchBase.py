@@ -1,5 +1,7 @@
 import requests
 from typing import List
+from bs4 import BeautifulSoup
+
 from lib.func import get_logger, save_torrent_to_tempfile
 from models.BotConfigurator import BotConfigurator
 
@@ -21,11 +23,15 @@ class SearchBase:
     def get_status(self):
         pass
 
+    def get_data(self, search_string: str):
+        self.log.info("Searching for %s on %s", search_string, self.TRACKER_NAME)
+        search_url = self.TRACKER_URL+self.TRACKER_SEARCH_URL_TPL+search_string
+        return BeautifulSoup(self.session.get(search_url, timeout=10).content, 'lxml')
+
     @property
     def session(self) -> requests.Session:
         if self._session:
             return self._session
-
 
         self._session = requests.Session()
         self._session.headers.update(
@@ -60,7 +66,7 @@ class SearchBase:
                 'sid': '',
                 'login': 'Login'
             }
-            self._session.post(self.TRACKER_LOGIN_URL, data=payload)
+            self._session.post(self.TRACKER_LOGIN_URL, data=payload, timeout=10)
 
         return self._session
 

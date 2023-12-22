@@ -13,8 +13,7 @@ class SearchKAT(SearchBase):
         logger = logging.getLogger(self.__class__.__name__)
         """Search data on the web"""
         self.POSTS=[]
-        x=self.TRACKER_URL+self.TRACKER_SEARCH_URL_TPL+search_string
-        _data=BeautifulSoup(get(x).content, 'lxml').select('table.data > tr.odd')
+        _data = self.get_data(search_string)..select('table.data > tr.odd')
         logger.debug(_data)
         for row in _data:
             _cols=row.select('td')

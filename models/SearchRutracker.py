@@ -24,10 +24,7 @@ class SearchRutracker(SearchBase):
 
     def search(self, search_string: str) -> List:
         """Search data on the web"""
-        self.log.info("Searching for %s on %s", search_string, self.TRACKER_NAME)
-        x = self.TRACKER_URL+self.TRACKER_SEARCH_URL_TPL+search_string
-
-        _data = BeautifulSoup(self.session.get(x).content, 'lxml').select('table.forumline > tbody > tr')
+        _data = self.get_data(search_string).select('table.forumline > tbody > tr')
         self.log.debug(_data)
         self.log.info("Found %s posts", len(_data))
 

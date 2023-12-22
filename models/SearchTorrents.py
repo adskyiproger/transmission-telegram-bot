@@ -36,10 +36,10 @@ class SearchTorrents:
     CLASSES = {
         "nnmclub": SearchNonameClub,
         "rutracker": SearchRutracker,
-        # "rutor": SearchRUTOR,
+        "rutor": SearchRUTOR,
         # FIXME: Check KAT is alive or dead
         # "kat": SearchKAT,
-        # "toloka": SearchToloka
+        "toloka": SearchToloka
     }
     # Variable for storing search results
     CACHE = {}
