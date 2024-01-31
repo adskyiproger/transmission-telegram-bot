@@ -61,3 +61,12 @@ trackers:
   toloka:
     user: <email or login>
     password: <password>
+  rutracker:
+    user: <email or login>
+    password: <password>
+
+# Proxies
+proxy:
+  enabled: False
+  url: 127.0.0.1:7777
+

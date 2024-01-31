@@ -17,4 +17,7 @@ COPY lib lib
 COPY models models
 COPY torrentino.py .
 
+RUN mkdir -p ./config
+COPY config/torrentino.yaml /usr/src/app/config/torrentino.yaml
+
 ENTRYPOINT [ "pipenv", "run", "./torrentino.py" ]

@@ -35,9 +35,7 @@ class SearchRUTOR(SearchBase):
     def search(self, search_string: str) -> List:
         """Search data on the web"""
 
-        self.log.info("Searching for %s on %s", search_string, self.TRACKER_NAME)
-        search_url = self.TRACKER_URL+self.TRACKER_SEARCH_URL_TPL+search_string
-        _data = BeautifulSoup(self.session.get(search_url).content, 'lxml').select('div#index > table > tr')
+        _data = self.get_data(search_string).select('div#index > table > tr')
         self.log.info("Found %s posts", len(_data) - 1)
 
         posts = []

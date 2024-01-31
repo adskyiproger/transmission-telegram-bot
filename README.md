@@ -28,6 +28,7 @@ Additionally you could setup home DLNA server like Jellyfin, Plex or MiniDLNA an
 * http://rutor.info 
 * https://kat.sx/
 * https://toloka.to
+* https://rutracker.to
 
 (new will arrive soon)
 
@@ -54,16 +55,19 @@ Additionally you could setup home DLNA server like Jellyfin, Plex or MiniDLNA an
 3. Register accounts on torrent trackers (credentials needs to be added to configuration file later):
    * http://nnmclub.to
    * https://toloka.to
+   * https://rutracker.to
 
 ## Run bot locally
 
 1. Clone this repository
    ```
    git clone https://github.com/adskyiproger/transmission-telegram-bot.git
+   cd transmission-telegram-bot
    ```
    or download as zip file: https://github.com/adskyiproger/transmission-telegram-bot/archive/refs/heads/master.zip
 2. Update config/torrentino.yaml configuration file. Follow up comments inside configuration file:
    ```
+   mkdir -p config
    cp templates/torrentino.sample.yaml config/torrentino.yaml
    nano config/torrentino.yaml
    ```
@@ -94,6 +98,11 @@ Additionally you could setup home DLNA server like Jellyfin, Plex or MiniDLNA an
    docker run -d -v `pwd`/torrentino.yaml:/usr/src/app/torrentino.yaml my-bot
    ```
 5. Check container logs.
+
+Optionally you can build an image chat includes the torrention.yaml using
+   ```
+   docker build -f Dockerfile.nas -t my-bot . 
+   ```
 
 
 **Complete installation Guide for Raspberry Pi 4 can be found at [Home DLNA on Raspberry Pi4 setup guide](doc/Home-DNLA-setup.md)**

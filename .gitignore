@@ -1,3 +1,6 @@
 **/__pycache__
-config/torrentino.yaml
 logs/
+config/torrentino.yaml
+.env
+compose.yaml
+.cache

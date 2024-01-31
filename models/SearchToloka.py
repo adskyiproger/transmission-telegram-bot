@@ -6,14 +6,11 @@ from typing import List
 class SearchToloka(SearchBase):
     TRACKER_NAME = 'toloka'
     TRACKER_URL = "https://toloka.to"
-    TRACKER_SEARCH_URL_TPL = "https://toloka.to/tracker.php?nm="
+    TRACKER_SEARCH_URL_TPL = "/tracker.php?nm="
     TRACKER_LOGIN_URL = "https://toloka.to/login.php"
 
     def search(self, search_string: str) -> List:
-        self.log.info("Searching for %s on %s", search_string, self.TRACKER_NAME)
-
-        raw_data = self.session.get(f"{self.TRACKER_SEARCH_URL_TPL}{search_string}")
-        _data = BeautifulSoup(raw_data.content, 'lxml').select('table.forumline')
+        _data = self.get_data(search_string).select('table.forumline')
 
         if len(_data) != 2:
             return False

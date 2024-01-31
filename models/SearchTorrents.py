@@ -3,6 +3,7 @@ import pydash as _
 import time
 from typing import List, Dict
 from models.SearchNonameClub import SearchNonameClub
+from models.SearchRutracker import SearchRutracker
 from models.SearchRUTOR import SearchRUTOR
 from models.SearchBase import SearchBase
 # TODO: KAT is down, temporary disabled
@@ -32,11 +33,14 @@ class SearchTorrents:
     # TODO: For 2-factor auth we need to implement authentication with phpbb tokens
     CREDENTIALS = {}
     # List of enabled trackers
-    CLASSES = {"nnmclub": SearchNonameClub,
-               "rutor": SearchRUTOR,
-               # FIXME: Check KAT is alive or dead
-               # "kat": SearchKAT,
-               "toloka": SearchToloka}
+    CLASSES = {
+        "nnmclub": SearchNonameClub,
+        "rutracker": SearchRutracker,
+        "rutor": SearchRUTOR,
+        # FIXME: Check KAT is alive or dead
+        # "kat": SearchKAT,
+        "toloka": SearchToloka
+    }
     # Variable for storing search results
     CACHE = {}
     CACHE_TIMER = {}
