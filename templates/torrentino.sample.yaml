@@ -1,9 +1,11 @@
 bot:
   # token, Use BotFather to create new token
   token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+
   # Admin telegram account ID or comma separated IDs
   # Use https://github.com/nadam/userinfobot to get your ID
   super_user: "<Your telegram account ID>"
+
   # List of your family and friends telegram account ID(s)
   # This list can be managed by user registration feature
   allowed_users: []
@@ -19,14 +21,17 @@ bot:
   # - leach, number of leachers
   # Results will be shown in reverse order, from latest to oldest, from biggest to smallest
   sort_by: size
+
   # download_log_file, Download log, or History log will hold all downloads from the 
   # beginning of the time, If you decide to review what/when was downloaded, all information 
   # will be there. This file have 2 goals:
   # - Track downloaded content for security reasons
   # - Help your family to recall what movie they watched on Chrismas Eve.
   download_log_file: download.log
+
   # Add menu button with all available commands
   use_menu: true
+
 transmission:
   # host, Transmission server host
   host: localhost
@@ -53,9 +58,9 @@ directories:
   Soft: /downloads/Soft
 
 # Trackers section to store user credentials:
-
 trackers:
   nnmclub:
+    # Please register account
     user: <email or login>
     password: <password>
   toloka:
