@@ -3,16 +3,14 @@ from models.SearchBase import SearchBase
 from typing import List
 
 class SearchRutracker(SearchBase):
+    LOGIN_NEEDED = True
     TRACKER_NAME = "rutracker"
     TRACKER_URL = "https://rutracker.org"
     TRACKER_SEARCH_URL_TPL = "/forum/tracker.php?nm="
     TRACKER_LOGIN_URL = "https://rutracker.org/forum/login.php"
     TRACKER_LOGIN_FIELDS = {
-        "username":"login_username", 
-        "password":"login_password", 
-        "meta":{
-            "login":None
-            }
+        "username":"login_username",
+        "password":"login_password"
         }
 
     def convert_date(self, date: str) -> str:

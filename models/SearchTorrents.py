@@ -32,8 +32,8 @@ class SearchTorrents:
     # }}
     # TODO: For 2-factor auth we need to implement authentication with phpbb tokens
     CREDENTIALS = {}
-    # List of enabled trackers
-    CLASSES = {
+    # List of available trackers
+    TRACKER_CLASSES = {
         "nnmclub": SearchNonameClub,
         "rutracker": SearchRutracker,
         "rutor": SearchRUTOR,
@@ -41,27 +41,28 @@ class SearchTorrents:
         # "kat": SearchKAT,
         "toloka": SearchToloka
     }
+
     # Variable for storing search results
     CACHE = {}
     CACHE_TIMER = {}
     def __init__(self, credentials: dict, sort_by: str) -> None:
         self.CREDENTIALS = credentials
         self.sort_by = sort_by
-        self._trackers = {}
+        self._trackers = dict()
         self.FAILED_SEARCH = []
         self.FAILED_TRACKERS = []
 
     @property
     def trackers(self) -> Dict[str, SearchBase]:
-        if self.FAILED_TRACKERS:
-            self._trackers = None
-            self.FAILED_TRACKERS = None
+        """Initialize trackers"""
         if self._trackers:
+            log.info("Trackers initialized: %s", ", ".join(self._trackers.keys()))
             return self._trackers
-
-        for _class in self.CLASSES:
+        log.info("Initialising search trackers from available classes: %s",
+                 ", ".join(self.TRACKER_CLASSES.keys()))
+        for _class in self.TRACKER_CLASSES:
             try:
-                tracker = self.CLASSES[_class](
+                tracker = self.TRACKER_CLASSES[_class](
                     username=_.get(self.CREDENTIALS, [_class, "user"]),
                     password=_.get(self.CREDENTIALS, [_class, "password"]))
                 self._trackers[_class] = tracker
@@ -84,15 +85,14 @@ class SearchTorrents:
         """Search over trackers"""
         log.info("Searching for: %s", search_string)
         posts = []
-        self.FAILED_SEARCH = []
         # Search over enabled trackers
         for tracker_name, tracker in self.trackers.items():
             try:
                 posts.extend(tracker.search(search_string))
-                log.info("Found %s posts on %s trackers", len(posts), ', '.join(self.trackers.keys()))
+                log.info("Found %s posts on trackers: %s", len(posts), ', '.join(self.trackers.keys()))
             except Exception as err:
                 self.FAILED_SEARCH.append(tracker_name)
-                log.error("Failed search due to error: %s", err)
+                log.error("Failed search on tracker %s due to error: %s", err, tracker_name)
         return posts
 
     def sort(self, posts: List) -> List:

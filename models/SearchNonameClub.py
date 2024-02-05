@@ -3,6 +3,7 @@ from models.SearchBase import SearchBase
 from typing import List
 
 class SearchNonameClub(SearchBase):
+    LOGIN_NEEDED = True
     TRACKER_NAME = "nnmclub"
     TRACKER_URL = "https://nnmclub.to"
     TRACKER_SEARCH_URL_TPL = "/forum/tracker.php?nm="
@@ -41,7 +42,6 @@ class SearchNonameClub(SearchBase):
                 else:
                     SEEDS = _cols[6].text
                     LEACH = _cols[7].text
-                self.log.info(f"Found seeds: {SEEDS}, leaches: {LEACH}")
                 self.log.debug(f"COL T: {TITLE} L:{str(INFO)} DL:{str(DL)} S:{str(SIZE)} D:{str(DATE)}")
 
                 posts.append({

@@ -4,6 +4,7 @@ from typing import List
 
 
 class SearchToloka(SearchBase):
+    LOGIN_NEEDED = True
     TRACKER_NAME = 'toloka'
     TRACKER_URL = "https://toloka.to"
     TRACKER_SEARCH_URL_TPL = "/tracker.php?nm="

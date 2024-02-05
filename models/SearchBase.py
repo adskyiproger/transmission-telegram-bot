@@ -9,12 +9,25 @@ bot_config = BotConfigurator()
 
 class SearchBase:
     LOGGED_IN = False
+    LOGIN_NEEDED = False
+    TRACKER_LOGIN_FIELDS = {
+        "username":"username", 
+        "password":"password", 
+        "meta":{
+            "login":None
+            }
+    }
     POSTS = []
     TRACKER_NAME = 'dummy'
     TRACKER_LOGIN_URL = None
+    TRACKER_URL = None
+    TRACKER_SEARCH_URL_TPL = None
+
     _log = None
 
     def __init__(self, username, password) -> None:
+        if all([self.LOGIN_NEEDED, not (username and password)]):
+            raise Exception("Please add login credentials to configuration file")
         self.username = username
         self.password = password
         self.POSTS = []
@@ -46,27 +59,22 @@ class SearchBase:
             self._session.proxies.update(proxies)
             self._session.verify = False
 
-        self.log.debug("%s %s", self.username, self.password)
-        if self.TRACKER_LOGIN_URL:
-            self.log.info("Loggin in %s", self.TRACKER_LOGIN_URL)
-            username_field = "username"
-            password_field = "password"
+        if not self.TRACKER_LOGIN_URL:
+            return self._session
 
-            try:
-                if self.TRACKER_LOGIN_FIELDS:
-                    username_field = self.TRACKER_LOGIN_FIELDS['username']
-                    password_field = self.TRACKER_LOGIN_FIELDS['password']
-            except Exception as e:
-                self.log.warning(e)
-                pass
-            payload = {
-                username_field: self.username,
-                password_field: self.password,
-                'redirect': 'index.php?',
-                'sid': '',
-                'login': 'Login'
-            }
-            self._session.post(self.TRACKER_LOGIN_URL, data=payload, timeout=10)
+        self.log.info("Loggin in %s", self.TRACKER_LOGIN_URL)
+        self.log.debug("%s %s", self.username, self.password)
+        username_field = self.TRACKER_LOGIN_FIELDS['username']
+        password_field = self.TRACKER_LOGIN_FIELDS['password']
+
+        payload = {
+            username_field: self.username,
+            password_field: self.password,
+            'redirect': 'index.php?',
+            'sid': '',
+            'login': 'Login'
+        }
+        self._session.post(self.TRACKER_LOGIN_URL, data=payload, timeout=10)
 
         return self._session
 

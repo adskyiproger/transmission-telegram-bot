@@ -36,7 +36,7 @@ log = get_logger("main")
 # Init search object with trackers
 def get_search():
     return SearchTorrents(credentials=bot_config.get("trackers", {}),
-                            sort_by=bot_config.get("bot.sort_by", "date"))
+                          sort_by=bot_config.get("bot.sort_by", "date"))
 
 def get_torrent_connection():
     try:
@@ -212,42 +212,49 @@ async def searchOnWebTracker(update: Update, context: ContextTypes.DEFAULT_TYPE)
     """Search on web trackers and return results back to user"""
     lang_code = update.message.from_user.language_code
 
-    # FIXME: Initial validation for wrong content passed in message
-    # It could be implemented as message handlers
+    # 1. Warning for user if wrong content type was passed
     if update.message.effective_attachment:
         await update.message.reply_text(text=trans('UNSUPPORTED_MIME_TYPE', lang_code))
         return
+    # 2. Warning for user if too long message was passed
     if len(update.message.text) > 256:
         await update.message.reply_text(text=trans('MESSAGE_IS_TOO_LONG', lang_code))
         return
+    # 3. Display dumb message while search is running, so user will understand all is good
+    msg = await update.message.reply_text(text=trans('DOING_SEARCH', lang_code) + " " + update.message.text)
 
-    msg = await update.message.reply_text(text=trans('DOING_SEARCH', lang_code)+f" {update.message.text}")
-
+    # Create search object
+    searcher = SearchTorrents(credentials=bot_config.get("trackers", {}), sort_by=bot_config.get("bot.sort_by", "date"))
+    # Get search results
     posts = PostsBrowser(
         user_id=msg.chat_id,
         user_lang=lang_code,
-        posts=get_search().search(update.message.text))
+        posts=searcher.search(update.message.text))
     context.user_data['nav_type'] = 'posts'
     context.user_data['posts'] = posts
-    # Display search results if something was found
+
+    # Get search results
     if posts.number_of_pages > 0:
         text = posts.get_page()
-        if len(get_search().FAILED_SEARCH) > 0:
-            text += "--------------\n" \
-                    "⚠ Failed search on trackers: " + ", ".join(get_search().FAILED_SEARCH)
-
-        await context.bot.edit_message_text(chat_id=msg.chat.id,
-                                            message_id=msg.message_id,
-                                            text=text,
-                                            reply_markup=posts.get_keyboard(),
-                                            parse_mode=ParseMode.HTML,
-                                            disable_web_page_preview=True)
+        reply_markup = posts.get_keyboard()
     # Tell user about empty search results
     else:
-        await context.bot.edit_message_text(
-            chat_id=update.message.chat.id,
-            message_id=msg.message_id,
-            text=trans('NOTHING_FOUND', lang_code))
+        text=trans('NOTHING_FOUND', lang_code)
+        reply_markup=None
+
+    # Add warning message if something went wrong while searching on trackers
+    if len(searcher.FAILED_SEARCH) > 0:
+        text += "\n--------------\n" + trans('FAILED_SEARCH_ON_TRACKERS', lang_code) + " " + ", ".join(searcher.FAILED_SEARCH)
+    if len(searcher.FAILED_TRACKERS) > 0:
+        text += "\n--------------\n" + trans("FAILED_INIT_TRACKERS", lang_code) + " " + ", ".join(searcher.FAILED_TRACKERS)
+
+    await context.bot.edit_message_text(
+        chat_id=update.message.chat.id,
+        message_id=msg.message_id,
+        text=text,
+        reply_markup=reply_markup,
+        parse_mode=ParseMode.HTML,
+        disable_web_page_preview=True)
 
 
 @restricted
