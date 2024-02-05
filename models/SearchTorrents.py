@@ -45,6 +45,7 @@ class SearchTorrents:
     # Variable for storing search results
     CACHE = {}
     CACHE_TIMER = {}
+
     def __init__(self, credentials: dict, sort_by: str) -> None:
         self.CREDENTIALS = credentials
         self.sort_by = sort_by
@@ -61,12 +62,16 @@ class SearchTorrents:
         log.info("Initialising search trackers from available classes: %s",
                  ", ".join(self.TRACKER_CLASSES.keys()))
         for _class in self.TRACKER_CLASSES:
+            # Conditionally disable tracker if not working
+            if not _.get(self.CREDENTIALS, [_class, 'enabled'], True):
+                log.info("Tracker %s is disabled in configuration file. Skipped initialisation", _class)
+                continue
             try:
                 tracker = self.TRACKER_CLASSES[_class](
                     username=_.get(self.CREDENTIALS, [_class, "user"]),
                     password=_.get(self.CREDENTIALS, [_class, "password"]))
                 self._trackers[_class] = tracker
-                log.info("Initialised tracker %s", _class)
+                log.debug("Initialised tracker %s", _class)
             except Exception as err:
                 self.FAILED_TRACKERS.append(_class)
                 log.error("Failed initialise tracker %s due to error: %s", _class, err)

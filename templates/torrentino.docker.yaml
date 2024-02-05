@@ -43,17 +43,29 @@ directories:
   Soft: /downloads/Soft
 
 # Trackers section to store user credentials:
-
+# By default only rutor is enabled, all other trackers are disabled
+# To enable other trackers:
+# 1. Register account on torrent tracker
+# 2. Add user and password to configuration
+# 3. set enabled=true or just delete this line
 trackers:
   nnmclub:
+    # Please register account
+    enabled: false
     user: <email or login>
     password: <password>
   toloka:
+    # Please register account
+    enabled: false
     user: <email or login>
     password: <password>
   rutracker:
+    # Please register account
+    enabled: false
     user: <email or login>
     password: <password>
+  rutor:
+    enabled: true
 
 # Proxies
 proxy:

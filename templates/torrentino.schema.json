@@ -1,0 +1,161 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$ref": "#/definitions/Welcome1",
+    "definitions": {
+        "Welcome1": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "bot": {
+                    "$ref": "#/definitions/Bot"
+                },
+                "transmission": {
+                    "$ref": "#/definitions/Transmission"
+                },
+                "directories": {
+                    "$ref": "#/definitions/Directories"
+                },
+                "trackers": {
+                    "$ref": "#/definitions/Trackers"
+                }
+            },
+            "required": [
+                "bot",
+                "directories",
+                "trackers",
+                "transmission"
+            ],
+            "title": "Welcome1"
+        },
+        "Bot": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "token": {
+                    "type": "string"
+                },
+                "super_user": {
+                    "type": "string"
+                },
+                "allowed_users": {
+                    "type": "array",
+                    "items": {}
+                },
+                "log_file": {
+                    "type": "string"
+                },
+                "log_level": {
+                    "type": "string"
+                },
+                "sort_by": {
+                    "type": "string"
+                },
+                "download_log_file": {
+                    "type": "string"
+                },
+                "use_menu": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "allowed_users",
+                "download_log_file",
+                "log_file",
+                "log_level",
+                "sort_by",
+                "super_user",
+                "token",
+                "use_menu"
+            ],
+            "title": "Bot"
+        },
+        "Directories": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "Movies": {
+                    "type": "string"
+                },
+                "TVShows": {
+                    "type": "string"
+                },
+                "Music": {
+                    "type": "string"
+                },
+                "Soft": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "Movies",
+                "Music",
+                "Soft",
+                "TVShows"
+            ],
+            "title": "Directories"
+        },
+        "Trackers": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "nnmclub": {
+                    "$ref": "#/definitions/Nnmclub"
+                },
+                "toloka": {
+                    "$ref": "#/definitions/Nnmclub"
+                }
+            },
+            "required": [
+                "nnmclub",
+                "toloka"
+            ],
+            "title": "Trackers"
+        },
+        "Nnmclub": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "user": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "password",
+                "user"
+            ],
+            "title": "Nnmclub"
+        },
+        "Transmission": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "host": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer"
+                },
+                "user": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "delete_data": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "delete_data",
+                "host",
+                "password",
+                "port",
+                "user"
+            ],
+            "title": "Transmission"
+        }
+    }
+}
