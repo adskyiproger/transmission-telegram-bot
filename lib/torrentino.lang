@@ -26,6 +26,7 @@ PROGRESS_STATUS=Progress: {0}, Status: {1}
 BAD_PAGE_ACCESS=Page not found. Use bot menu or search again. Probably bot was restarted
 FAILED_INIT_TRACKERS=⚠ Check logs and config file. Not initialized trackers:
 FAILED_SEARCH_ON_TRACKERS=⚠ Failed search on trackers:
+HOWTO_DOWNLOAD_MAGNET_LINK=⚠ Copy and paste link into your torrent client
 [ru]
 ACCESS_RESTRICTED=У вас недостаточно прав для выполнения этой команды. Пожалуйста обратитесь к администратору.
 TORRENT_LIST_HEADER=Список торрентов: страница {} из {} ({} файлов):
@@ -58,6 +59,7 @@ PROGRESS_STATUS=завершено: {0}, статус: {1}
 BAD_PAGE_ACCESS=Страница не найдена, используйте меню бота для навигации, или попробуйте повторить поиск
 FAILED_INIT_TRACKERS=⚠ Проверьте логи и конфигурацию. Не удалось инициализировать трекеры:
 FAILED_SEARCH_ON_TRACKERS=⚠ Ошибка поиска на трекерах:
+HOWTO_DOWNLOAD_MAGNET_LINK=⚠ Copy and paste link into your torrent client
 [uk]
 ACCESS_RESTRICTED=У вас недостатньо дозволів для виконання цієї команди. Будь-ласка зверніться до адміністратора.
 TORRENT_LIST_HEADER=Список торрентів: сторінка {} з {} (всього {} файлів):
@@ -96,3 +98,4 @@ MESSAGE_IS_TOO_LONG=Занадто довга фраза для пошуку, с
 BAD_PAGE_ACCESS=Сторінку не знайдено, використайте меню бота для навігації, або спробуйте повторити пошук
 FAILED_INIT_TRACKERS=⚠ Перевірте логи та конфігурацію. Не вдалось ініціалізувати трекери:
 FAILED_SEARCH_ON_TRACKERS=⚠ Помилка пошуку на трекерах:
+HOWTO_DOWNLOAD_MAGNET_LINK=⚠ Додайте посилання в ваш торент клієнт

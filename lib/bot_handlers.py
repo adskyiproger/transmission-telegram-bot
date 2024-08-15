@@ -98,6 +98,31 @@ async def history(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                                    parse_mode=ParseMode.HTML,
                                    reply_markup=history.get_keyboard())
 
+
+async def getTorrentFile(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    _id = int(update.message.text.split("_")[1])
+    post = context.user_data['posts'].posts[_id]
+    tmp_file_path = post['dl']
+    # If tracker has credential, download file and path file path to Transmission
+    if _.has(bot_config.get('trackers'), post["tracker"]) and str(post["dl"]).startswith("http"):
+        tmp_file_path = get_search().download(post['dl'],
+                                              post['tracker'])
+
+        document = open(tmp_file_path, 'rb')
+        await context.bot.send_document(chat_id=update.message.chat.id,
+                                    document=document, caption=post['title']
+                                    )
+    else:
+        await context.bot.send_message(
+            chat_id=update.message.chat.id,
+            parse_mode=ParseMode.MARKDOWN,
+            text=f"**{post['title']}:**\n"
+                 "-------------------------------\n"
+                 f"{trans('HOWTO_DOWNLOAD_MAGNET_LINK', update.message.from_user.language_code)}\n"
+                 "-------------------------------\n"
+                 f"```\n{post['dl']}\n```"
+            )
+
 @restricted
 async def chooseDownloadDir(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.document:
@@ -384,6 +409,7 @@ HANDLERS = [
     MessageHandler(Regex(r'^/stop_[0-9]+$'), torrentStop),
     MessageHandler(Regex(r'^/start_[0-9]+$'), torrentStart),
     MessageHandler(Regex(r'^/delete_[0-9]+$'), torrentDelete),
+    MessageHandler(Regex(r'^/torrent_[0-9]+$'), getTorrentFile),
     # Ask download directory for Menu URL
     MessageHandler(Regex(r'^/download_[0-9]+$'), chooseDownloadDir),
     # Ask download directory for magnet/http(s) link
