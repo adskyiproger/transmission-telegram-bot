@@ -57,7 +57,7 @@ class BotConfigurator():
             description="Torrentino configuration options: ",
             epilog="Passed as command line arguments or environment variables"
                    "are stored to configuration file and available for next run.")
-        parser.add_argument('--config_file', type=str,
+        parser.add_argument('--config-file', type=str,
                             default=os.getenv("CONFIG_FILE", CONFIG_FILE),
                             help='Configuration file location')
         parser.add_argument('--token', type=str, default=os.getenv("TOKEN"),
@@ -84,7 +84,7 @@ class BotConfigurator():
                             default=os.getenv("DOWNLOAD_LOG", ),
                             help='Download history log file')
         BotConfigurator.args = parser.parse_args()
-        BotConfigurator.config_file = BotConfigurator.args.config or CONFIG_FILE
+        BotConfigurator.config_file = BotConfigurator.args.config_file or CONFIG_FILE
         BotConfigurator._init_args = True
 
     def init_args(self):

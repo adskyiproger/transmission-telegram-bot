@@ -22,27 +22,31 @@ class SearchToloka(SearchBase):
 
         posts = []
         for row in rows[1:]:
-            _cols = row.select('td')
-            if not len(_cols) == 13:
-                self.log.debug("Skipped record due to length != 13: %s", _cols)
-                continue
+            try:
+                _cols = row.select('td')
+                if not len(_cols) == 13:
+                    self.log.debug("Skipped record due to length != 13: %s", _cols)
+                    continue
 
-            TITLE = _cols[2].text.replace(r'<', '')
-            INFO = _cols[2].select('a')[0].get('href')
-            DL = _cols[5].select('a')[0].get('href')
-            SIZE = _cols[6].text
-            DATE = _cols[12].text
-            SEEDS = _cols[9].text
-            LEACH = _cols[10].text
-            self.log.debug(f"COL T: {TITLE} L:{str(INFO)} DL:{str(DL)} S:{str(SIZE)} D:{str(DATE)}")
+                TITLE = _cols[2].text.replace(r'<', '')
+                INFO = _cols[2].select('a')[0].get('href')
+                DL = _cols[5].select('a')[0].get('href')
+                SIZE = _cols[6].text
+                DATE = _cols[12].text
+                SEEDS = _cols[9].text
+                LEACH = _cols[10].text
+                self.log.debug(f"COL T: {TITLE} L:{str(INFO)} DL:{str(DL)} S:{str(SIZE)} D:{str(DATE)}")
 
-            posts.append({
-                'tracker': self.TRACKER_NAME,
-                'title': TITLE,
-                'info': f"{self.TRACKER_URL}/{INFO}",
-                'dl': f"{self.TRACKER_URL}/{DL}",
-                'size': SIZE,
-                'date': DATE,
-                'seed': SEEDS,
-                'leach': LEACH})
+                posts.append({
+                    'tracker': self.TRACKER_NAME,
+                    'title': TITLE,
+                    'info': f"{self.TRACKER_URL}/{INFO}",
+                    'dl': f"{self.TRACKER_URL}/{DL}",
+                    'size': SIZE,
+                    'date': DATE,
+                    'seed': SEEDS,
+                    'leach': LEACH})
+            except Exception as e:
+                # seems that there is some problem with this tr, let's just continue to the next one
+                self.log.critical(e, exc_info=True)
         return posts

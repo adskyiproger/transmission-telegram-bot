@@ -40,26 +40,30 @@ class SearchRUTOR(SearchBase):
 
         posts = []
         for row in _data[1:]:
-            _cols = row.select('td')
-            TITLE = _cols[1].select('a')[2].text
-            INFO = _cols[1].select('a')[2].get('href')
-            DL = _cols[1].select('a')[1].get('href')
-            SIZE = _cols[3].text if len(_cols) == 5 else _cols[2].text
-            DATE = self.convert_date(_cols[0].text)
-            if len(_cols) == 5:
-                SEEDS = _cols[4].text.split("\xa0")[1]
-                LEACH = _cols[4].text.split("\xa0")[3]
-            else:
-                SEEDS = LEACH = 0
-            self.log.debug("COL Title:"+TITLE+" L:"+str(INFO)+" DL:"+str(DL)+" S:"+str(SIZE)+" D:"+str(DATE))
+            try:
+                _cols = row.select('td')
+                TITLE = _cols[1].select('a')[2].text
+                INFO = _cols[1].select('a')[2].get('href')
+                DL = _cols[1].select('a')[1].get('href')
+                SIZE = _cols[3].text if len(_cols) == 5 else _cols[2].text
+                DATE = self.convert_date(_cols[0].text)
+                if len(_cols) == 5:
+                    SEEDS = _cols[4].text.split("\xa0")[1]
+                    LEACH = _cols[4].text.split("\xa0")[3]
+                else:
+                    SEEDS = LEACH = 0
+                self.log.debug("COL Title:"+TITLE+" L:"+str(INFO)+" DL:"+str(DL)+" S:"+str(SIZE)+" D:"+str(DATE))
 
-            posts.append({
-                'tracker': self.TRACKER_NAME,
-                'title': TITLE.replace(r'<', ''),
-                'info': "{0}/{1}".format(self.TRACKER_URL, INFO),
-                'dl': DL,
-                'size': SIZE,
-                'date': DATE,
-                'seed': SEEDS,
-                'leach': LEACH})
+                posts.append({
+                    'tracker': self.TRACKER_NAME,
+                    'title': TITLE.replace(r'<', ''),
+                    'info': "{0}/{1}".format(self.TRACKER_URL, INFO),
+                    'dl': DL,
+                    'size': SIZE,
+                    'date': DATE,
+                    'seed': SEEDS,
+                    'leach': LEACH})
+            except Exception as e:
+                # seems that there is some problem with this tr, let's just continue to the next one
+                self.log.critical(e, exc_info=True)
         return posts
