@@ -5,7 +5,7 @@ import string
 import pydash as _
 import asyncio
 import re
-
+import pathlib
 from telegram import Update
 from telegram.ext import ContextTypes
 from telegram.constants import ParseMode
@@ -203,7 +203,7 @@ async def addTorrentToTransmission(update: Update, context: ContextTypes.DEFAULT
         # Download file from telegram bot to temporal location
         _file = await context.bot.getFile(context.user_data['torrent']['file_id'])
         await _file.download_to_drive(_tmp_file_path)
-        tmp_file_path = f"file://{_tmp_file_path}"
+        tmp_file_path = pathlib.Path(_tmp_file_path)
     elif context.user_data['torrent']['type'] in ['url', 'magnet']:
         # Magnet URLs and regular URLs are processed by transmission
         tmp_file_path = context.user_data['torrent']['url']
@@ -211,7 +211,8 @@ async def addTorrentToTransmission(update: Update, context: ContextTypes.DEFAULT
         if _.has(bot_config.get('trackers'), _.get(context.user_data, 'torrent.tracker')):
             _tmp_file_path = get_search().download(context.user_data['torrent']['url'],
                                              context.user_data['torrent']['tracker'])
-            tmp_file_path = f"file://{_tmp_file_path}"
+            
+            tmp_file_path = pathlib.Path(_tmp_file_path)
     lang_code = query.from_user.language_code
     log.info("Adding file/URL %s to Transmission", tmp_file_path)
     message = query.message.text
