@@ -181,14 +181,18 @@ class BotConfigurator():
         self.commands = commands
         loop = asyncio.get_event_loop()
         coroutine = Bot(token=self.config['bot']['token']).set_my_commands(self.commands)
+
         try:
             loop.run_until_complete(coroutine)
         except InvalidToken as err:
-            log.critical("Invalid token provided: %s", str(err))
+            log.critical("Invalid token provided: %s: %s", self.config['bot']['token'], str(err))
+            log.critical(
+                "Please check configuration file %s or pass token using `--token` argument at startup.", BotConfigurator.config_file)
             sys.exit(1)
         except Exception as err:
             log.critical("Generic error occured: %s", str(err))
         log.info("Synchronized bots's commands: \n - %s", "\n - ".join([':\t\t'.join(c) for c in self.commands]))
+
         return self
 
     def add_user(self, id: int) -> "BotConfigurator":
