@@ -113,11 +113,16 @@ class BotConfigurator():
         if not os.path.exists(BotConfigurator.config_file):
             log.info("Configuration file %s not found", BotConfigurator.config_file)
             try:
-                shutil.copy(os.path.join(BOT_FOLDER, 'templates', 'torrentino.template.yaml'), BotConfigurator.config_file)
+                template_file = os.path.join(BOT_FOLDER, 'templates', 'torrentino.template.yaml')
+                os.makedirs(os.path.dirname(BotConfigurator.config_file), exist_ok=True)
+                shutil.copy(template_file, BotConfigurator.config_file)
                 log.info("Created new configuration file from template: %s", BotConfigurator.config_file)
             except Exception as e:
-                log.critical("Configuration file %s not found. Failed to create configuration file from template",
-                            BotConfigurator.config_file)
+                log.critical("Failed to create configuration file %s from template: %s due to error: %s",
+                            BotConfigurator.config_file,
+                            template_file,
+                            e)
+                log.critical("Stopping bot startup...")
                 sys.exit(1)
         with open(BotConfigurator.config_file, 'r') as config_file:
             self._config = yaml.load(config_file, Loader=yaml.FullLoader)
