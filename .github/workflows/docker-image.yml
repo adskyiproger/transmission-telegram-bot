@@ -1,22 +1,10 @@
-name: Docker Image CI
+name: Publish Docker image on tag
 
 on:
   push:
-    branches: [ "develop" ]
-  pull_request:
-    branches: [ "develop" ]
-  workflow_dispatch:
-    inputs:
-      branch-tag:
-        description: Branch or Tag
-        required: true
-        default: 'develop'
-  workflow_call:
-    inputs:
-      branch-tag:
-        required: true
-        type: string
-        default: 'develop'
+    tags:
+      - 'v*'
+
 jobs:
 
   build-and-push:
@@ -25,27 +13,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set version and branch
-      id: set-version-and-branch
-      run: |
-        export VERSION=`git log -1 --pretty=format:%h`
-        echo "Pushing version $VERSION"
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-        # the event_name is the event that triggered the caller workflow
-        # and not "workflow_call" like how it was supposed to be when
-        # another workflow is calling this one
+    - name: Extract version from tag
+      id: extract_version
+      run: echo "TAG_NAME=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
 
-        if [ "${{ github.event_name }}" == 'push' ]; then
-          BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
-        elif [ "${{ github.event_name }}" == 'pull_request' ]; then
-          BRANCH=${{ github.event.pull_request.head.ref }}
-        else
-        BRANCH=${{ inputs.branch_name }}
-        fi
-        ESCAPED_BRANCH=$(echo $BRANCH | sed 's/[^a-zA-Z0-9_.-]/-/g')
-        echo "from branch $BRANCH"
-        echo "branch=$ESCAPED_BRANCH" >> $GITHUB_OUTPUT
     - name: Log in to GitHub Container Registry
       uses: docker/login-action@v1 
       with:
@@ -77,4 +49,4 @@ jobs:
         push: true
         tags: |
           ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
-          ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ steps.set-version-and-branch.outputs.branch }}
+          ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ env.TAG_NAME }}
