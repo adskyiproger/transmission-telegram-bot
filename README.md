@@ -34,6 +34,39 @@ Additionally you could setup home DLNA server like Jellyfin, Plex or MiniDLNA an
 
 # Installation
 
+
+## Quick start with docker
+
+1. Register new telegram bot using [@BotFather](https://t.me/botfather).
+2. Get your telegram user id using [@fredykardian](https://t.me/get_id_bot)
+3. Copy file `./templates/torrentino.sample.yaml` to any persistent folder,
+   for example `<Home directory>/transmission-bot/config`
+4. Update file:
+   - Add Bot token, take value from BotGather, for example:
+      ```yaml
+      bot:
+         # token, Use BotFather to create new token
+         token: "112XXXX78:AXXXXXXXXXXXXXXXXXXXXXXXXXXXw"
+      ```
+   - Add Super user id, take value from [@fredykardian](https://t.me/get_id_bot), for example:
+      ```yaml
+      bot:
+         ...
+         # Admin telegram account ID or comma separated IDs
+         # Use https://github.com/nadam/userinfobot to get your ID
+         super_user: "456721770"
+      ```
+5. Copy docker compose file (`docker-compose.yaml`) to any persistent folder,
+   for example `<Home directory>/transmission-bot/`
+6. Start containers:
+   ```
+   docker compose up -d
+   ```
+7. You should be able to talk to bot in telegram
+
+Next steps: Configure folders to store torrents and downloads.
+
+
 ## What you will need to run bot?
 1. **Hardware:**
    - If you are planning to use Bot as standalone application for searching torrent and pushing them to external Transmission, no specific configuration is required.
@@ -46,7 +79,6 @@ Additionally you could setup home DLNA server like Jellyfin, Plex or MiniDLNA an
    - Transmission, please check available packages at: https://transmissionbt.com/download or use one of the available docker images
    
    
-
 ## Preparation
 1. Register new telegram bot using [@BotFather](https://t.me/botfather).
 2. Configure Transmission server authentication with username and password:

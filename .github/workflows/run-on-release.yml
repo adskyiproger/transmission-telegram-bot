@@ -1,0 +1,84 @@
+name: Publish Docker image on tag
+
+# on:
+#   push:
+#     tags:
+#       - 'v*'
+on:
+  release:
+    types: [created]
+
+jobs:
+
+  build-and-push:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Extract version from tag
+      id: extract_version
+      run: echo "TAG_NAME=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v1 
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    # - name: Build the Docker image
+    #   run: |
+    #     pattern="^v[0-9]+\.[0-9]+\.[0-9]+$"
+    #     input_branch=${{ github.event.inputs.branch-tag }}
+    #     input_commit=${input_branch:-develop}
+    #     echo "Checking out $input_commit"
+    #     if [[ $pattern =~ $input_commit ]]; then
+    #       tag=${{ github.event.inputs.branch-tag }}
+    #       echo "Changed build tag to $tag"
+    #       git checkout $tag
+    #     else
+    #       tag=$(date +%s)
+    #       echo "Running build on develop branch"
+    #     fi
+    #     image_with_tag="ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:$(date +%s)"
+    #     docker build . --file Dockerfile --tag $image_with_tag
+    #     docker push $image_with_tag
+    - name: Build and push base image
+      uses: docker/build-push-action@v6
+      with:
+        file: Dockerfile
+        context: .
+        push: true
+        tags: |
+          ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
+          ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ env.TAG_NAME }}
+
+    - name: Update release notes with Docker image
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        release_id=${{ github.event.release.id }}
+        release_body=$(curl -s \
+          -H "Authorization: token ${GITHUB_TOKEN}" \
+          https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/releases/${release_id} \
+          | jq -r .body)
+        echo "${{ github.repository_owner }}/${{ github.event.repository.name }}/releases/${release_id}"
+        echo "Body: $release_body"
+        IMAGE_URL=${{ github.repository_owner }}/${{ github.event.repository.name }}
+        TAG=${{ github.event.release.tag_name }}
+        docker_info="""
+        ## Docker Image
+        Docker image published to GitHub Container Registry:
+        \`\`\`
+        docker pull ghcr.io/$IMAGE_URL:$TAG
+        docker pull ghcr.io/$IMAGE_URL:latest
+        \`\`\`"""
+
+        new_release_body="${release_body}${docker_info}"
+
+        curl -s --request PATCH \
+          -H "Authorization: token ${GITHUB_TOKEN}" \
+          -H "Content-Type: application/json" \
+          --data "$(jq --null-input --compact-output --arg body "$new_release_body" '{body: $body}')" \
+          https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/releases/${release_id}

@@ -7,26 +7,27 @@
 ---
 version: "2.1"
 services:
-  jellyfin:
-    image: ghcr.io/linuxserver/jellyfin
-    container_name: jellyfin
-    environment:
-      - PUID=<dnla uid>
-      - PGID=<dnla guid>
-      - TZ=Europe/London
-    volumes:
-      - <download folder on host>/Video:/Video
-      - <download folder on host>/TVShows:/TVShows
-      - <config folder on host>/jellyfin/config:/config
-    ports:
-      - 8096:8096
-      - 8920:8920 
-      - 7359:7359/udp 
-      - 1900:1900/udp 
-    restart: "unless-stopped"
-    network_mode: "host"
+  # Uncomment to add jellyfin service
+  # jellyfin:
+  #   image: ghcr.io/linuxserver/jellyfin
+  #   container_name: jellyfin
+  #   environment:
+  #     - PUID=<dnla uid>
+  #     - PGID=<dnla guid>
+  #     - TZ=Europe/London
+  #   volumes:
+  #     - <download folder on host>/Video:/Video
+  #     - <download folder on host>/TVShows:/TVShows
+  #     - <config folder on host>/jellyfin/config:/config
+  #   ports:
+  #     - 8096:8096
+  #     - 8920:8920 
+  #     - 7359:7359/udp 
+  #     - 1900:1900/udp 
+  #   restart: "unless-stopped"
+  #   network_mode: "host"
   torrentino:
-    image: transmission-telegram-bot
+    image: ghcr.io/adskyiproger/transmission-telegram-bot:latest
     container_name: transmission-telegram-bot
     # Transmission connection properties
     # environment:
@@ -38,19 +39,21 @@ services:
     depends_on:
       - "transmission"
     volumes:
-      - <config folder on host>/torrentino/config:/usr/src/app/config
+      - ./config-test:/usr/src/app/config
   transmission:
     image: ghcr.io/linuxserver/transmission
     container_name: transmission
     environment:
-      - PUID=<dnla uid>
-      - PGID=<dnla guid>
+      # Uncomment to grant correct permissions
+      # - PUID=<dnla uid>
+      # - PGID=<dnla guid>
       - TZ=Europe/London
       - USER=<transmission user name>
       - PASS=<transmission user passoword>
-    volumes:
-      - <download folder on host>:/downloads
-      - <config folder on host>/transmission/config:/config
+    # Uncomment to add transmission external volumes
+    # volumes:
+    #   - <download folder on host>:/downloads
+    #   - <config folder on host>/transmission/config:/config
     ports:
       - 9091:9091
       - 51413:51413
