@@ -61,14 +61,15 @@ jobs:
         release_id=${{ github.event.release.id }}
         release_body=$(curl -s \
           -H "Authorization: token ${GITHUB_TOKEN}" \
-          https://api.github.com/repos/${{ github.repository_owner }}/${{ github.repository.name }}/releases/${release_id} \
+          https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/releases/${release_id} \
           | jq -r .body)
-
+        echo "${{ github.repository_owner }}/${{ github.event.repository.name }}/releases/${release_id}"
+        echo "Body: $release_body"
         docker_info="\n## Docker Image\n\n\
           Docker image published to GitHub Container Registry:\n\n\
           \`\`\`\n\
-          docker pull ghcr.io/${{ github.repository_owner }}/${{ github.repository.name }}:${{ github.event.release.tag_name }}\n\
-          docker pull ghcr.io/${{ github.repository_owner }}/${{ github.repository.name }}:latest\n\
+          docker pull ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.event.release.tag_name }}\n\
+          docker pull ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest\n\
           \`\`\`"
 
         new_release_body="${release_body}${docker_info}"
@@ -77,4 +78,4 @@ jobs:
           -H "Authorization: token ${GITHUB_TOKEN}" \
           -H "Content-Type: application/json" \
           --data "$(jq --null-input --compact-output --arg body "$new_release_body" '{body: $body}')" \
-          https://api.github.com/repos/${{ github.repository_owner }}/${{ github.repository.name }}/releases/${release_id}
+          https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/releases/${release_id}
