@@ -4,8 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-python-telegram-bot = "==21.4"
-transmission-rpc = "==7.0.10"
+python-telegram-bot = "==21.10"
+transmission-rpc = "==7.0.11"
 bs4 = "*"
 requests = "*"
 lxml = "*"
@@ -19,4 +19,4 @@ pydash = "*"
 [dev-packages]
 
 [requires]
-python_version = "3.12"
+python_version = "3.13"
