@@ -16,7 +16,7 @@ on:
       branch-tag:
         required: true
         type: string
-
+        default: 'develop'
 jobs:
 
   build-and-push:
