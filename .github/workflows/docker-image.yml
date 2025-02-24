@@ -67,12 +67,12 @@ jobs:
         echo "Body: $release_body"
         IMAGE_URL=${{ github.repository_owner }}/${{ github.event.repository.name }}
         TAG=${{ github.event.release.tag_name }}
-        docker_info="""\n
-          ## Docker Image \n
-          Docker image published to GitHub Container Registry: \n
+        docker_info="""
+          ## Docker Image
+          Docker image published to GitHub Container Registry:
           \`\`\`
-          docker pull ghcr.io/$IMAGE_URL:$TAG \n
-          docker pull ghcr.io/$IMAGE_URL:latest \n
+          docker pull ghcr.io/$IMAGE_URL:$TAG
+          docker pull ghcr.io/$IMAGE_URL:latest
           \`\`\`"""
 
         new_release_body="${release_body}${docker_info}"
