@@ -72,6 +72,9 @@ jobs:
         Docker image published to GitHub Container Registry:
         \`\`\`
         docker pull ghcr.io/$IMAGE_URL:$TAG
+        \`\`\`
+        or simply pull the latest image:
+        \`\`\`
         docker pull ghcr.io/$IMAGE_URL:latest
         \`\`\`"""
 
