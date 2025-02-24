@@ -5,10 +5,15 @@ on:
     branches: [ "develop" ]
   pull_request:
     branches: [ "develop" ]
-
+  workflow_dispatch:
+    inputs:
+      branch-tag:
+        description: Branch or Tag
+        required: true
+        default: 'develop'
 jobs:
 
-  build:
+  build-and-push:
 
     runs-on: ubuntu-latest
 
@@ -22,6 +27,15 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Build the Docker image
       run: |
+        pattern="^v[0-9]+\.[0-9]+\.[0-9]+$"
+        if [[ $version_string =~ ${{ github.event.inputs.branch-tag }} ]]; then
+          tag=${{ github.event.inputs.branch-tag }}
+          echo "Changed build tag to $tag"
+          git checkout $tag
+        else
+          tag=$(date +%s)
+          echo "Running build on develop branch"
+        fi
         image_with_tag="ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:$(date +%s)"
         docker build . --file Dockerfile --tag $image_with_tag
         docker push $image_with_tag
