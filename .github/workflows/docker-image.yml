@@ -36,7 +36,7 @@ jobs:
         pattern="^v[0-9]+\.[0-9]+\.[0-9]+$"
         input_branch=${{ github.event.inputs.branch-tag }}
         input_commit=${input_branch:-develop}
-
+        echo "Checking out $input_commit"
         if [[ $pattern =~ $input_commit ]]; then
           tag=${{ github.event.inputs.branch-tag }}
           echo "Changed build tag to $tag"
