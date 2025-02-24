@@ -56,4 +56,4 @@ jobs:
         push: true
         tags: |
           ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
-          ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.event.inputs.branch-tag }}  
+          ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ steps.set-version-and-branch.outputs.branch }}
