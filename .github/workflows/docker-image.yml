@@ -65,12 +65,15 @@ jobs:
           | jq -r .body)
         echo "${{ github.repository_owner }}/${{ github.event.repository.name }}/releases/${release_id}"
         echo "Body: $release_body"
-        docker_info="\n## Docker Image\n\n\
-          Docker image published to GitHub Container Registry:\n\n\
-          \`\`\`\n\
-          docker pull ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.event.release.tag_name }}\n\
-          docker pull ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest\n\
-          \`\`\`"
+        IMAGE_URL=${{ github.repository_owner }}/${{ github.event.repository.name }}
+        TAG=${{ github.event.release.tag_name }}
+        docker_info="""\n
+          ## Docker Image \n
+          Docker image published to GitHub Container Registry: \n
+          \`\`\`
+          docker pull ghcr.io/$IMAGE_URL:$TAG \n
+          docker pull ghcr.io/$IMAGE_URL:latest \n
+          \`\`\`"""
 
         new_release_body="${release_body}${docker_info}"
 
