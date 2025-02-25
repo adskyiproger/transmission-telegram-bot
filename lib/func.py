@@ -21,7 +21,7 @@ lang = configparser.ConfigParser()
 lang.read(LANGUAGE_FILE)
 
 
-def trans(text, lang_code):
+def trans(text, lang_code) -> str:
     """"""
     logging.debug(f"Translate: {text}, {lang_code}")
     return _.get(lang,
