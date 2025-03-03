@@ -14,7 +14,7 @@ jobs:
           run: echo "::set-output name=commit_sha::$(git rev-parse HEAD | cut -c 1-7)"
         
         - name: Use the commit SHA
-          run: echo "The short commit SHA is ${{ steps.get_commit_sha.outputs.commit_sha }}"`
+          run: echo "The short commit SHA is ${{ steps.get_commit_sha.outputs.commit_sha }}"
     mypy:
         runs-on: ubuntu-latest
         steps:
@@ -23,9 +23,9 @@ jobs:
 
           - name: Get the short commit SHA
             id: get_commit_sha
-            run: echo "::set-output name=commit_sha::$(git rev-parse HEAD | cut -c 1-7)"
+            run: echo "commit_sha=$(git rev-parse HEAD | cut -c 1-7)" >> $GITHUB_OUTPUT
             
           - name: Use the commit SHA
             run: |
-                echo "The short commit SHA is ${{ steps.get_commit_sha.outputs.commit_sha }}"`
+                echo "The short commit SHA is ${{ steps.get_commit_sha.outputs.commit_sha }}"
                 env
