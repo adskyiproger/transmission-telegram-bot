@@ -1,0 +1,31 @@
+name: Run Linters and Checkers
+# Test sync
+on:
+  push
+jobs:
+    flake8:
+        runs-on: ubuntu-latest
+        steps:
+        - name: Checkout code
+            uses: actions/checkout@v2
+
+        - name: Get the short commit SHA
+            id: get_commit_sha
+            run: echo "::set-output name=commit_sha::$(git rev-parse HEAD | cut -c 1-7)"
+        
+        - name: Use the commit SHA
+            run: echo "The short commit SHA is ${{ steps.get_commit_sha.outputs.commit_sha }}"`
+    mypy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+            uses: actions/checkout@v2
+
+            - name: Get the short commit SHA
+            id: get_commit_sha
+            run: echo "::set-output name=commit_sha::$(git rev-parse HEAD | cut -c 1-7)"
+            
+            - name: Use the commit SHA
+            run: |
+                echo "The short commit SHA is ${{ steps.get_commit_sha.outputs.commit_sha }}"`
+                env
