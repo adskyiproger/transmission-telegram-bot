@@ -9,12 +9,20 @@ jobs:
         - name: Checkout code
           uses: actions/checkout@v2
 
-        - name: Get the short commit SHA
-          id: get_commit_sha
-          run: echo "::set-output name=commit_sha::$(git rev-parse HEAD | cut -c 1-7)"
-        
-        - name: Use the commit SHA
-          run: echo "The short commit SHA is ${{ steps.get_commit_sha.outputs.commit_sha }}"
+        - name: Set up Python ${{ matrix.python-version }}
+          uses: actions/setup-python@v2
+          with:
+            python-version: ${{ matrix.python-version }}
+        - name: Install dependencies
+          run: |
+            pip install --user pipenv && \
+            pipenv install && \
+            pipenv install --dev && \
+            pipenv run flake8
+        - name: Flake8
+          run: |
+            pipenv run flake8
+
     mypy:
         runs-on: ubuntu-latest
         steps:
