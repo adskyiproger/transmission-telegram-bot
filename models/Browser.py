@@ -5,7 +5,13 @@ from lib.constants import POSTS_PER_PAGE
 
 
 class Browser:
-    def __init__(self, user_id: int = None, user_lang: str = "en", posts: dict = None, posts_per_page: int = POSTS_PER_PAGE) -> None:
+    def __init__(
+        self,
+        user_id: int = None,
+        user_lang: str = "en",
+        posts: dict = None,
+        posts_per_page: int = POSTS_PER_PAGE,
+    ) -> None:
         self.user_id = user_id
         self.user_lang = user_lang
         self.posts = posts
@@ -44,19 +50,35 @@ class Browser:
         if pages == 1:
             KEYBOARD = []
         elif page == 1 or page < 4:
-            KEYBOARD = [InlineKeyboardButton(str(jj), callback_data=str(jj)) for jj in range(1, 8) if 0 < jj <= pages]
+            KEYBOARD = [
+                InlineKeyboardButton(str(jj), callback_data=str(jj))
+                for jj in range(1, 8)
+                if 0 < jj <= pages
+            ]
         # Edge case for last page
         elif pages - page < 4:
-            KEYBOARD = [InlineKeyboardButton(str(jj), callback_data=str(jj)) for jj in range(pages - 6, pages + 1) if 0 < jj <= pages]
+            KEYBOARD = [
+                InlineKeyboardButton(str(jj), callback_data=str(jj))
+                for jj in range(pages - 6, pages + 1)
+                if 0 < jj <= pages
+            ]
         # Regular navigation
         else:
-            KEYBOARD = [InlineKeyboardButton(str(jj), callback_data=str(jj)) for jj in range(page - 3, page + 4) if 0 < jj <= pages]
+            KEYBOARD = [
+                InlineKeyboardButton(str(jj), callback_data=str(jj))
+                for jj in range(page - 3, page + 4)
+                if 0 < jj <= pages
+            ]
 
         FOOTER_KEYS = []
         if page > 10:
-            FOOTER_KEYS.append(InlineKeyboardButton("«« -10", callback_data=str(page-10)))
+            FOOTER_KEYS.append(
+                InlineKeyboardButton("«« -10", callback_data=str(page - 10))
+            )
         if pages > page + 10:
-            FOOTER_KEYS.append(InlineKeyboardButton("+10 »»", callback_data=str(page+10)))
+            FOOTER_KEYS.append(
+                InlineKeyboardButton("+10 »»", callback_data=str(page + 10))
+            )
 
         for key in KEYBOARD:
             if str(key.text) == str(page):

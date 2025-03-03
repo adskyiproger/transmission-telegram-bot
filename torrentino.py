@@ -21,18 +21,22 @@ def bot():
 
     bot_config = BotConfigurator()
 
-    DownloadHistory.set_log_file(bot_config.get('bot.download_log_file'))
+    DownloadHistory.set_log_file(bot_config.get("bot.download_log_file"))
 
-    log = get_logger("main", bot_config.get('bot.log_level'), bot_config.get('bot.log_file'))
+    log = get_logger(
+        "main", bot_config.get("bot.log_level"), bot_config.get("bot.log_file")
+    )
 
     bot_config.set_bot_commands(commands)
 
-    if not bot_config.get('bot.token'):
-        log.critical("You must pass the token you received from https://t.me/Botfather!, check documentation")
+    if not bot_config.get("bot.token"):
+        log.critical(
+            "You must pass the token you received from https://t.me/Botfather!, check documentation"
+        )
 
     """Start the bot."""
     try:
-        app = Application.builder().token(bot_config.get('bot.token')).build()
+        app = Application.builder().token(bot_config.get("bot.token")).build()
         """Add bot handlers"""
         app.add_handlers(HANDLERS)
         """Run the bot until the user presses Ctrl-C"""
@@ -44,6 +48,6 @@ def bot():
         log.info("Generic error occured: %s", str(err))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     BotConfigurator.argparser()
     bot()

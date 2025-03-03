@@ -25,19 +25,33 @@ class TransmissionClient(Client):
     - get detailed information about torrent
     - notify user on torrent download done
     """
+
     DOWNLOAD_QUEUE = {}
 
-    def __init__(self, *, protocol: Literal['http', 'https'] = "http",
-                 username: str = None, password: str = None,
-                 host: str = "127.0.0.1", port: int = 9091,
-                 path: str = "/transmission/", telegram_token: str = None):
+    def __init__(
+        self,
+        *,
+        protocol: Literal["http", "https"] = "http",
+        username: str = None,
+        password: str = None,
+        host: str = "127.0.0.1",
+        port: int = 9091,
+        path: str = "/transmission/",
+        telegram_token: str = None
+    ):
         self.telegram_token = telegram_token
         # Background thread for tracking torrent status
         download_status_monitor = threading.Thread(target=self._between_callback)
         download_status_monitor.start()
 
-        super().__init__(protocol=protocol, username=username, password=password,
-                         host=host, port=port, path=path)
+        super().__init__(
+            protocol=protocol,
+            username=username,
+            password=password,
+            host=host,
+            port=port,
+            path=path,
+        )
 
     def _between_callback(self):
         loop = asyncio.new_event_loop()
@@ -64,21 +78,35 @@ class TransmissionClient(Client):
 
                 log.info("Download completed: %s %s", torrent.name, status.seeding)
 
-                DownloadHistory.add(torrent.done_date, torrent.name, torrent.download_dir, torrent.size_when_done)
+                DownloadHistory.add(
+                    torrent.done_date,
+                    torrent.name,
+                    torrent.download_dir,
+                    torrent.size_when_done,
+                )
                 del TransmissionClient.DOWNLOAD_QUEUE[torrent_id]
-                message = trans("DOWNLOAD_COMPLETED", user["lang_code"]).format(torrent.name)
-                log.info("Sending message to user: %s, lang: %s, message: %s",
-                         user["chat_id"], user["lang_code"], message)
-                await app.bot.send_message(chat_id=user["chat_id"],
-                                           text=message)
+                message = trans("DOWNLOAD_COMPLETED", user["lang_code"]).format(
+                    torrent.name
+                )
+                log.info(
+                    "Sending message to user: %s, lang: %s, message: %s",
+                    user["chat_id"],
+                    user["lang_code"],
+                    message,
+                )
+                await app.bot.send_message(chat_id=user["chat_id"], text=message)
 
-    def add_torrent(self, chat_id, lang_code, torrent: BinaryIO | str, **kwargs: Any) -> Torrent:
+    def add_torrent(
+        self, chat_id, lang_code, torrent: BinaryIO | str, **kwargs: Any
+    ) -> Torrent:
         """Add torrent to transmission server"""
         _torrent = super().add_torrent(torrent, **kwargs)
 
         # Add torrent to download queue
-        TransmissionClient.DOWNLOAD_QUEUE[_torrent.id] = {"chat_id": chat_id,
-                                                          "lang_code": lang_code}
+        TransmissionClient.DOWNLOAD_QUEUE[_torrent.id] = {
+            "chat_id": chat_id,
+            "lang_code": lang_code,
+        }
 
         return _torrent
 

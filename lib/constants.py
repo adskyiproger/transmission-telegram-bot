@@ -9,10 +9,10 @@ from pathlib import Path
 BOT_FOLDER = str(Path(__file__).parent.parent)
 
 # Configuration file
-CONFIG_FILE = os.path.join(BOT_FOLDER, 'config', 'torrentino.yaml')
+CONFIG_FILE = os.path.join(BOT_FOLDER, "config", "torrentino.yaml")
 
 # Translation file
-LANGUAGE_FILE = os.path.join(BOT_FOLDER, 'lib', 'torrentino.lang')
+LANGUAGE_FILE = os.path.join(BOT_FOLDER, "lib", "torrentino.lang")
 
 # Use this language if client language doesn't mach with any of
 # supported languages
@@ -27,5 +27,5 @@ QUEUE_CHECK_INTERVAL = 60
 # browsing torrent, search results, download history, etc
 POSTS_PER_PAGE = 5
 
-# How long keep search results cached? 
+# How long keep search results cached?
 CACHE_TIMEOUT = 3600

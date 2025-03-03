@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 from models.SearchBase import SearchBase
 from typing import List
 
+
 class SearchNonameClub(SearchBase):
     LOGIN_NEEDED = True
     TRACKER_NAME = "nnmclub"
@@ -19,19 +20,19 @@ class SearchNonameClub(SearchBase):
     def search(self, search_string: str) -> List:
         """Search data on the web"""
 
-        _data = self.get_data(search_string).select('table.forumline > tbody > tr')
+        _data = self.get_data(search_string).select("table.forumline > tbody > tr")
         self.log.debug(_data)
         self.log.info("Found %s posts", len(_data))
 
         posts = []
         for row in _data:
             try:
-                _cols = row.select('td')
-                TITLE = _cols[2].text.replace(r'<', '')
-                INFO = _cols[2].select('a')[0].get('href')
-                DL = _cols[4].select('a')[0].get('href')
-                SIZE = "".join(_cols[5].text.split(' ')[1:])
-                DATE = "".join(_cols[9].text.split(' ')[1:])[0:10]
+                _cols = row.select("td")
+                TITLE = _cols[2].text.replace(r"<", "")
+                INFO = _cols[2].select("a")[0].get("href")
+                DL = _cols[4].select("a")[0].get("href")
+                SIZE = "".join(_cols[5].text.split(" ")[1:])
+                DATE = "".join(_cols[9].text.split(" ")[1:])[0:10]
                 authorized = False
                 for key in self.session.cookies.get_dict().keys():
                     if key.startswith("phpbb2mysql"):
@@ -42,17 +43,22 @@ class SearchNonameClub(SearchBase):
                 else:
                     SEEDS = _cols[6].text
                     LEACH = _cols[7].text
-                self.log.debug(f"COL T: {TITLE} L:{str(INFO)} DL:{str(DL)} S:{str(SIZE)} D:{str(DATE)}")
+                self.log.debug(
+                    f"COL T: {TITLE} L:{str(INFO)} DL:{str(DL)} S:{str(SIZE)} D:{str(DATE)}"
+                )
 
-                posts.append({
-                    'tracker': self.TRACKER_NAME,
-                    'title': TITLE,
-                    'info': f"{self.TRACKER_URL}/forum/{INFO}",
-                    'dl': f"{self.TRACKER_URL}/forum/{DL}",
-                    'size': SIZE,
-                    'date': self.convert_date(DATE),
-                    'seed': SEEDS,
-                    'leach': LEACH})
+                posts.append(
+                    {
+                        "tracker": self.TRACKER_NAME,
+                        "title": TITLE,
+                        "info": f"{self.TRACKER_URL}/forum/{INFO}",
+                        "dl": f"{self.TRACKER_URL}/forum/{DL}",
+                        "size": SIZE,
+                        "date": self.convert_date(DATE),
+                        "seed": SEEDS,
+                        "leach": LEACH,
+                    }
+                )
             except Exception as e:
                 # seems that there is some problem with this tr, let's just continue to the next one
                 self.log.critical(e, exc_info=True)
