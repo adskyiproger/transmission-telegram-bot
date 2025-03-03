@@ -319,18 +319,14 @@ async def searchOnWebTracker(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Add warning message if something went wrong while searching on trackers
     if len(searcher.FAILED_SEARCH) > 0:
-        text += (
-            "\n--------------\n"
-            + trans("FAILED_SEARCH_ON_TRACKERS", lang_code)
-            + " "
-            + ", ".join(searcher.FAILED_SEARCH)
+        text += "\n--------------\n {0} {1}".format(
+            trans("FAILED_SEARCH_ON_TRACKERS", lang_code),
+            ", ".join(searcher.FAILED_SEARCH),
         )
     if len(searcher.FAILED_TRACKERS) > 0:
-        text += (
-            "\n--------------\n"
-            + trans("FAILED_INIT_TRACKERS", lang_code)
-            + " "
-            + ", ".join(searcher.FAILED_TRACKERS)
+        text += "\n--------------\n {0} {1}".format(
+            trans("FAILED_INIT_TRACKERS", lang_code),
+            ", ".join(searcher.FAILED_TRACKERS),
         )
 
     await context.bot.edit_message_text(

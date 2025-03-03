@@ -189,11 +189,13 @@ class BotConfigurator:
             warning_checks.append(
                 "You must pass the token you received from https://t.me/Botfather!"
             )
-        if not (
-            _.has(self.config, "transmission.host")
-            and _.has(self.config, "transmission.port")
-            and _.has(self.config, "transmission.user")
-            and _.has(self.config, "transmission.password")
+        if not all(
+            [
+                _.has(self.config, "transmission.host"),
+                _.has(self.config, "transmission.port"),
+                _.has(self.config, "transmission.user"),
+                _.has(self.config, "transmission.password"),
+            ]
         ):
             warning_checks.append(
                 "Provide add transmission configuration options to configuration file: host, user, password"

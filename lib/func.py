@@ -1,6 +1,6 @@
 import configparser
 import os
-import yaml
+
 import sys
 import tempfile
 import uuid

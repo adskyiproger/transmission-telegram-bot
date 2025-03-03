@@ -1,5 +1,3 @@
-from requests import get
-from bs4 import BeautifulSoup
 import logging
 
 # logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -35,17 +33,14 @@ class SearchKAT(SearchBase):
             DATE = _cols[2].text
 
             logger.debug(
-                "COL Title:"
-                + TITLE
-                + " L:"
-                + str(INFO)
-                + " DL:"
-                + str(DL)
-                + " S:"
-                + str(SIZE)
-                + " D:"
-                + str(DATE)
+                "Title: %s, Info: %s, DL: %s, Size: %s, Date: %s",
+                TITLE,
+                INFO,
+                DL,
+                SIZE,
+                DATE,
             )
+
             self.POSTS.append(
                 {
                     "tracker": self.TRACKER_NAME,

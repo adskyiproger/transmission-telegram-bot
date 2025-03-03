@@ -1,4 +1,3 @@
-from bs4 import BeautifulSoup
 from models.SearchBase import SearchBase
 from typing import List
 
@@ -54,16 +53,12 @@ class SearchRUTOR(SearchBase):
                 else:
                     SEEDS = LEACH = 0
                 self.log.debug(
-                    "COL Title:"
-                    + TITLE
-                    + " L:"
-                    + str(INFO)
-                    + " DL:"
-                    + str(DL)
-                    + " S:"
-                    + str(SIZE)
-                    + " D:"
-                    + str(DATE)
+                    "Title: %s, Info: %s, DL: %s, Size: %s, Date: %s",
+                    TITLE,
+                    INFO,
+                    DL,
+                    SIZE,
+                    DATE,
                 )
 
                 posts.append(
