@@ -20,6 +20,8 @@ pydash = "*"
 flake8 = "*"
 black = "*"
 mypy = "*"
+types-PyYAML = "*"
+types-requests = "*"
 
 [requires]
 python_version = "3.13"

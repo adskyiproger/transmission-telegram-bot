@@ -1,7 +1,8 @@
 import hashlib
 import pydash as _
 import time
-from typing import List, Dict
+
+from typing import List, Dict, Any
 from models.SearchNonameClub import SearchNonameClub
 from models.SearchRutracker import SearchRutracker
 from models.SearchRUTOR import SearchRUTOR
@@ -23,18 +24,18 @@ class SearchTorrents:
     """
 
     # Key to sort search results
-    sort_by = "size"
+    sort_by: str = "size"
     # reverse sort order
-    SORT_REVERSE = True
+    SORT_REVERSE: bool = True
     # CREDENTIALS: {
     # "trakcer_name": {
     #     "user": <user name>,
     #     "password": <password>
     # }}
     # TODO: For 2-factor auth we need to implement authentication with phpbb tokens
-    CREDENTIALS = {}
+    CREDENTIALS: Dict[str, Any] = {}
     # List of available trackers
-    TRACKER_CLASSES = {
+    TRACKER_CLASSES: Dict[str, Any] = {
         "nnmclub": SearchNonameClub,
         "rutracker": SearchRutracker,
         "rutor": SearchRUTOR,
@@ -45,16 +46,16 @@ class SearchTorrents:
 
     # Variable for storing search results in cache
     # Cached items
-    CACHE = {}
+    CACHE: Dict[str, Any] = {}
     # Time of adding search results to cache
-    CACHE_TIMER = {}
+    CACHE_TIMER: Dict[str, Any] = {}
 
     def __init__(self, credentials: dict, sort_by: str) -> None:
         self.CREDENTIALS = credentials
         self.sort_by = sort_by
-        self._trackers = dict()
-        self.FAILED_SEARCH = []
-        self.FAILED_TRACKERS = []
+        self._trackers: Dict[str, Any] = {}
+        self.FAILED_SEARCH: List[str] = []
+        self.FAILED_TRACKERS: List[str] = []
 
     @property
     def trackers(self) -> Dict[str, SearchBase]:

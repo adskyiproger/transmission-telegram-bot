@@ -291,7 +291,7 @@ async def searchOnWebTracker(update: Update, context: ContextTypes.DEFAULT_TYPE)
         return
     # 3. Display dumb message while search is running, so user will understand all is good
     msg = await update.message.reply_text(
-        text=trans("DOING_SEARCH", lang_code) + " " + update.message.text
+        text=trans("DOING_SEARCH", lang_code) + " " + str(update.message.text)
     )
 
     # Create search object

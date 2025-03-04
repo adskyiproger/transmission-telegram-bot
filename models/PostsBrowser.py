@@ -3,7 +3,7 @@ from models.Browser import Browser
 
 
 class PostsBrowser(Browser):
-    def get_page(self, _page: int = None) -> str:
+    def get_page(self, _page: int | None = None) -> str:
         if not _page:
             _page = self.prev_page
 

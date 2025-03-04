@@ -1,5 +1,5 @@
 import requests
-from typing import List
+from typing import List, Any, Dict
 from bs4 import BeautifulSoup
 
 from lib.func import get_logger, save_torrent_to_tempfile
@@ -9,18 +9,18 @@ bot_config = BotConfigurator()
 
 
 class SearchBase:
-    LOGGED_IN = False
-    LOGIN_NEEDED = False
-    TRACKER_LOGIN_FIELDS = {
+    LOGGED_IN: bool = False
+    LOGIN_NEEDED: bool = False
+    TRACKER_LOGIN_FIELDS: Dict[str, Any] = {
         "username": "username",
         "password": "password",
         "meta": {"login": None},
     }
-    POSTS = []
-    TRACKER_NAME = "dummy"
-    TRACKER_LOGIN_URL = None
-    TRACKER_URL = None
-    TRACKER_SEARCH_URL_TPL = None
+    POSTS: List[Any] = []
+    TRACKER_NAME: str = "dummy"
+    TRACKER_LOGIN_URL: str | None = None
+    TRACKER_URL: str | None = None
+    TRACKER_SEARCH_URL_TPL: str | None = None
 
     _log = None
 
@@ -37,7 +37,7 @@ class SearchBase:
 
     def get_data(self, search_string: str):
         self.log.info("Searching for %s on %s", search_string, self.TRACKER_NAME)
-        search_url = self.TRACKER_URL + self.TRACKER_SEARCH_URL_TPL + search_string
+        search_url = f"{self.TRACKER_URL} {self.TRACKER_SEARCH_URL_TPL} {search_string}"
         return BeautifulSoup(self.session.get(search_url, timeout=10).content, "lxml")
 
     @property

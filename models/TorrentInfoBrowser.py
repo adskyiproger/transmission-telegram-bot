@@ -7,7 +7,7 @@ from transmission_rpc.torrent import Torrent
 class TorrentInfoBrowser(Browser):
     def __init__(
         self,
-        user_id: int = None,
+        user_id: int | None = None,
         user_lang: str | Any | None = "en",
         posts: Torrent = None,
         posts_per_page: int = 5,
@@ -20,7 +20,7 @@ class TorrentInfoBrowser(Browser):
         self.posts_per_page = posts_per_page
         self.prev_page = 1
 
-    def get_page(self, _page: int = None) -> str:
+    def get_page(self, _page: int | None = None) -> str:
         if not _page:
             _page = self.prev_page
 

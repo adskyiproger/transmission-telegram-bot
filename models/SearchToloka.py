@@ -13,7 +13,7 @@ class SearchToloka(SearchBase):
         _data = self.get_data(search_string).select("table.forumline")
 
         if len(_data) != 2:
-            return False
+            return []
         rows = _data[1].select("tr")
         self.log.debug(rows)
         """Search data on the web"""
