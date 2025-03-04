@@ -14,7 +14,8 @@ class TorrentsListBrowser(Browser):
         )
         _message += "\n---------------------\n"
         post_num = (page - 1) * self.posts_per_page
-        for torrent in self.posts[post_num : post_num + self.posts_per_page]:
+        post_end = post_num + self.posts_per_page
+        for torrent in self.posts[post_num:post_end]:
             _message += f"<b>{torrent.name}</b>\n"
             _status = trans(torrent.status, self.user_lang)
             _message += trans("PROGRESS_STATUS", self.user_lang).format(

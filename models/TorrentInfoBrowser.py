@@ -34,8 +34,9 @@ class TorrentInfoBrowser(Browser):
         ).format(page, self.number_of_pages, self.len)
         _message += "\n[▶ /start_{0}][⏹ /stop_{0}][⏏ /delete_{0}]".format(self.id)
         _message += "\n--------------\n"
+        post_end = post_num + self.posts_per_page
 
-        for file in self.posts[post_num : post_num + self.posts_per_page]:
+        for file in self.posts[post_num:post_end]:
             _message += f"{file.name}: completed/size: {bytes_to_human(file.completed)}/{bytes_to_human(file.size)} Bytes \n"
             post_num += 1
         return _message

@@ -19,6 +19,7 @@ pydash = "*"
 [dev-packages]
 flake8 = "*"
 black = "*"
+mypy = "*"
 
 [requires]
 python_version = "3.13"

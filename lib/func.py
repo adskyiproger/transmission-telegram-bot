@@ -28,7 +28,7 @@ def trans(text, lang_code) -> str:
 
 
 def get_logger(
-    class_name: str, log_level: str = None, log_file: str = None
+    class_name: str, log_level: str | None = None, log_file: str = None
 ) -> logging.Logger:
     if not log_level:
         log_level = os.environ.get("log_level", "INFO").upper()
@@ -46,7 +46,7 @@ def get_logger(
         )
     logging.basicConfig(
         format="[%(asctime)s] [%(levelname)s] %(name)s %(message)s",
-        level=logging.getLevelName(log_level),
+        level=log_level,
         handlers=log_handlers,
     )
     # Silence for httpx

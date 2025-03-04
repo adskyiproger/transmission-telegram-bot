@@ -43,8 +43,10 @@ class SearchTorrents:
         "toloka": SearchToloka,
     }
 
-    # Variable for storing search results
+    # Variable for storing search results in cache
+    # Cached items
     CACHE = {}
+    # Time of adding search results to cache
     CACHE_TIMER = {}
 
     def __init__(self, credentials: dict, sort_by: str) -> None:
@@ -87,11 +89,9 @@ class SearchTorrents:
     def search(self, search_string: str) -> List:
         """Check Cached search results and do search if nothing found in cache"""
         srch_hash = hashlib.md5(str(search_string).encode("utf-8")).hexdigest()
-
-        if (
-            _.get(self.CACHE_TIMER, srch_hash, time.time() - CACHE_TIMEOUT * 2)
-            < time.time() - CACHE_TIMEOUT
-        ):
+        # Get time of adding search results to cache
+        cache_added_time = _.get(self.CACHE_TIMER, srch_hash, time.time() - CACHE_TIMEOUT * 2)
+        if cache_added_time < time.time() - CACHE_TIMEOUT:
             self.CACHE_TIMER[srch_hash] = time.time()
             self.CACHE[srch_hash] = self._search(search_string)
         return self.sort(self.CACHE[srch_hash])

@@ -14,7 +14,8 @@ class PostsBrowser(Browser):
         )
         # Add first and last posts index
         post_num = (page - 1) * self.posts_per_page
-        for post in self.posts[post_num : post_num + self.posts_per_page]:
+        post_end = post_num + self.posts_per_page
+        for post in self.posts[post_num:post_end]:
             _message += (
                 f"\n<b>{post['title']}</b>: \n"
                 f"{post['size']}  {post['date']} ⬆{post['seed']} ⬇{post['leach']}\n"
