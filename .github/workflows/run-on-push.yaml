@@ -40,4 +40,4 @@ jobs:
               pipenv install --dev
           - name: MyPy
             run: |
-              pipenv run mypy
+              pipenv run mypy .
