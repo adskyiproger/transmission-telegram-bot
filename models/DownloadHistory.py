@@ -7,6 +7,7 @@ log = get_logger("DownloadHistory")
 class DownloadHistory:
     download_log_file = "download.log"
 
+    @staticmethod
     def show():
         logs = ""
         if not os.path.isfile(DownloadHistory.download_log_file):

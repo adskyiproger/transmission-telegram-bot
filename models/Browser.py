@@ -1,3 +1,4 @@
+from typing import Any, List
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 from lib.func import get_logger
@@ -8,12 +9,12 @@ class Browser:
     def __init__(
         self,
         user_id: int = None,
-        user_lang: str = "en",
-        posts: dict = None,
+        user_lang: str | Any | None = None,
+        posts: List = None,
         posts_per_page: int = POSTS_PER_PAGE,
     ) -> None:
         self.user_id = user_id
-        self.user_lang = user_lang
+        self.user_lang = user_lang or "en"
         self.posts = posts
         self.posts_per_page = posts_per_page
         self.prev_page = 1

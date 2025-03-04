@@ -90,7 +90,9 @@ class SearchTorrents:
         """Check Cached search results and do search if nothing found in cache"""
         srch_hash = hashlib.md5(str(search_string).encode("utf-8")).hexdigest()
         # Get time of adding search results to cache
-        cache_added_time = _.get(self.CACHE_TIMER, srch_hash, time.time() - CACHE_TIMEOUT * 2)
+        cache_added_time = _.get(
+            self.CACHE_TIMER, srch_hash, time.time() - CACHE_TIMEOUT * 2
+        )
         if cache_added_time < time.time() - CACHE_TIMEOUT:
             self.CACHE_TIMER[srch_hash] = time.time()
             self.CACHE[srch_hash] = self._search(search_string)

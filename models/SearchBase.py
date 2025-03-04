@@ -80,7 +80,7 @@ class SearchBase:
 
         return self._session
 
-    def search(self) -> List:
+    def search(self, _: str) -> List:
         return []
 
     @property

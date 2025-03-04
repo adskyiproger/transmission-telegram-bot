@@ -28,7 +28,7 @@ def trans(text, lang_code) -> str:
 
 
 def get_logger(
-    class_name: str, log_level: str | None = None, log_file: str = None
+    class_name: str, log_level: str | None = None, log_file: str | None = None
 ) -> logging.Logger:
     if not log_level:
         log_level = os.environ.get("log_level", "INFO").upper()
@@ -39,11 +39,12 @@ def get_logger(
         # First run: create directory
         if not os.path.isdir(os.path.dirname(log_file)):
             os.makedirs(os.path.dirname(log_file))
-        log_handlers.append(
-            logging.handlers.RotatingFileHandler(
-                filename=log_file, maxBytes=(1048576 * 5), backupCount=1
-            )
-        )
+        # TODO: Check if this code is working
+        # log_handlers.append(
+        #     logging.handlers.RotatingFileHandler(
+        #         filename=log_file, maxBytes=(1048576 * 5), backupCount=1
+        #     )
+        # )
     logging.basicConfig(
         format="[%(asctime)s] [%(levelname)s] %(name)s %(message)s",
         level=log_level,
@@ -77,7 +78,7 @@ def bytes_to_human(size_bytes: int) -> str:
         return "%s%s" % (s, size_names[i])
     except TypeError as err:
         log.warning("Wrong value for conversion to bytes %s: %s", size_bytes, err)
-        return size_bytes
+        return str(size_bytes)
 
 
 def save_file(path: str, content: bytes):
@@ -102,15 +103,16 @@ def save_torrent_to_tempfile(content: bytes) -> str:
     return temp_file
 
 
-def human_to_bytes(size_human: str) -> int:
+def human_to_bytes(size_human: str) -> int | str | None:
     try:
         size, size_name = size_human[:-2], size_human[-2:]
         if size_name in size_names:
             i = size_names.index(size_name)
             p = math.pow(1024, i)
             return int(float(size) * p)
-    except TypeError:
         return size_human
+    except TypeError:
+        return None
 
 
 log = get_logger("function")

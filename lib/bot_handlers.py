@@ -303,7 +303,7 @@ async def searchOnWebTracker(update: Update, context: ContextTypes.DEFAULT_TYPE)
     posts = PostsBrowser(
         user_id=msg.chat_id,
         user_lang=lang_code,
-        posts=searcher.search(update.message.text),
+        posts=searcher.search(str(update.message.text)),
     )
     context.user_data["nav_type"] = "posts"
     context.user_data["posts"] = posts
@@ -449,6 +449,7 @@ async def addNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def welcomeNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    assert update.message.text is not None
     hash_code = update.message.text.replace("/start welcome_", "")
     if hash_code in WELCOME_HASHES and update.message.chat.id:
         bot_config.add_user(update.message.chat.id)

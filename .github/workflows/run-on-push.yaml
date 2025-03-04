@@ -28,12 +28,16 @@ jobs:
         steps:
           - name: Checkout code
             uses: actions/checkout@v2
-
-          - name: Get the short commit SHA
-            id: get_commit_sha
-            run: echo "commit_sha=$(git rev-parse HEAD | cut -c 1-7)" >> $GITHUB_OUTPUT
-            
-          - name: Use the commit SHA
+          - name: Set up Python
+            uses: actions/setup-python@v2
+            with:
+              python-version: 3.13
+  
+          - name: Install dependencies
             run: |
-                echo "The short commit SHA is ${{ steps.get_commit_sha.outputs.commit_sha }}"
-                env
+              pip install --user pipenv && \
+              pipenv install && \
+              pipenv install --dev
+          - name: MyPy
+            run: |
+              pipenv run mypy

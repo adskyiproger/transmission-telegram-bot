@@ -1,14 +1,14 @@
+from typing import Any
 from lib.func import trans, bytes_to_human
 from models.Browser import Browser
 from transmission_rpc.torrent import Torrent
 
 
 class TorrentInfoBrowser(Browser):
-
     def __init__(
         self,
         user_id: int = None,
-        user_lang: str = "en",
+        user_lang: str | Any | None = "en",
         posts: Torrent = None,
         posts_per_page: int = 5,
     ) -> None:

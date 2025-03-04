@@ -1,10 +1,9 @@
 import asyncio
 import threading
 import time
-
+from typing import Union, Dict, Any, BinaryIO
 from copy import deepcopy
 from telegram.ext import Application
-from typing import Any, BinaryIO
 from typing_extensions import Literal
 from transmission_rpc.client import Client
 from transmission_rpc.torrent import Torrent
@@ -26,18 +25,18 @@ class TransmissionClient(Client):
     - notify user on torrent download done
     """
 
-    DOWNLOAD_QUEUE = {}
+    DOWNLOAD_QUEUE: Dict[str, Any] = {}
 
     def __init__(
         self,
         *,
         protocol: Literal["http", "https"] = "http",
-        username: str = None,
-        password: str = None,
+        username: str | None = None,
+        password: str | None = None,
         host: str = "127.0.0.1",
         port: int = 9091,
         path: str = "/transmission/",
-        telegram_token: str = None
+        telegram_token: str | None = None
     ):
         self.telegram_token = telegram_token
         # Background thread for tracking torrent status
@@ -97,8 +96,8 @@ class TransmissionClient(Client):
                 await app.bot.send_message(chat_id=user["chat_id"], text=message)
 
     def add_torrent(
-        self, chat_id, lang_code, torrent: BinaryIO | str, **kwargs: Any
-    ) -> Torrent:
+        self, chat_id, lang_code, torrent: Union[BinaryIO, str], **kwargs: Any
+    ) -> Torrent:  # type: ignore[override]
         """Add torrent to transmission server"""
         _torrent = super().add_torrent(torrent, **kwargs)
 
