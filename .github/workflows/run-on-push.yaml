@@ -3,6 +3,19 @@ name: Run Linters and Checkers
 on:
   push
 jobs:
+    test:
+      runs-on: ubuntu-latest
+      steps:
+      - run: |
+          pwd
+          ls -la
+          env
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - run: |
+          pwd
+          ls -la
+          env
     flake8:
         runs-on: ubuntu-latest
         steps:
