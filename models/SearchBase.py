@@ -35,9 +35,9 @@ class SearchBase:
     def get_status(self):
         pass
 
-    def get_data(self, search_string: str):
+    def get_data(self, search_string: str) -> BeautifulSoup:
         self.log.info("Searching for %s on %s", search_string, self.TRACKER_NAME)
-        search_url = f"{self.TRACKER_URL} {self.TRACKER_SEARCH_URL_TPL} {search_string}"
+        search_url = f"{self.TRACKER_URL}{self.TRACKER_SEARCH_URL_TPL}{search_string}"
         return BeautifulSoup(self.session.get(search_url, timeout=10).content, "lxml")
 
     @property

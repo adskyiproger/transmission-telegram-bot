@@ -5,7 +5,7 @@ from typing import List
 class SearchRUTOR(SearchBase):
     TRACKER_NAME = "rutor"
     TRACKER_URL = "http://rutor.info"
-    TRACKER_SEARCH_URL_TPL = "/search/0/0/000/0/"
+    TRACKER_SEARCH_URL_TPL = "/search/"
 
     def convert_date(self, date: str):
         _date = date.split("\xa0")

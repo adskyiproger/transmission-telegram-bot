@@ -257,10 +257,9 @@ class BotConfigurator:
 
         return self
 
-    def add_user(self, id: int) -> "BotConfigurator" | None:
+    def add_user(self, id: int) -> "BotConfigurator":
         if id not in self.config["bot"]["allowed_users"]:
             log.info("Adding user_id %s to allowed users", id)
             self._config["bot"]["allowed_users"].append(id)
             self.save_config()
-            return self
-        return None
+        return self
