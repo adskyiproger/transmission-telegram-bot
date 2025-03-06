@@ -16,6 +16,9 @@ jobs:
           pwd
           ls -la
           env
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+
     flake8:
         runs-on: ubuntu-latest
         steps:
