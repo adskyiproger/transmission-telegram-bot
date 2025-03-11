@@ -145,7 +145,7 @@ class BotConfigurator:
             log.info("Configuration file %s not found", BotConfigurator.config_file)
             try:
                 template_file = os.path.join(
-                    BOT_FOLDER, "templates", "torrentino.template.yaml"
+                    BOT_FOLDER, "templates", "torrentino.yaml"
                 )
                 os.makedirs(os.path.dirname(BotConfigurator.config_file), exist_ok=True)
                 shutil.copy(template_file, BotConfigurator.config_file)
