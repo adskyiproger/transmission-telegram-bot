@@ -26,7 +26,7 @@ class TransmissionClient(Client):
     """
 
     DOWNLOAD_QUEUE: Dict[str, Any] = {}
-
+    SCHEDULER = None
     def __init__(
         self,
         *,
@@ -40,8 +40,9 @@ class TransmissionClient(Client):
     ):
         self.telegram_token = telegram_token
         # Background thread for tracking torrent status
-        download_status_monitor = threading.Thread(target=self._between_callback)
-        download_status_monitor.start()
+        if not TransmissionClient.SCHEDULER:
+            TransmissionClient.SCHEDULER = threading.Thread(target=self._between_callback)
+            TransmissionClient.SCHEDULER.start()
 
         super().__init__(
             protocol=protocol,
@@ -52,10 +53,9 @@ class TransmissionClient(Client):
             path=path,
         )
 
-    def _between_callback(self):
+    def _between_callback(self) -> None:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-
         loop.run_until_complete(self._download_status_monitor())
         loop.close()
 
@@ -69,8 +69,13 @@ class TransmissionClient(Client):
             app = Application.builder().token(self.telegram_token).build()
             download_queue = deepcopy(TransmissionClient.DOWNLOAD_QUEUE)
             for torrent_id in download_queue.keys():
-                status = self.status(torrent_id)
-                if not status.seeding:
+                try:
+                    status = self.status(torrent_id)
+                    if not status.seeding:
+                        continue
+                except KeyError:
+                    del TransmissionClient.DOWNLOAD_QUEUE[torrent_id]
+                    log.warning("Torrent %s doesn't exist on server, cleaning up download queue", torrent_id)
                     continue
                 user = TransmissionClient.DOWNLOAD_QUEUE[torrent_id]
                 torrent = self.get_torrent(torrent_id=torrent_id)

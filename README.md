@@ -32,40 +32,34 @@ Additionally you could setup home DLNA server like Jellyfin, Plex or MiniDLNA an
 
 (new will arrive soon)
 
+
+# Quick start with docker
+
+1. Install docker on Windows/Linux/MacOS. On Windows additionally enable WSL.
+2. Register new telegram bot using [@BotFather](https://t.me/botfather).
+   Save bot token value for later usage.
+3. On Linux/MacOS open terminal window (WSL on Windows):
+   Add environment variable `TOKEN`:
+   ```
+   export TOKEN=<your token>;
+   ```
+   Run bot:
+   ```
+   curl -o docker-compose.yaml https://raw.githubusercontent.com/adskyiproger/transmission-telegram-bot/refs/heads/develop/docker-compose.yaml && \
+   docker compose -f docker-compose.yaml up -d
+   ```
+4. Open telegram client and make sure you are able talk to your bot.
+
+In minimal configuration you will get search working for rutor.into tracker and download to docker volume by default.
+
+Next steps:
+- Configure folders to store torrents and downloads.
+- Check logs for any kind of issues:
+  ```
+  docker compose logs -f
+  ```
+
 # Installation
-
-
-## Quick start with docker
-
-1. Register new telegram bot using [@BotFather](https://t.me/botfather).
-2. Get your telegram user id using [@fredykardian](https://t.me/get_id_bot)
-3. Copy file `./templates/torrentino.sample.yaml` to any persistent folder,
-   for example `<Home directory>/transmission-bot/config`
-4. Update file:
-   - Add Bot token, take value from BotGather, for example:
-      ```yaml
-      bot:
-         # token, Use BotFather to create new token
-         token: "112XXXX78:AXXXXXXXXXXXXXXXXXXXXXXXXXXXw"
-      ```
-   - Add Super user id, take value from [@fredykardian](https://t.me/get_id_bot), for example:
-      ```yaml
-      bot:
-         ...
-         # Admin telegram account ID or comma separated IDs
-         # Use https://github.com/nadam/userinfobot to get your ID
-         super_user: "456721770"
-      ```
-5. Copy docker compose file (`docker-compose.yaml`) to any persistent folder,
-   for example `<Home directory>/transmission-bot/`
-6. Start containers:
-   ```
-   docker compose up -d
-   ```
-7. You should be able to talk to bot in telegram
-
-Next steps: Configure folders to store torrents and downloads.
-
 
 ## What you will need to run bot?
 1. **Hardware:**
@@ -77,7 +71,6 @@ Next steps: Configure folders to store torrents and downloads.
       - Any Windows, Mac OS, Linux, FreeBSD OS/distribution with Python 3.10+. Bot may also run on any other operating system with Python 3.10+ support.
       - Any OS with support for Docker 20.0.4+ and docker-compose 3+.
    - Transmission, please check available packages at: https://transmissionbt.com/download or use one of the available docker images
-   
    
 ## Preparation
 1. Register new telegram bot using [@BotFather](https://t.me/botfather).
@@ -116,20 +109,16 @@ Next steps: Configure folders to store torrents and downloads.
    ```
    git clone https://github.com/adskyiproger/transmission-telegram-bot.git
    ```
-2. Update torrentino.yaml configuration file. Follow up comments inside configuration file:
+2. Create torrentino.yaml configuration file. Follow up comments inside configuration file:
    ```
-   torrentino.yaml
+   mkdir -p config
+   cp templates/torrentino.yaml config/
    ```
 
-3. Build docker image:
+3. Modify docker compose and fill all required values
+4. Run docker compose:
    ```
-   docker build -t my-bot . 
-   ```
-4. Start docker container as daemon process:
-   ```
-   docker run -d -v `pwd`/torrentino.yaml:/usr/src/app/torrentino.yaml my-bot
-   ```
-5. Check container logs.
+   docker compose -f docker-compose.yaml up -d
 
 Optionally you can build an image chat includes the torrention.yaml using
    ```

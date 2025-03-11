@@ -26,19 +26,26 @@ services:
   #   restart: "unless-stopped"
   #   network_mode: "host"
   torrentino:
-    image: ghcr.io/adskyiproger/transmission-telegram-bot:latest
+    # image: ghcr.io/adskyiproger/transmission-telegram-bot:latest
+    image: tr
     container_name: transmission-telegram-bot
     # Transmission connection properties
     environment:
       # Transmission connection properties
-      - HOST=127.0.0.1
-      - PORT=9091
-      - USERNAME=test
-      - PASSWORD=test
+      - TRANSMISSION_HOST=transmission
+      - TRANSMISSION_PORT=9091
+      - TRANSMISSION_USER=test
+      - TRANSMISSION_PASSWORD=test
+      - TOKEN=${TOKEN}
     depends_on:
       - "transmission"
-    volumes:
-      - ./config-test:/usr/src/app/config
+    # Uncomment this line if you need to persist you configuration
+    # in local folder or docker volume
+    # volumes:
+    # 1. Local folder example
+    #   - ./config:/usr/src/app/config
+    # 2. Docker volume example
+    #   - config:/usr/src/app/config
   transmission:
     image: ghcr.io/linuxserver/transmission
     container_name: transmission
@@ -49,12 +56,17 @@ services:
       - TZ=Europe/London
       - USER=test
       - PASS=test
-    # Uncomment to add transmission external volumes
-    # volumes:
-    #   - <download folder on host>:/downloads
-    #   - <config folder on host>/transmission/config:/config
+    volumes:
+      # Modify this section to add external volumes
+      - downloads:/downloads
     ports:
       - 9091:9091
       - 51413:51413
       - 51413:51413/udp
     restart: unless-stopped
+
+# Temporal volume for testing
+# Please check: https://docs.docker.com/reference/compose-file/volumes/
+volumes:
+  downloads: {}
+  config: {}

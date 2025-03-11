@@ -4,7 +4,7 @@ bot:
 
   # Admin telegram account ID or comma separated IDs
   # Use https://github.com/nadam/userinfobot to get your ID
-  super_user: "<Your telegram account ID>"
+  # super_user: "<Your telegram account ID>"
 
   # List of your family and friends telegram account ID(s)
   # This list can be managed by user registration feature
@@ -19,8 +19,8 @@ bot:
   # - date, torrent adding date
   # - seed, number of seeders
   # - leach, number of leachers
-  # Results will be shown in reverse order, from latest to oldest, from biggest to smallest
-  sort_by: size
+  # Results will be shown in reverse order:
+  sort_by: seed
 
   # download_log_file, Download log, or History log will hold all downloads from the 
   # beginning of the time, If you decide to review what/when was downloaded, all information 

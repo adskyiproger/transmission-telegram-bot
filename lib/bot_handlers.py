@@ -238,11 +238,14 @@ async def addTorrentToTransmission(update: Update, context: ContextTypes.DEFAULT
         _file = await context.bot.getFile(context.user_data["torrent"]["file_id"])
         await _file.download_to_drive(_tmp_file_path)
         tmp_file_path = pathlib.Path(_tmp_file_path)
-    elif context.user_data["torrent"]["type"] in ["url", "magnet"]:
+    elif context.user_data["torrent"]["type"] in ["url"]:
         # Magnet URLs and regular URLs are processed by transmission
         tmp_file_path = context.user_data["torrent"]["url"]
+        # Magnet links don't require download
+        if str(context.user_data["torrent"]["url"]).startswith("magnet"):
+            tmp_file_path = context.user_data["torrent"]["url"]
         # If tracker has credential, download file and path file path to Transmission
-        if _.has(
+        elif _.has(
             bot_config.get("trackers"), _.get(context.user_data, "torrent.tracker")
         ):
             _tmp_file_path = get_search().download(
@@ -251,6 +254,7 @@ async def addTorrentToTransmission(update: Update, context: ContextTypes.DEFAULT
             )
 
             tmp_file_path = pathlib.Path(_tmp_file_path)
+    
     lang_code = query.from_user.language_code
     log.info("Adding file/URL %s to Transmission", tmp_file_path)
     message = query.message.text

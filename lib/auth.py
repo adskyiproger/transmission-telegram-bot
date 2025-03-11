@@ -24,6 +24,10 @@ def restricted(func):
             log.warning(f"Adding new super user {user_id}")
             bot_config.set("bot.super_user", user_id)
             bot_config.save_config()
+            await context.bot.send_message(
+                chat_id=user_id,
+                text=trans("WELCOME_SUPER_USER", update.message.from_user.language_code)
+            )
         # Check if user is allowed
         if user_id not in _.get(
             bot_config.config, "bot.allowed_users", []
