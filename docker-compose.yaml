@@ -5,7 +5,6 @@
 # - <download folder on host>, Path to download folder on host system
 # - <config folder on host>, Path to configuration folder on host system
 ---
-version: "2.1"
 services:
   # Uncomment to add jellyfin service
   # jellyfin:
@@ -30,12 +29,12 @@ services:
     image: ghcr.io/adskyiproger/transmission-telegram-bot:latest
     container_name: transmission-telegram-bot
     # Transmission connection properties
-    # environment:
+    environment:
       # Transmission connection properties
-      # - HOST=127.0.0.1
-      # - PORT=9091
-      # - USERNAME=<user>
-      # - PASSWORD=<passoword>
+      - HOST=127.0.0.1
+      - PORT=9091
+      - USERNAME=test
+      - PASSWORD=test
     depends_on:
       - "transmission"
     volumes:
@@ -48,8 +47,8 @@ services:
       # - PUID=<dnla uid>
       # - PGID=<dnla guid>
       - TZ=Europe/London
-      - USER=<transmission user name>
-      - PASS=<transmission user passoword>
+      - USER=test
+      - PASS=test
     # Uncomment to add transmission external volumes
     # volumes:
     #   - <download folder on host>:/downloads
