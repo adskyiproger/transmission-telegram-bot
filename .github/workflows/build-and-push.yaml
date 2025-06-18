@@ -5,6 +5,9 @@ on:
       image-tag:
         description: Image tag
         required: true
+  repository_dispatch:
+    types: [build_and_push]
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
