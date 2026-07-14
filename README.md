@@ -42,6 +42,9 @@ Additionally you could setup home DLNA server like Jellyfin, Plex or MiniDLNA an
    Add environment variable `TOKEN`:
    ```
    export TOKEN=<your token>;
+   export SUPER_USER=<your Telegram numeric user ID>;
+   export TRANSMISSION_USER=<Transmission username>;
+   export TRANSMISSION_PASSWORD=<strong Transmission password>;
    ```
    Run bot:
    ```
@@ -68,8 +71,8 @@ Next steps:
    - Bot and transmission will run on any hardware architecture including Apple M1/2 chips and ARMs.
 2. **Software:** 
    - Bot will work well on one of the following configuration:
-      - Any Windows, Mac OS, Linux, FreeBSD OS/distribution with Python 3.10+. Bot may also run on any other operating system with Python 3.10+ support.
-      - Any OS with support for Docker 20.0.4+ and docker-compose 3+.
+      - Any Windows, macOS, Linux, or FreeBSD system with Python 3.14.
+      - A current Docker Engine with the `docker compose` plugin.
    - Transmission, please check available packages at: https://transmissionbt.com/download or use one of the available docker images
    
 ## Preparation
@@ -93,7 +96,7 @@ Next steps:
 2. Update config/torrentino.yaml configuration file. Follow up comments inside configuration file:
    ```
    mkdir -p config
-   cp templates/torrentino.sample.yaml config/torrentino.yaml
+   cp templates/torrentino.yaml config/torrentino.yaml
    nano config/torrentino.yaml
    ```
 3. Run:
@@ -120,10 +123,8 @@ Next steps:
    ```
    docker compose -f docker-compose.yaml up -d
 
-Optionally you can build an image chat includes the torrention.yaml using
-   ```
-   docker build -f Dockerfile.nas -t my-bot . 
-   ```
+Configuration should be mounted at `/usr/src/app/config` or supplied through
+environment variables. Do not embed tokens or passwords in a container image.
 
 
 **Complete installation Guide for Raspberry Pi 4 can be found at [Home DLNA on Raspberry Pi4 setup guide](doc/Home-DNLA-setup.md)**
