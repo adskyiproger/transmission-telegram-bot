@@ -29,7 +29,7 @@ class SearchRUTOR(SearchBase):
             dd = _date[0]
             return f"{yyyy}-{mm}-{dd}"
         else:
-            self.log.warn("Date was not converted: %s", date)
+            self.log.warning("Date was not converted: %s", date)
             return date
 
     def search(self, search_string: str) -> List:

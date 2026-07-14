@@ -1,9 +1,8 @@
 import asyncio
 import threading
-import time
 from typing import Union, Dict, Any, BinaryIO
 from copy import deepcopy
-from telegram.ext import Application
+from telegram import Bot
 from typing_extensions import Literal
 from transmission_rpc.client import Client
 from transmission_rpc.torrent import Torrent
@@ -12,7 +11,6 @@ from lib.func import trans, get_logger
 from lib.constants import QUEUE_CHECK_INTERVAL
 
 from models.DownloadHistory import DownloadHistory
-
 
 log = get_logger("TransmissionClient")
 
@@ -26,7 +24,8 @@ class TransmissionClient(Client):
     """
 
     DOWNLOAD_QUEUE: Dict[str, Any] = {}
-    SCHEDULER = None
+    QUEUE_LOCK = threading.Lock()
+
     def __init__(
         self,
         *,
@@ -36,14 +35,9 @@ class TransmissionClient(Client):
         host: str = "127.0.0.1",
         port: int = 9091,
         path: str = "/transmission/",
-        telegram_token: str | None = None
+        telegram_token: str | None = None,
     ):
         self.telegram_token = telegram_token
-        # Background thread for tracking torrent status
-        if not TransmissionClient.SCHEDULER:
-            TransmissionClient.SCHEDULER = threading.Thread(target=self._between_callback)
-            TransmissionClient.SCHEDULER.start()
-
         super().__init__(
             protocol=protocol,
             username=username,
@@ -53,32 +47,35 @@ class TransmissionClient(Client):
             path=path,
         )
 
-    def _between_callback(self) -> None:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(self._download_status_monitor())
-        loop.close()
-
-    async def _download_status_monitor(self):
-        """Periodically check download queue"""
+    async def monitor_downloads(self, bot: Bot) -> None:
+        """Periodically check downloads for the lifetime of the Telegram app."""
         log.info("Initializing scheduler")
         while True:
-            time.sleep(QUEUE_CHECK_INTERVAL)
+            await asyncio.sleep(QUEUE_CHECK_INTERVAL)
             if not TransmissionClient.DOWNLOAD_QUEUE:
                 continue
-            app = Application.builder().token(self.telegram_token).build()
-            download_queue = deepcopy(TransmissionClient.DOWNLOAD_QUEUE)
+            with TransmissionClient.QUEUE_LOCK:
+                download_queue = deepcopy(TransmissionClient.DOWNLOAD_QUEUE)
             for torrent_id in download_queue.keys():
                 try:
-                    status = self.status(torrent_id)
+                    status = await asyncio.to_thread(self.status, torrent_id)
                     if not status.seeding:
                         continue
                 except KeyError:
-                    del TransmissionClient.DOWNLOAD_QUEUE[torrent_id]
-                    log.warning("Torrent %s doesn't exist on server, cleaning up download queue", torrent_id)
+                    with TransmissionClient.QUEUE_LOCK:
+                        TransmissionClient.DOWNLOAD_QUEUE.pop(torrent_id, None)
+                    log.warning(
+                        "Torrent %s doesn't exist on server, cleaning up download queue",
+                        torrent_id,
+                    )
                     continue
-                user = TransmissionClient.DOWNLOAD_QUEUE[torrent_id]
-                torrent = self.get_torrent(torrent_id=torrent_id)
+                with TransmissionClient.QUEUE_LOCK:
+                    user = TransmissionClient.DOWNLOAD_QUEUE.get(torrent_id)
+                if not user:
+                    continue
+                torrent = await asyncio.to_thread(
+                    self.get_torrent, torrent_id=torrent_id
+                )
 
                 log.info("Download completed: %s %s", torrent.name, status.seeding)
 
@@ -88,7 +85,8 @@ class TransmissionClient(Client):
                     torrent.download_dir,
                     torrent.size_when_done,
                 )
-                del TransmissionClient.DOWNLOAD_QUEUE[torrent_id]
+                with TransmissionClient.QUEUE_LOCK:
+                    TransmissionClient.DOWNLOAD_QUEUE.pop(torrent_id, None)
                 message = trans("DOWNLOAD_COMPLETED", user["lang_code"]).format(
                     torrent.name
                 )
@@ -98,7 +96,7 @@ class TransmissionClient(Client):
                     user["lang_code"],
                     message,
                 )
-                await app.bot.send_message(chat_id=user["chat_id"], text=message)
+                await bot.send_message(chat_id=user["chat_id"], text=message)
 
     def add_torrent(
         self, chat_id, lang_code, torrent: Union[BinaryIO, str], **kwargs: Any
@@ -107,10 +105,11 @@ class TransmissionClient(Client):
         _torrent = super().add_torrent(torrent, **kwargs)
 
         # Add torrent to download queue
-        TransmissionClient.DOWNLOAD_QUEUE[_torrent.id] = {
-            "chat_id": chat_id,
-            "lang_code": lang_code,
-        }
+        with TransmissionClient.QUEUE_LOCK:
+            TransmissionClient.DOWNLOAD_QUEUE[_torrent.id] = {
+                "chat_id": chat_id,
+                "lang_code": lang_code,
+            }
 
         return _torrent
 
