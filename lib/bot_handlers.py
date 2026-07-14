@@ -5,6 +5,7 @@ import time
 import pydash as _
 import asyncio
 import re
+import pathlib
 from telegram import Update
 from telegram.ext import ContextTypes
 from telegram.constants import ParseMode
@@ -255,7 +256,7 @@ async def addTorrentToTransmission(update: Update, context: ContextTypes.DEFAULT
         # Download file from telegram bot to temporal location
         _file = await context.bot.getFile(context.user_data["torrent"]["file_id"])
         await _file.download_to_drive(_tmp_file_path)
-        tmp_file_path = _tmp_file_path
+        tmp_file_path = pathlib.Path(_tmp_file_path)
     elif context.user_data["torrent"]["type"] in ["url"]:
         # Magnet URLs and regular URLs are processed by transmission
         tmp_file_path = context.user_data["torrent"]["url"]
@@ -271,7 +272,7 @@ async def addTorrentToTransmission(update: Update, context: ContextTypes.DEFAULT
                 context.user_data["torrent"]["url"],
                 context.user_data["torrent"]["tracker"],
             )
-            tmp_file_path = _tmp_file_path
+            tmp_file_path = pathlib.Path(_tmp_file_path)
 
     lang_code = query.from_user.language_code
     log.info("Adding file/URL %s to Transmission", tmp_file_path)
@@ -289,7 +290,10 @@ async def addTorrentToTransmission(update: Update, context: ContextTypes.DEFAULT
             str(query.data)
         )
     except Exception as err:
-        if "invalid or corrupt torrent file" in str(err):
+        if any(
+            error_text in str(err).lower()
+            for error_text in ("invalid or corrupt torrent file", "unrecognized info")
+        ):
             message += trans("ADDING_TORRENT_FILE_IS_CORRUPTED", lang_code)
         else:
             message += (
@@ -297,7 +301,7 @@ async def addTorrentToTransmission(update: Update, context: ContextTypes.DEFAULT
             )
         log.error("File %s was not added due to error %s", tmp_file_path, str(err))
     finally:
-        if isinstance(tmp_file_path, str) and os.path.isfile(tmp_file_path):
+        if isinstance(tmp_file_path, pathlib.Path) and tmp_file_path.is_file():
             os.unlink(tmp_file_path)
     await query.edit_message_text(text=message)
 
