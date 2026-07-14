@@ -1,1 +1,10 @@
 **/.git
+**/__pycache__
+**/*.py[cod]
+.github
+.mypy_cache
+.pytest_cache
+.venv
+config
+doc
+tests

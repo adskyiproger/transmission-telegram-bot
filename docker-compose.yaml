@@ -26,19 +26,21 @@ services:
   #   restart: "unless-stopped"
   #   network_mode: "host"
   torrentino:
-    # image: ghcr.io/adskyiproger/transmission-telegram-bot:latest
-    image: tr
+    image: ghcr.io/adskyiproger/transmission-telegram-bot:latest
     container_name: transmission-telegram-bot
     # Transmission connection properties
     environment:
       # Transmission connection properties
       - TRANSMISSION_HOST=transmission
       - TRANSMISSION_PORT=9091
-      - TRANSMISSION_USER=test
-      - TRANSMISSION_PASSWORD=test
-      - TOKEN=${TOKEN}
+      - TRANSMISSION_USER=${TRANSMISSION_USER:?set TRANSMISSION_USER}
+      - TRANSMISSION_PASSWORD=${TRANSMISSION_PASSWORD:?set TRANSMISSION_PASSWORD}
+      - TOKEN=${TOKEN:?set TOKEN}
+      - SUPER_USER=${SUPER_USER:?set SUPER_USER}
     depends_on:
-      - "transmission"
+      transmission:
+        condition: service_healthy
+    restart: unless-stopped
     # Uncomment this line if you need to persist you configuration
     # in local folder or docker volume
     # volumes:
@@ -47,15 +49,15 @@ services:
     # 2. Docker volume example
     #   - config:/usr/src/app/config
   transmission:
-    image: ghcr.io/linuxserver/transmission
+    image: lscr.io/linuxserver/transmission:4.1.1-r1-ls345
     container_name: transmission
     environment:
       # Uncomment to grant correct permissions
       # - PUID=<dnla uid>
       # - PGID=<dnla guid>
       - TZ=Europe/London
-      - USER=test
-      - PASS=test
+      - USER=${TRANSMISSION_USER:?set TRANSMISSION_USER}
+      - PASS=${TRANSMISSION_PASSWORD:?set TRANSMISSION_PASSWORD}
     volumes:
       # Modify this section to add external volumes
       - downloads:/downloads
@@ -64,6 +66,12 @@ services:
       - 51413:51413
       - 51413:51413/udp
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:9091/transmission/web/"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
 
 # Temporal volume for testing
 # Please check: https://docs.docker.com/reference/compose-file/volumes/
