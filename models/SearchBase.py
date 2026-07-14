@@ -1,4 +1,5 @@
 import requests
+from urllib.parse import quote
 from typing import List, Any, Dict
 from bs4 import BeautifulSoup
 
@@ -37,8 +38,13 @@ class SearchBase:
 
     def get_data(self, search_string: str) -> BeautifulSoup:
         self.log.info("Searching for %s on %s", search_string, self.TRACKER_NAME)
-        search_url = f"{self.TRACKER_URL}{self.TRACKER_SEARCH_URL_TPL}{search_string}"
-        return BeautifulSoup(self.session.get(search_url, timeout=10).content, "lxml")
+        search_url = (
+            f"{self.TRACKER_URL}{self.TRACKER_SEARCH_URL_TPL}"
+            f"{quote(search_string, safe='')}"
+        )
+        response = self.session.get(search_url, timeout=10)
+        response.raise_for_status()
+        return BeautifulSoup(response.content, "lxml")
 
     @property
     def session(self) -> requests.Session:
@@ -59,13 +65,12 @@ class SearchBase:
                 proxies["http"] = bot_config.get("proxy.url")
                 proxies["https"] = bot_config.get("proxy.url")
             self._session.proxies.update(proxies)
-            self._session.verify = False
+            self._session.verify = bot_config.get("proxy.verify_tls", True)
 
         if not self.TRACKER_LOGIN_URL:
             return self._session
 
         self.log.info("Loggin in %s", self.TRACKER_LOGIN_URL)
-        self.log.debug("%s %s", self.username, self.password)
         username_field = self.TRACKER_LOGIN_FIELDS["username"]
         password_field = self.TRACKER_LOGIN_FIELDS["password"]
 
@@ -76,7 +81,8 @@ class SearchBase:
             "sid": "",
             "login": "Login",
         }
-        self._session.post(self.TRACKER_LOGIN_URL, data=payload, timeout=10)
+        response = self._session.post(self.TRACKER_LOGIN_URL, data=payload, timeout=10)
+        response.raise_for_status()
 
         return self._session
 
@@ -90,6 +96,10 @@ class SearchBase:
         return self._log
 
     def download(self, file_url: str) -> str:
-        content = self.session.get(file_url, allow_redirects=True).content
         self.log.info("Downloading file %s with authorization", file_url)
-        return save_torrent_to_tempfile(content)
+        response = self.session.get(file_url, allow_redirects=True, timeout=30)
+        response.raise_for_status()
+        max_size = int(bot_config.get("bot.max_torrent_size", 10 * 1024 * 1024))
+        if len(response.content) > max_size:
+            raise ValueError("Downloaded torrent exceeds configured size limit")
+        return save_torrent_to_tempfile(response.content)

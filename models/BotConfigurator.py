@@ -1,21 +1,18 @@
 import os
 import yaml
 import sys
-import asyncio
 import pydash as _
 from typing import Dict, Any
 import argparse
 import shutil
 from lib.func import get_logger
 from telegram import (
-    Bot,
     ReplyKeyboardMarkup,
     KeyboardButton,
     ReplyKeyboardRemove,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
 )
-from telegram.error import InvalidToken
 from lib.constants import CONFIG_FILE, BOT_FOLDER
 
 log = get_logger("BotConfigurator")
@@ -25,7 +22,7 @@ class BotConfigurator:
 
     config_file = CONFIG_FILE
     args = None
-    _init_args = False
+    _runtime_overrides: Dict[str, Any] = {}
 
     def __init__(self) -> None:
         if not BotConfigurator.config_file:
@@ -35,11 +32,6 @@ class BotConfigurator:
             raise ValueError("BotConfigurator.config_file not set")
         self.commands = None
         self._config = None
-
-        if BotConfigurator._init_args:
-            # Make sure this logic will run only once
-            BotConfigurator._init_args = False
-            self.init_args()
 
     @staticmethod
     def argparser():
@@ -72,6 +64,12 @@ class BotConfigurator:
             type=str,
             default=os.getenv("TOKEN"),
             help="Token received from https://t.me/Botfather!",
+        )
+        parser.add_argument(
+            "--super-user",
+            type=int,
+            default=os.getenv("SUPER_USER"),
+            help="Telegram user ID allowed to administer the bot",
         )
         parser.add_argument(
             "--transmission-host",
@@ -116,22 +114,23 @@ class BotConfigurator:
         )
         BotConfigurator.args = parser.parse_args()
         BotConfigurator.config_file = BotConfigurator.args.config_file or CONFIG_FILE
-        BotConfigurator._init_args = True
+        BotConfigurator._runtime_overrides = {
+            "bot.token": BotConfigurator.args.token,
+            "bot.super_user": BotConfigurator.args.super_user,
+            "bot.log_file": BotConfigurator.args.log,
+            "bot.log_level": BotConfigurator.args.log_level,
+            "bot.download_log_file": BotConfigurator.args.download_log,
+            "transmission.host": BotConfigurator.args.transmission_host,
+            "transmission.port": BotConfigurator.args.transmission_port,
+            "transmission.user": BotConfigurator.args.transmission_user,
+            "transmission.password": BotConfigurator.args.transmission_password,
+        }
 
     def init_args(self):
-        args = BotConfigurator.args
-        args_list = {
-            "bot.token": args.token,
-            "bot.log_file": args.log,
-            "bot.log_level": args.log_level,
-            "bot.download_log_file": args.download_log,
-            "transmission.host": args.transmission_host,
-            "transmission.port": args.transmission_port,
-            "transmission.user": args.transmission_user,
-            "transmission.password": args.transmission_password,
-        }
-        for k in args_list:
-            self.set(k, args_list[k])
+        """Apply CLI/environment values in memory without persisting secrets."""
+        for path, value in BotConfigurator._runtime_overrides.items():
+            if value is not None:
+                _.set_(self._config, path, value)
 
     @property
     def config(self) -> Dict:
@@ -144,9 +143,7 @@ class BotConfigurator:
         if not os.path.exists(BotConfigurator.config_file):
             log.info("Configuration file %s not found", BotConfigurator.config_file)
             try:
-                template_file = os.path.join(
-                    BOT_FOLDER, "templates", "torrentino.yaml"
-                )
+                template_file = os.path.join(BOT_FOLDER, "templates", "torrentino.yaml")
                 os.makedirs(os.path.dirname(BotConfigurator.config_file), exist_ok=True)
                 shutil.copy(template_file, BotConfigurator.config_file)
                 log.info(
@@ -162,8 +159,9 @@ class BotConfigurator:
                 )
                 log.critical("Stopping bot startup...")
                 sys.exit(1)
-        with open(BotConfigurator.config_file, "r") as config_file:
-            self._config = yaml.load(config_file, Loader=yaml.FullLoader)
+        with open(BotConfigurator.config_file, "r", encoding="utf-8") as config_file:
+            self._config = yaml.safe_load(config_file) or {}
+        self.init_args()
 
         return self._config
 
@@ -171,35 +169,40 @@ class BotConfigurator:
         if not (value and value != _.get(self.config, path)):
             return
         _.set_(self._config, path, value)
-        log.info("Added configuration value: %s = %s", path, value)
+        if path in {"bot.token", "transmission.password"} or path.endswith("password"):
+            log.info("Updated sensitive configuration value: %s", path)
+        else:
+            log.info("Updated configuration value: %s = %s", path, value)
         self.save_config()
 
-    def get(self, path: str, default: Any = None) -> Dict:
+    def get(self, path: str | list[str], default: Any = None) -> Any:
         return _.get(self.config, path, default)
 
     def save_config(self) -> None:
         log.info("Updating configuration file: %s", self.config_file)
-        with open(self.config_file, "w") as f:
-            yaml.dump(self._config, f)
+        with open(self.config_file, "w", encoding="utf-8") as f:
+            yaml.safe_dump(self._config, f, sort_keys=False, allow_unicode=True)
 
     def validate(self) -> bool:
         failed_checks = []
         warning_checks = []
-        if not _.has(self.config, "bot.token"):
-            warning_checks.append(
+        if not self.get("bot.token"):
+            failed_checks.append(
                 "You must pass the token you received from https://t.me/Botfather!"
+            )
+        if not self.get("bot.super_user"):
+            failed_checks.append(
+                "Set bot.super_user, SUPER_USER, or --super-user before starting the bot"
             )
         if not all(
             [
-                _.has(self.config, "transmission.host"),
-                _.has(self.config, "transmission.port"),
-                _.has(self.config, "transmission.user"),
-                _.has(self.config, "transmission.password"),
+                self.get("transmission.host"),
+                self.get("transmission.port"),
+                self.get("transmission.user"),
+                self.get("transmission.password"),
             ]
         ):
-            warning_checks.append(
-                "Provide add transmission configuration options to configuration file: host, user, password"
-            )
+            warning_checks.append("Provide Transmission host, port, user, and password")
         if warning_checks:
             for check in warning_checks:
                 log.warning(check)
@@ -230,36 +233,13 @@ class BotConfigurator:
         )
 
     def set_bot_commands(self, commands) -> "BotConfigurator":
-        """Adds/Updates Bot menu commands"""
+        """Store commands to synchronize during application startup."""
         self.commands = commands
-        loop = asyncio.get_event_loop()
-        coroutine = Bot(token=self.config["bot"]["token"]).set_my_commands(
-            self.commands
-        )
-
-        try:
-            loop.run_until_complete(coroutine)
-        except InvalidToken as err:
-            log.critical(
-                "Invalid token provided: %s: %s", self.config["bot"]["token"], str(err)
-            )
-            log.critical(
-                "Please check configuration file %s or pass token using `--token` argument at startup.",
-                BotConfigurator.config_file,
-            )
-            sys.exit(1)
-        except Exception as err:
-            log.critical("Generic error occured: %s", str(err))
-        log.info(
-            "Synchronized bots's commands: \n - %s",
-            "\n - ".join([":\t\t".join(c) for c in self.commands]),
-        )
-
         return self
 
-    def add_user(self, id: int) -> "BotConfigurator":
-        if id not in self.config["bot"]["allowed_users"]:
-            log.info("Adding user_id %s to allowed users", id)
-            self._config["bot"]["allowed_users"].append(id)
+    def add_user(self, user_id: int) -> "BotConfigurator":
+        if user_id not in self.config["bot"]["allowed_users"]:
+            log.info("Adding user_id %s to allowed users", user_id)
+            self._config["bot"]["allowed_users"].append(user_id)
             self.save_config()
         return self

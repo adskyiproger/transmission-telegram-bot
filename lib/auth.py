@@ -19,24 +19,22 @@ def restricted(func):
         update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs
     ):
         user_id = update.effective_user.id
-        # Add super user at first run
-        if not _.has(bot_config.config, "bot.super_user"):
-            log.warning(f"Adding new super user {user_id}")
-            bot_config.set("bot.super_user", user_id)
-            bot_config.save_config()
+        super_user = bot_config.get("bot.super_user")
+        if not super_user:
+            log.critical("Access denied because bot.super_user is not configured")
             await context.bot.send_message(
                 chat_id=user_id,
-                text=trans("WELCOME_SUPER_USER", update.message.from_user.language_code)
+                text=trans("ACCESS_RESTRICTED", update.effective_user.language_code),
             )
+            return
         # Check if user is allowed
-        if user_id not in _.get(
-            bot_config.config, "bot.allowed_users", []
-        ) and user_id != _.get(bot_config.config, "bot.super_user"):
+        is_allowed_user = user_id in _.get(bot_config.config, "bot.allowed_users", [])
+        if not is_allowed_user and user_id != super_user:
             log.debug(update)
 
             await context.bot.send_message(
                 chat_id=user_id,
-                text=trans("ACCESS_RESTRICTED", update.message.from_user.language_code),
+                text=trans("ACCESS_RESTRICTED", update.effective_user.language_code),
             )
             log.error("User %s is not authorized", user_id)
             return
