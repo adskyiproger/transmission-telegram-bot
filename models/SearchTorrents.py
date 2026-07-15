@@ -1,6 +1,7 @@
 import hashlib
 import pydash as _
 import time
+from copy import deepcopy
 
 from typing import List, Dict, Any
 from models.SearchNonameClub import SearchNonameClub
@@ -49,6 +50,7 @@ class SearchTorrents:
     CACHE: Dict[str, Any] = {}
     # Time of adding search results to cache
     CACHE_TIMER: Dict[str, Any] = {}
+    MAX_CACHE_ITEMS = 128
 
     def __init__(self, credentials: dict, sort_by: str) -> None:
         self.CREDENTIALS = credentials
@@ -89,7 +91,13 @@ class SearchTorrents:
 
     def search(self, search_string: str) -> List:
         """Check Cached search results and do search if nothing found in cache"""
-        srch_hash = hashlib.md5(str(search_string).encode("utf-8")).hexdigest()
+        enabled_trackers = sorted(
+            name
+            for name in self.TRACKER_CLASSES
+            if _.get(self.CREDENTIALS, [name, "enabled"], True)
+        )
+        cache_key = f"{search_string}\0{self.sort_by}\0{','.join(enabled_trackers)}"
+        srch_hash = hashlib.sha256(cache_key.encode("utf-8")).hexdigest()
         # Get time of adding search results to cache
         cache_added_time = _.get(
             self.CACHE_TIMER, srch_hash, time.time() - CACHE_TIMEOUT * 2
@@ -97,7 +105,21 @@ class SearchTorrents:
         if cache_added_time < time.time() - CACHE_TIMEOUT:
             self.CACHE_TIMER[srch_hash] = time.time()
             self.CACHE[srch_hash] = self._search(search_string)
-        return self.sort(self.CACHE[srch_hash])
+        self._prune_cache()
+        return self.sort(deepcopy(self.CACHE[srch_hash]))
+
+    def _prune_cache(self) -> None:
+        expired_before = time.time() - CACHE_TIMEOUT
+        expired = [
+            key for key, added in self.CACHE_TIMER.items() if added < expired_before
+        ]
+        for key in expired:
+            self.CACHE.pop(key, None)
+            self.CACHE_TIMER.pop(key, None)
+        while len(self.CACHE_TIMER) > self.MAX_CACHE_ITEMS:
+            oldest = min(self.CACHE_TIMER, key=self.CACHE_TIMER.get)
+            self.CACHE.pop(oldest, None)
+            self.CACHE_TIMER.pop(oldest, None)
 
     def _search(self, search_string: str) -> List:
         """Search over trackers"""
@@ -115,7 +137,7 @@ class SearchTorrents:
             except Exception as err:
                 self.FAILED_SEARCH.append(tracker_name)
                 log.error(
-                    "Failed search on tracker %s due to error: %s", err, tracker_name
+                    "Failed search on tracker %s due to error: %s", tracker_name, err
                 )
         return posts
 
@@ -128,8 +150,7 @@ class SearchTorrents:
             # Store results in cache if sorting went well
             posts = self.post_sort_format(sorted_list)
         except Exception as err:
-            log.fatal(err)
-            log.fatal(posts)
+            log.exception("Failed to sort search results: %s", err)
         return posts
 
     def pre_sort_format(self, posts):

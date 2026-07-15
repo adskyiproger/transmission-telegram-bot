@@ -18,6 +18,7 @@ class Browser:
         self.posts = posts
         self.posts_per_page = posts_per_page
         self.prev_page = 1
+        self._log = None
 
     @property
     def len(self):

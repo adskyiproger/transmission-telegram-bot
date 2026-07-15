@@ -4,7 +4,8 @@ bot:
 
   # Admin telegram account ID or comma separated IDs
   # Use https://github.com/nadam/userinfobot to get your ID
-  # super_user: "<Your telegram account ID>"
+  # This value is required. It may also be supplied as SUPER_USER.
+  super_user: null
 
   # List of your family and friends telegram account ID(s)
   # This list can be managed by user registration feature
@@ -29,6 +30,9 @@ bot:
   # - Help your family to recall what movie they watched on Chrismas Eve.
   download_log_file: download.log
 
+  # Maximum accepted authenticated tracker download size (10 MiB by default)
+  max_torrent_size: 10485760
+
   # Add menu button with all available commands
   use_menu: true
 
@@ -38,9 +42,9 @@ transmission:
   # port, Transmission server port
   port: 9091
   # user, Transmission server user name
-  user: test
+  user: null
   # password, Transmission server user password
-  password: test
+  password: null
   # delete_data, delete torrent from transmission and remove data from file system
   delete_data: true
 
@@ -86,4 +90,5 @@ trackers:
 proxy:
   enabled: False
   url: 127.0.0.1:7777
-
+  # Prefer a custom CA bundle over disabling this option.
+  verify_tls: True

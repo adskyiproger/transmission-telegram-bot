@@ -14,7 +14,6 @@ import math
 from tempfile import mkstemp
 from lib.constants import LANGUAGE_FILE, DEFAULT_LANGUAGE
 
-
 size_names = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
 
 lang = configparser.ConfigParser()

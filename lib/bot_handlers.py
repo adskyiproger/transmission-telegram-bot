@@ -1,7 +1,7 @@
 import os
 import tempfile
-import random
-import string
+import secrets
+import time
 import pydash as _
 import asyncio
 import re
@@ -25,10 +25,11 @@ from models.TorrentsListBrowser import TorrentsListBrowser
 from models.TorrentInfoBrowser import TorrentInfoBrowser
 from models.DownloadHistory import DownloadHistory
 
-
 bot_config = BotConfigurator()
 
 log = get_logger("main")
+
+_transmission_client = None
 
 
 # Init search object with trackers
@@ -40,14 +41,18 @@ def get_search():
 
 
 def get_torrent_connection():
+    global _transmission_client
+    if _transmission_client is not None:
+        return _transmission_client
     try:
-        return TransmissionClient(
+        _transmission_client = TransmissionClient(
             telegram_token=bot_config.get("bot.token"),
             host=bot_config.get("transmission.host"),
             port=bot_config.get("transmission.port"),
             username=bot_config.get("transmission.user"),
             password=bot_config.get("transmission.password"),
         )
+        return _transmission_client
     except Exception as err:
         log.error(
             "Transmission %s:%s is not available due to error: %s",
@@ -55,6 +60,7 @@ def get_torrent_connection():
             bot_config.get("transmission.port"),
             err,
         )
+        raise ConnectionError("Transmission server is unavailable") from err
 
 
 # Configure Bot commands and actions
@@ -62,7 +68,8 @@ commands = []
 actions = []
 
 # This variable is used to auth new users
-WELCOME_HASHES = []
+WELCOME_HASHES = {}
+WELCOME_LINK_TTL = 900
 
 # Add Transmission buttons and menus only if server is available
 
@@ -86,6 +93,7 @@ commands.extend(
 )
 
 
+@restricted
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Send a message when the command /help is issued."""
     HELP = trans("HELP", update.message.from_user.language_code)
@@ -119,6 +127,7 @@ async def history(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
 
 
+@restricted
 async def getTorrentFile(update: Update, context: ContextTypes.DEFAULT_TYPE):
     _id = int(update.message.text.split("_")[1])
     post = context.user_data["posts"].posts[_id]
@@ -127,12 +136,18 @@ async def getTorrentFile(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if _.has(bot_config.get("trackers"), post["tracker"]) and str(
         post["dl"]
     ).startswith("http"):
-        tmp_file_path = get_search().download(post["dl"], post["tracker"])
-
-        document = open(tmp_file_path, "rb")
-        await context.bot.send_document(
-            chat_id=update.message.chat.id, document=document, caption=post["title"]
+        tmp_file_path = await asyncio.to_thread(
+            get_search().download, post["dl"], post["tracker"]
         )
+        try:
+            with open(tmp_file_path, "rb") as document:
+                await context.bot.send_document(
+                    chat_id=update.message.chat.id,
+                    document=document,
+                    caption=post["title"],
+                )
+        finally:
+            os.unlink(tmp_file_path)
     else:
         await context.bot.send_message(
             chat_id=update.message.chat.id,
@@ -183,7 +198,7 @@ async def getMenuPage(update: Update, context: ContextTypes.DEFAULT_TYPE):
         nav_type = context.user_data["nav_type"]
         posts: Browser = context.user_data[nav_type]
         if str(page) == "x":
-            log.warn("You are trying to click the same page")
+            log.warning("You are trying to click the same page")
             return
         await context.bot.edit_message_text(
             chat_id=update.callback_query.message.chat_id,
@@ -229,11 +244,15 @@ async def addTorrentToTransmission(update: Update, context: ContextTypes.DEFAULT
 
     query = update.callback_query
     await query.answer()
+    allowed_directories = set(bot_config.get("directories", {}).values())
+    if query.data not in allowed_directories:
+        raise ValueError("Invalid download directory selection")
     if context.user_data["torrent"]["type"] == "torrent":
         # Temporal file location
-        _tmp_file_path = os.path.join(
-            tempfile.gettempdir(), context.user_data["torrent"]["file_name"]
-        )
+        suffix = os.path.splitext(context.user_data["torrent"]["file_name"])[1]
+        tmp = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
+        _tmp_file_path = tmp.name
+        tmp.close()
         # Download file from telegram bot to temporal location
         _file = await context.bot.getFile(context.user_data["torrent"]["file_id"])
         await _file.download_to_drive(_tmp_file_path)
@@ -248,19 +267,20 @@ async def addTorrentToTransmission(update: Update, context: ContextTypes.DEFAULT
         elif _.has(
             bot_config.get("trackers"), _.get(context.user_data, "torrent.tracker")
         ):
-            _tmp_file_path = get_search().download(
+            _tmp_file_path = await asyncio.to_thread(
+                get_search().download,
                 context.user_data["torrent"]["url"],
                 context.user_data["torrent"]["tracker"],
             )
-
             tmp_file_path = pathlib.Path(_tmp_file_path)
-    
+
     lang_code = query.from_user.language_code
     log.info("Adding file/URL %s to Transmission", tmp_file_path)
     message = query.message.text
     message += "\n----------------------\n"
     try:
-        get_torrent_connection().add_torrent(
+        await asyncio.to_thread(
+            get_torrent_connection().add_torrent,
             chat_id=update.effective_user.id,
             lang_code=lang_code,
             torrent=tmp_file_path,
@@ -270,13 +290,19 @@ async def addTorrentToTransmission(update: Update, context: ContextTypes.DEFAULT
             str(query.data)
         )
     except Exception as err:
-        if "invalid or corrupt torrent file" in str(err):
+        if any(
+            error_text in str(err).lower()
+            for error_text in ("invalid or corrupt torrent file", "unrecognized info")
+        ):
             message += trans("ADDING_TORRENT_FILE_IS_CORRUPTED", lang_code)
         else:
             message += (
                 trans("ADDING_FILE_SOMETHING_WENT_WRONG", lang_code) + ":\n" + str(err)
             )
         log.error("File %s was not added due to error %s", tmp_file_path, str(err))
+    finally:
+        if isinstance(tmp_file_path, pathlib.Path) and tmp_file_path.is_file():
+            os.unlink(tmp_file_path)
     await query.edit_message_text(text=message)
 
 
@@ -307,7 +333,7 @@ async def searchOnWebTracker(update: Update, context: ContextTypes.DEFAULT_TYPE)
     posts = PostsBrowser(
         user_id=msg.chat_id,
         user_lang=lang_code,
-        posts=searcher.search(str(update.message.text)),
+        posts=await asyncio.to_thread(searcher.search, str(update.message.text)),
     )
     context.user_data["nav_type"] = "posts"
     context.user_data["posts"] = posts
@@ -346,29 +372,31 @@ async def searchOnWebTracker(update: Update, context: ContextTypes.DEFAULT_TYPE)
 @restricted
 async def torrentStop(update: Update, _: ContextTypes.DEFAULT_TYPE):
     """Stop torrent by torrent_id"""
-    get_torrent_connection().stop_torrent(int(update.message.text.split("_")[1]))
-    await asyncio.sleep(1)
+    await asyncio.to_thread(
+        get_torrent_connection().stop_torrent,
+        int(update.message.text.split("_")[1]),
+    )
 
 
 @restricted
 async def torrentStopAll(_: Update, __: ContextTypes.DEFAULT_TYPE):
     """Stop All Torrents"""
-    get_torrent_connection().stop_all()
-    await asyncio.sleep(1)
+    await asyncio.to_thread(get_torrent_connection().stop_all)
 
 
 @restricted
 async def torrentStart(update: Update, __: ContextTypes.DEFAULT_TYPE):
     """Start torrent by torrent_id"""
-    get_torrent_connection().start_torrent(int(update.message.text.split("_")[1]))
-    await asyncio.sleep(1)
+    await asyncio.to_thread(
+        get_torrent_connection().start_torrent,
+        int(update.message.text.split("_")[1]),
+    )
 
 
 @restricted
 async def torrentStartAll(_: Update, __: ContextTypes.DEFAULT_TYPE):
     """Stop All Torrents"""
-    get_torrent_connection().start_all()
-    await asyncio.sleep(1)
+    await asyncio.to_thread(get_torrent_connection().start_all)
 
 
 @restricted
@@ -377,7 +405,7 @@ async def torrentList(update: Update, context: ContextTypes.DEFAULT_TYPE):
     torrents = TorrentsListBrowser(
         user_id=update.message.chat.id,
         user_lang=update.message.from_user.language_code,
-        posts=get_torrent_connection().get_torrents(),
+        posts=await asyncio.to_thread(get_torrent_connection().get_torrents),
     )
     context.user_data["nav_type"] = "torrents"
     context.user_data["torrents"] = torrents
@@ -399,7 +427,9 @@ async def torrentInfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     torrent_info = TorrentInfoBrowser(
         user_id=user_id,
         user_lang=update.message.from_user.language_code,
-        posts=get_torrent_connection().get_torrent(int(torrent_id)),
+        posts=await asyncio.to_thread(
+            get_torrent_connection().get_torrent, int(torrent_id)
+        ),
     )
     context.user_data["nav_type"] = "torrent_info"
     context.user_data["torrent_info"] = torrent_info
@@ -428,26 +458,36 @@ async def torrentDelete(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
         chat_id=update.message.chat.id,
         text=trans("TORRENT_REMOVED", update.message.from_user.language_code).format(
-            get_torrent_connection().get_torrents(int(torrent_id))[0].name
+            (
+                await asyncio.to_thread(
+                    get_torrent_connection().get_torrents, int(torrent_id)
+                )
+            )[0].name
         ),
         parse_mode=ParseMode.HTML,
     )
-    get_torrent_connection().remove_torrent(
-        int(torrent_id), delete_data=bot_config.get("transmission.delete_data")
+    await asyncio.to_thread(
+        get_torrent_connection().remove_torrent,
+        int(torrent_id),
+        delete_data=bot_config.get("transmission.delete_data"),
     )
 
 
 @restricted
 async def addNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.chat.id == bot_config.get("bot.super_user"):
-        hash = "".join(random.choices(string.ascii_uppercase + string.digits, k=10))
-        WELCOME_HASHES.append(hash)
+        hash = secrets.token_urlsafe(24)
+        WELCOME_HASHES[hash] = time.monotonic() + WELCOME_LINK_TTL
         log.info(context.bot)
         message = f"https://t.me/{context.bot.username}?start=welcome_{hash}"
         img = get_qr_code(message)
-        await context.bot.send_photo(
-            update.message.chat.id, open(img, "rb"), caption=message
-        )
+        try:
+            with open(img, "rb") as qr_image:
+                await context.bot.send_photo(
+                    update.message.chat.id, qr_image, caption=message
+                )
+        finally:
+            os.unlink(img)
     else:
         await context.bot.send_message(update.message.chat.id, "Nice try!")
 
@@ -455,9 +495,9 @@ async def addNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def welcomeNewUser(update: Update, context: ContextTypes.DEFAULT_TYPE):
     assert update.message.text is not None
     hash_code = update.message.text.replace("/start welcome_", "")
-    if hash_code in WELCOME_HASHES and update.message.chat.id:
+    expires_at = WELCOME_HASHES.pop(hash_code, 0)
+    if expires_at >= time.monotonic() and update.message.chat.id:
         bot_config.add_user(update.message.chat.id)
-        WELCOME_HASHES.remove(hash_code)
         await context.bot.send_message(
             update.message.chat.id,
             f"Welcome {update.message.chat.first_name}!",
