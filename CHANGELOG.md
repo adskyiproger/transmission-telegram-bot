@@ -7,9 +7,9 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [2.0.0] - 2026-07-15
+## [1.4.0] - 2026-07-15
 
-See the [2.0.0 release and migration notes](docs/releases/v2.0.0.md).
+See the [1.4.0 release and migration notes](docs/releases/v1.4.0.md).
 
 ### Added
 
@@ -82,5 +82,5 @@ See the [2.0.0 release and migration notes](docs/releases/v2.0.0.md).
 - Validate untrusted tracker output, callback values, downloads, and temporary
   file handling.
 
-[Unreleased]: https://github.com/adskyiproger/transmission-telegram-bot/compare/v2.0.0...HEAD
-[2.0.0]: https://github.com/adskyiproger/transmission-telegram-bot/compare/v1.3.4...v2.0.0
+[Unreleased]: https://github.com/adskyiproger/transmission-telegram-bot/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/adskyiproger/transmission-telegram-bot/compare/v1.3.4...v1.4.0
