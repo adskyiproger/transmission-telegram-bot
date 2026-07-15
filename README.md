@@ -20,7 +20,7 @@ Features are independent of each other. E/g: If you would like to manage torrent
 
 Additionally you could setup home DLNA server like Jellyfin, Plex or MiniDLNA and stream downloaded Video and Audio content to your smartTV, speakers, etc.
 
-![image](doc/images/network-diagram.jpg)
+![image](docs/images/network-diagram.jpg)
 
 
 **Supported trackers:**
@@ -78,7 +78,7 @@ Next steps:
 ## Preparation
 1. Register new telegram bot using [@BotFather](https://t.me/botfather).
 2. Configure Transmission server authentication with username and password:
-   - For rpm or deb package use official doc: https://github.com/transmission/transmission/tree/main. Detailed setup instruction is [here](doc/Transmission-setup.md)
+   - For rpm or deb package use official doc: https://github.com/transmission/transmission/tree/main. Detailed setup instruction is [here](docs/Transmission-setup.md)
    - For docker image https://hub.docker.com/r/linuxserver/transmission please check `docker-compose.yaml` for available options.
 3. Register accounts on torrent trackers (credentials needs to be added to configuration file later):
    * http://nnmclub.to
@@ -127,7 +127,7 @@ Configuration should be mounted at `/usr/src/app/config` or supplied through
 environment variables. Do not embed tokens or passwords in a container image.
 
 
-**Complete installation Guide for Raspberry Pi 4 can be found at [Home DLNA on Raspberry Pi4 setup guide](doc/Home-DNLA-setup.md)**
+**Complete installation Guide for Raspberry Pi 4 can be found at [Home DLNA on Raspberry Pi4 setup guide](docs/Home-DNLA-setup.md)**
 
 
 # User Guide
@@ -153,7 +153,7 @@ Search window content:
 3. Each post has information about torrent size and when torrent was posted on torrent tracker. E/g: `4.56GB  2023-07-29`
 4. Navigation bar allows quick switch between pages or jump +/-10 pages.
 
-![image](doc/images/search-window.png)
+![image](docs/images/search-window.png)
 
 
 
@@ -163,10 +163,10 @@ Search window content:
 - Last search results are available by pressing "Search" button.
 - List of downloaded torrents is available by pressing "Torrents" button.
 
-![image](doc/images/screen-0.png)
+![image](docs/images/screen-0.png)
 
 ### Adding new user
 
 After initial configuration new users can be added by typing `/adduser` command. As output you will get a registration link and QR-code.
 
-![image](doc/images/screen-1.png)
+![image](docs/images/screen-1.png)
