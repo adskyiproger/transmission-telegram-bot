@@ -1,172 +1,222 @@
-# Transmission telegram bot
+# Transmission Telegram Bot
 
+This Telegram bot searches supported torrent trackers and sends torrent files,
+URLs, and magnet links to a Transmission server.
 
-This Telegram bot is a small piece of software for Searching torrents on tracker websites and passing to Transmission torrent server.
+## Features
 
-**Features:**
+- **Manage torrents on Transmission**
+  - Start, stop, delete, and inspect torrents.
+  - Select a download directory before adding a torrent.
+  - Add a `.torrent` file, URL, or magnet link from Telegram.
+- **Search supported trackers**
+  - Search several preconfigured torrent trackers.
+  - Sort results by size, date, seeders, or leechers.
+- **Control access**
+  - Restrict commands to an explicitly configured administrator and an
+    allowlist of Telegram user IDs.
+  - Invite family members using a short-lived, single-use link or QR code with
+    the `/adduser` command.
 
-- **Manage** torrents on Transmission server:
-  - Start, Stop, Delete and view torrents on transmission server
-  - Select download folder before adding torrent to transmission
-  - You could use built-in search option on list of predefined trackers or copy/paste torrent file, url or magnet link into the bot chat.
-- **Search** torrents using bot:
-  - Bot has pre-configured websites to find torrents
-  - You can configure the way to display search results by changing sort and filter options. It will help you to find torrents with great number of seaders, or video content with better quality.
-- **Authentication and Security**:
-  - Bot uses built-in protection authentication verification. You don't have to worry about hacking.
-  - You can easily share access to bot with family members using QR Code or link. Check `/adduser` command.
+You can connect Transmission's download directories to Jellyfin, Plex, or
+MiniDLNA and stream downloaded media to other devices on your network.
 
-Features are independent of each other. E/g: If you would like to manage torrents only you could disable search and vice versa.
+![Home network diagram](docs/images/network-diagram.jpg)
 
-Additionally you could setup home DLNA server like Jellyfin, Plex or MiniDLNA and stream downloaded Video and Audio content to your smartTV, speakers, etc.
+### Supported trackers
 
-![image](docs/images/network-diagram.jpg)
+- [NNM-Club](https://nnmclub.to/)
+- [Rutor](http://rutor.info/)
+- [Toloka](https://toloka.to/)
+- [RuTracker](https://rutracker.org/)
 
+## Quick start with Docker
 
-**Supported trackers:**
-* http://nnmclub.to/
-* http://rutor.info 
-* https://kat.sx/
-* https://toloka.to
-* https://rutracker.to
+1. Install a current Docker Engine with the `docker compose` plugin. As additional step on Windows, please
+   enable WSL 2.
+2. Create a Telegram bot using [@BotFather](https://t.me/botfather) and save its
+   token.
+3. Open a terminal (WSL on Windows) and set the bot token first:
 
-(new will arrive soon)
-
-
-# Quick start with docker
-
-1. Install docker on Windows/Linux/MacOS. On Windows additionally enable WSL.
-2. Register new telegram bot using [@BotFather](https://t.me/botfather).
-   Save bot token value for later usage.
-3. On Linux/MacOS open terminal window (WSL on Windows):
-   Add environment variable `TOKEN`:
+   ```shell
+   export TOKEN="123456789:replace-with-your-bot-token"
    ```
-   export TOKEN=<your token>;
-   export SUPER_USER=<your Telegram numeric user ID>;
-   export TRANSMISSION_USER=<Transmission username>;
-   export TRANSMISSION_PASSWORD=<strong Transmission password>;
+
+4. Find your numeric Telegram user ID:
+
+   - Open your new bot in Telegram and send it any message.
+   - Request its pending updates:
+
+     ```shell
+     curl --silent "https://api.telegram.org/bot${TOKEN}/getUpdates"
+     ```
+
+   - In the JSON response, find the latest message and copy the number in
+     `message.from.id`. That number is your administrator ID.
+
+   As a simpler alternative, you can message a user-information bot such as
+   [@userinfobot](https://t.me/userinfobot) and copy the displayed `Id`. This
+   shares your basic Telegram profile with that third-party bot; using your own
+   bot and `getUpdates` avoids that disclosure.
+
+5. Set the remaining required values. Replace the examples inside the quotes:
+
+   ```shell
+   export SUPER_USER="123456789"
+   export TRANSMISSION_USER="torrentino"
+   export TRANSMISSION_PASSWORD="replace-with-a-strong-password"
+   export TORRENTINO_VERSION="1.4.0"
    ```
-   Run bot:
+
+6. Download the matching Compose file and start the services:
+
+   ```shell
+   curl --fail --location --output docker-compose.yaml \
+     https://raw.githubusercontent.com/adskyiproger/transmission-telegram-bot/v${TORRENTINO_VERSION}/docker-compose.yaml
+   docker compose --file docker-compose.yaml up --detach
    ```
-   curl -o docker-compose.yaml https://raw.githubusercontent.com/adskyiproger/transmission-telegram-bot/refs/heads/develop/docker-compose.yaml && \
-   docker compose -f docker-compose.yaml up -d
-   ```
-4. Open telegram client and make sure you are able talk to your bot.
 
-In minimal configuration you will get search working for rutor.into tracker and download to docker volume by default.
+7. Open Telegram and send `/help` to your bot.
 
-Next steps:
-- Configure folders to store torrents and downloads.
-- Check logs for any kind of issues:
-  ```
-  docker compose logs -f
-  ```
+This configuration enables Rutor search and stores downloads in a Docker volume.
+Bot configuration, authorized users, download history, and logs are persisted in
+the `config` volume.
 
-# Installation
+Useful commands:
 
-## What you will need to run bot?
-1. **Hardware:**
-   - If you are planning to use Bot as standalone application for searching torrent and pushing them to external Transmission, no specific configuration is required.
-   - If you are planning to run Bot and Transmission on the same hardware, make sure you have at least 2G of RAM and 100G+ storage. Actual setup takes less then 1G, but you will need place to download torrents.
-   - Bot and transmission will run on any hardware architecture including Apple M1/2 chips and ARMs.
-2. **Software:** 
-   - Bot will work well on one of the following configuration:
-      - Any Windows, macOS, Linux, or FreeBSD system with Python 3.14.
-      - A current Docker Engine with the `docker compose` plugin.
-   - Transmission, please check available packages at: https://transmissionbt.com/download or use one of the available docker images
-   
+```shell
+docker compose ps
+docker compose logs --follow
+docker compose down
+```
+
+## Requirements
+
+### Hardware
+
+- A search-only client that connects to an external Transmission server has no
+  special hardware requirements.
+- When running the bot and Transmission together, use at least 2 GB of RAM and
+  provide enough storage for downloads.
+- The container images support common x86-64 and ARM64 systems, including Apple
+  Silicon and Raspberry Pi.
+
+### Software
+
+- Python 3.14 for local execution, or a current Docker Engine with the
+  `docker compose` plugin.
+- A Transmission server. Install it from the
+  [official download page](https://transmissionbt.com/download) or use the
+  container supplied by this project's Compose file.
+
 ## Preparation
-1. Register new telegram bot using [@BotFather](https://t.me/botfather).
-2. Configure Transmission server authentication with username and password:
-   - For rpm or deb package use official doc: https://github.com/transmission/transmission/tree/main. Detailed setup instruction is [here](docs/Transmission-setup.md)
-   - For docker image https://hub.docker.com/r/linuxserver/transmission please check `docker-compose.yaml` for available options.
-3. Register accounts on torrent trackers (credentials needs to be added to configuration file later):
-   * http://nnmclub.to
-   * https://toloka.to
-   * https://rutracker.to
 
-## Run bot locally
+1. Create a Telegram bot using [@BotFather](https://t.me/botfather).
+2. Configure Transmission authentication. See the
+   [Transmission setup guide](docs/Transmission-setup.md) or the
+   [LinuxServer.io image documentation](https://docs.linuxserver.io/images/docker-transmission/).
+3. Register accounts on trackers that require authentication and add their
+   credentials to `config/torrentino.yaml`:
+   - https://nnmclub.to
+   - https://toloka.to
+   - https://rutracker.org
 
-1. Clone this repository
-   ```
+## Run locally
+
+1. Clone the repository:
+
+   ```shell
    git clone https://github.com/adskyiproger/transmission-telegram-bot.git
    cd transmission-telegram-bot
    ```
-   or download as zip file: https://github.com/adskyiproger/transmission-telegram-bot/archive/refs/heads/master.zip
-2. Update config/torrentino.yaml configuration file. Follow up comments inside configuration file:
-   ```
+
+2. Create and edit the configuration file:
+
+   ```shell
    mkdir -p config
    cp templates/torrentino.yaml config/torrentino.yaml
    nano config/torrentino.yaml
    ```
-3. Run:
-   ```
-   pip install --user pipenv
-   pipenv install
+
+3. Install the locked dependencies and start the bot:
+
+   ```shell
+   python -m pip install --user "pipenv==2026.0.3"
+   pipenv sync
    pipenv run ./torrentino.py
    ```
 
-## Run in docker
+Environment variables and command-line arguments override YAML values in memory;
+runtime secrets are not written to the configuration file. Run
+`pipenv run ./torrentino.py --help` to see the available options.
 
-1. Clone this repository
-   ```
+## Run from a cloned repository with Docker
+
+1. Clone the repository and enter it:
+
+   ```shell
    git clone https://github.com/adskyiproger/transmission-telegram-bot.git
-   ```
-2. Create torrentino.yaml configuration file. Follow up comments inside configuration file:
-   ```
-   mkdir -p config
-   cp templates/torrentino.yaml config/
+   cd transmission-telegram-bot
    ```
 
-3. Modify docker compose and fill all required values
-4. Run docker compose:
+2. Set the required environment variables as shown in
+   [Quick start with Docker](#quick-start-with-docker).
+3. Start the services:
+
+   ```shell
+   docker compose --file docker-compose.yaml up --detach
    ```
-   docker compose -f docker-compose.yaml up -d
 
-Configuration should be mounted at `/usr/src/app/config` or supplied through
-environment variables. Do not embed tokens or passwords in a container image.
+The supplied Compose file uses a named volume for `/usr/src/app/config`. To use
+a host directory instead, replace the `torrentino` volume with:
 
+```yaml
+volumes:
+  - ./config:/usr/src/app/config
+```
 
-**Complete installation Guide for Raspberry Pi 4 can be found at [Home DLNA on Raspberry Pi4 setup guide](docs/Home-DNLA-setup.md)**
+Do not embed tokens or passwords in a container image.
 
+For a Raspberry Pi media-server example, see the
+[Home DLNA setup guide](docs/Home-DNLA-setup.md).
 
-# User Guide
+## User guide
 
-## Menu options / Bot Commads
+### Commands
 
-List of menu options (bot commands):
+- `/torrents` — list torrents on the Transmission server.
+- `/last_search` — show the last search results. Results are cached for 60
+  minutes.
+- `/stop_all` — stop all torrents.
+- `/start_all` — start all torrents.
+- `/history` — show successfully completed downloads.
+- `/help` — display the help message.
+- `/adduser` — generate a single-use invitation link and QR code. This command
+  is available only to the administrator.
 
-- `/torrents`, List torrents on Transmission server
-- `/last_search`, Show last search results. Keep in mind search results are cached for 60 minutes.
-- `/stop_all`, Stop seeding and leaching all torrents
-- `/start_all`, Start seeding and leaching all torrents
-- `/history`, Show downloaded torrents history. Only successfully downloaded torrents are added to the history.
-- `/help`, Display help message
-- `/adduser`, Generates QR-Code and link for adding new bot user. Command is available only for administrator
+### Search results
 
-## Search window
+1. The header shows the current page, total pages, and total results.
+2. Each result shows seeders (⬆️), leechers (⬇️), size, and publication date.
+3. Use the tracker link to open the source page.
+4. Use the navigation buttons to change pages or jump by ten pages.
 
-Search window content:
+![Search results](docs/images/search-window.png)
 
-1. Top string shows current page, total number of pages and total number of found posts (torrents).
-2. Each post has information about seaders (⬆️) and leachers (⬇️). `Info` could be used to open post page on torrent tracker.
-3. Each post has information about torrent size and when torrent was posted on torrent tracker. E/g: `4.56GB  2023-07-29`
-4. Navigation bar allows quick switch between pages or jump +/-10 pages.
+### Main menu
 
-![image](docs/images/search-window.png)
+Use **Search** to reopen the last results and **Torrents** to list downloads.
 
+![Bot main menu](docs/images/screen-0.png)
 
+### Adding a user
 
-## Other screenshots
+The administrator can run `/adduser` to generate a short-lived registration
+link and QR code.
 
-### Bot Main window
-- Last search results are available by pressing "Search" button.
-- List of downloaded torrents is available by pressing "Torrents" button.
+![Adding a user](docs/images/screen-1.png)
 
-![image](docs/images/screen-0.png)
+## Upgrading
 
-### Adding new user
-
-After initial configuration new users can be added by typing `/adduser` command. As output you will get a registration link and QR-code.
-
-![image](docs/images/screen-1.png)
+See [UPGRADE.md](UPGRADE.md), the [changelog](CHANGELOG.md), and the
+[release-specific notes](docs/releases/) before upgrading.

@@ -2,7 +2,7 @@ bot:
   # token, Use BotFather to create new token
   token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 
-  # Admin telegram account ID or comma separated IDs
+  # Administrator's numeric Telegram account ID
   # Use https://github.com/nadam/userinfobot to get your ID
   # This value is required. It may also be supplied as SUPER_USER.
   super_user: null
@@ -88,7 +88,7 @@ trackers:
 
 # Proxies
 proxy:
-  enabled: False
+  enabled: false
   url: 127.0.0.1:7777
   # Prefer a custom CA bundle over disabling this option.
-  verify_tls: True
+  verify_tls: true

@@ -1,9 +1,6 @@
-# Update required before running this file with docker-compose
-# - <dnla uid>, User ID on host system, must have access write to download folder
-# - <dnla guid>, Group ID on host system, must have access read or write to download folder,
-#                depends on how access is organised, by group or user
-# - <download folder on host>, Path to download folder on host system
-# - <config folder on host>, Path to configuration folder on host system
+# Required environment variables are documented in README.md.
+# Set PUID and PGID below when host-mounted download directories require a
+# specific Linux user or group.
 ---
 services:
   # Uncomment to add jellyfin service
@@ -26,7 +23,7 @@ services:
   #   restart: "unless-stopped"
   #   network_mode: "host"
   torrentino:
-    image: ghcr.io/adskyiproger/transmission-telegram-bot:latest
+    image: ghcr.io/adskyiproger/transmission-telegram-bot:${TORRENTINO_VERSION:-latest}
     container_name: transmission-telegram-bot
     # Transmission connection properties
     environment:
@@ -37,17 +34,15 @@ services:
       - TRANSMISSION_PASSWORD=${TRANSMISSION_PASSWORD:?set TRANSMISSION_PASSWORD}
       - TOKEN=${TOKEN:?set TOKEN}
       - SUPER_USER=${SUPER_USER:?set SUPER_USER}
+      - DOWNLOAD_LOG=/usr/src/app/config/download.log
+      - LOG_FILE=/usr/src/app/config/torrentino.log
     depends_on:
       transmission:
         condition: service_healthy
     restart: unless-stopped
-    # Uncomment this line if you need to persist you configuration
-    # in local folder or docker volume
-    # volumes:
-    # 1. Local folder example
-    #   - ./config:/usr/src/app/config
-    # 2. Docker volume example
-    #   - config:/usr/src/app/config
+    # Persist configuration, authorized users, download history, and logs.
+    volumes:
+      - config:/usr/src/app/config
   transmission:
     image: lscr.io/linuxserver/transmission:4.1.1-r1-ls345
     container_name: transmission
@@ -73,8 +68,8 @@ services:
       retries: 12
       start_period: 20s
 
-# Temporal volume for testing
-# Please check: https://docs.docker.com/reference/compose-file/volumes/
+# Named volumes persist downloads and bot configuration across container
+# recreation. Replace them with bind mounts when host access is required.
 volumes:
   downloads: {}
   config: {}
