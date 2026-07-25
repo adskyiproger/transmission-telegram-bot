@@ -1,3 +1,7 @@
+
+> [!TIP]
+> ⭐ If you found this project useful, please consider giving it a star on GitHub. It helps others discover the project and motivates future development. Thank you for your support!
+
 # Transmission Telegram Bot
 
 This Telegram bot searches supported torrent trackers and sends torrent files,
